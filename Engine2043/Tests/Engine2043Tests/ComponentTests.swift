@@ -43,4 +43,26 @@ struct ComponentTests {
         #expect(steering.hoverY == Float(100))
         #expect(steering.steerStrength == Float(2.0))
     }
+
+    @Test func turretComponentTracking() {
+        let turret = TurretComponent(trackingSpeed: 2.0)
+        #expect(turret.trackingSpeed == 2.0)
+        #expect(turret.fireInterval == 1.5)
+        #expect(turret.timeSinceLastShot == 0)
+    }
+
+    @Test func bossPhaseComponentTransitions() {
+        let boss = BossPhaseComponent(totalHP: 30)
+        #expect(boss.currentPhase == 0)
+        #expect(boss.phaseThresholds == [0.6, 0.3])
+
+        boss.updatePhase(healthFraction: 1.0)
+        #expect(boss.currentPhase == 0)
+
+        boss.updatePhase(healthFraction: 0.5)
+        #expect(boss.currentPhase == 1)
+
+        boss.updatePhase(healthFraction: 0.2)
+        #expect(boss.currentPhase == 2)
+    }
 }
