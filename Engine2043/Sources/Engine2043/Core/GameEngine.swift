@@ -31,6 +31,6 @@ public final class GameEngine {
 
     public func render(to drawable: CAMetalDrawable) {
         let sprites = currentScene?.collectSprites() ?? []
-        renderer.render(to: drawable, sprites: sprites)
+        renderer.render(to: drawable, sprites: sprites, totalTime: Float(time.totalTime))
     }
 }
