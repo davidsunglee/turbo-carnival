@@ -1,4 +1,5 @@
 import Metal
+import MetalPerformanceShaders
 import QuartzCore
 import simd
 
@@ -9,6 +10,7 @@ public final class Renderer {
     private let spriteBatcher: SpriteBatcher
     private let renderPassPipeline: RenderPassPipeline
     private let textureAtlas: TextureAtlas
+    private let bloomBlurKernel: MPSImageGaussianBlur
 
     public init(device: MTLDevice) throws {
         self.device = device
@@ -22,9 +24,10 @@ public final class Renderer {
         self.renderPassPipeline = try RenderPassPipeline(device: device, library: library)
         self.spriteBatcher = try SpriteBatcher(device: device)
         self.textureAtlas = try TextureAtlas(device: device)
+        self.bloomBlurKernel = MPSImageGaussianBlur(device: device, sigma: 4.0)
     }
 
-    public func render(to drawable: CAMetalDrawable, sprites: [SpriteInstance]) {
+    public func render(to drawable: CAMetalDrawable, sprites: [SpriteInstance], totalTime: Float) {
         let width = drawable.texture.width
         let height = drawable.texture.height
         guard width > 0, height > 0 else { return }
@@ -36,6 +39,7 @@ public final class Renderer {
 
         var uniforms = Uniforms(viewProjection: makeOrthographicProjection())
 
+        // Pass 1: Forward (sprites -> offscreen)
         renderPassPipeline.encodeForwardPass(
             commandBuffer: commandBuffer,
             batcher: spriteBatcher,
@@ -43,9 +47,21 @@ public final class Renderer {
             texture: textureAtlas.defaultTexture
         )
 
+        // Pass 2: Bloom extract (offscreen -> bloom extract texture)
+        renderPassPipeline.encodeBloomExtractPass(commandBuffer: commandBuffer)
+
+        // Pass 3: MPS Gaussian blur (bloom extract -> bloom blur)
+        if let src = renderPassPipeline.bloomExtractTextureForBlur,
+           let dst = renderPassPipeline.bloomBlurTextureForBlur {
+            bloomBlurKernel.encode(commandBuffer: commandBuffer, sourceTexture: src, destinationTexture: dst)
+        }
+
+        // Pass 4: Final composite (offscreen + bloom blur -> drawable)
+        var ppUniforms = PostProcessUniforms(time: totalTime)
         renderPassPipeline.encodePostProcessPass(
             commandBuffer: commandBuffer,
-            drawable: drawable
+            drawable: drawable,
+            uniforms: &ppUniforms
         )
 
         commandBuffer.present(drawable)
