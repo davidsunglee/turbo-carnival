@@ -37,6 +37,10 @@ class MetalView: NSView {
         inputProvider = KeyboardInputProvider()
         let scene = PlaceholderScene()
         scene.inputProvider = inputProvider
+
+        let audio = AVAudioManager()
+        scene.audioProvider = audio
+
         engine.currentScene = scene
     }
 

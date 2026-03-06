@@ -13,6 +13,9 @@ public final class PlaceholderScene: GameScene {
     // Input
     public var inputProvider: (any InputProvider)?
 
+    // Audio
+    public var audioProvider: (any AudioProvider)?
+
     // Entities
     private var player: GKEntity!
     private var enemies: [GKEntity] = []

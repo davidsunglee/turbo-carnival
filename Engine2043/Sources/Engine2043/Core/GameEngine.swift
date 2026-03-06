@@ -13,6 +13,7 @@ public final class GameEngine {
     public private(set) var time = GameTime()
     public let renderer: Renderer
     public var currentScene: (any GameScene)?
+    public var audioProvider: (any AudioProvider)?
 
     public init(renderer: Renderer) {
         self.renderer = renderer
@@ -31,6 +32,6 @@ public final class GameEngine {
 
     public func render(to drawable: CAMetalDrawable) {
         let sprites = currentScene?.collectSprites() ?? []
-        renderer.render(to: drawable, sprites: sprites)
+        renderer.render(to: drawable, sprites: sprites, totalTime: Float(time.totalTime))
     }
 }

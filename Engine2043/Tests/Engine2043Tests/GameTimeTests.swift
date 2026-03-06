@@ -48,4 +48,10 @@ struct GameTimeTests {
     @Test func uniformsMemoryLayout() {
         #expect(MemoryLayout<Uniforms>.size == 64)
     }
+
+    @Test func postProcessUniformsMemoryLayout() {
+        // Must be 16-byte aligned for Metal buffer binding
+        #expect(MemoryLayout<PostProcessUniforms>.size == 16)
+        #expect(MemoryLayout<PostProcessUniforms>.stride % 16 == 0)
+    }
 }

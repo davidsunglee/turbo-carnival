@@ -8,7 +8,10 @@ final class RenderPassPipeline {
     let postProcessPipelineState: MTLRenderPipelineState
     let spriteSampler: MTLSamplerState
     let postProcessSampler: MTLSamplerState
+    let bloomExtractPipelineState: MTLRenderPipelineState
     private var offscreenTexture: MTLTexture?
+    private var bloomExtractTexture: MTLTexture?
+    private var bloomBlurTexture: MTLTexture?
 
     private static let offscreenPixelFormat: MTLPixelFormat = .bgra8Unorm
 
@@ -42,6 +45,18 @@ final class RenderPassPipeline {
             postProcessPipelineState = try device.makeRenderPipelineState(descriptor: postDesc)
         } catch {
             throw RendererError.failedToCreatePipelineState("PostProcess: \(error)")
+        }
+
+        // --- Bloom extract pipeline ---
+        let bloomDesc = MTLRenderPipelineDescriptor()
+        bloomDesc.vertexFunction = library.makeFunction(name: "postprocess_vertex")
+        bloomDesc.fragmentFunction = library.makeFunction(name: "bloom_extract_fragment")
+        bloomDesc.colorAttachments[0].pixelFormat = Self.offscreenPixelFormat
+
+        do {
+            bloomExtractPipelineState = try device.makeRenderPipelineState(descriptor: bloomDesc)
+        } catch {
+            throw RendererError.failedToCreatePipelineState("BloomExtract: \(error)")
         }
 
         // --- Samplers ---
@@ -81,6 +96,17 @@ final class RenderPassPipeline {
         desc.usage = [.renderTarget, .shaderRead]
         desc.storageMode = .private
         offscreenTexture = device.makeTexture(descriptor: desc)
+
+        let bloomDesc = MTLTextureDescriptor.texture2DDescriptor(
+            pixelFormat: Self.offscreenPixelFormat,
+            width: width,
+            height: height,
+            mipmapped: false
+        )
+        bloomDesc.usage = [.renderTarget, .shaderRead, .shaderWrite]
+        bloomDesc.storageMode = .private
+        bloomExtractTexture = device.makeTexture(descriptor: bloomDesc)
+        bloomBlurTexture = device.makeTexture(descriptor: bloomDesc)
     }
 
     func encodeForwardPass(
@@ -113,11 +139,32 @@ final class RenderPassPipeline {
         encoder.endEncoding()
     }
 
+    func encodeBloomExtractPass(commandBuffer: MTLCommandBuffer) {
+        guard let bloomExtract = bloomExtractTexture,
+              let offscreen = offscreenTexture else { return }
+
+        let passDesc = MTLRenderPassDescriptor()
+        passDesc.colorAttachments[0].texture = bloomExtract
+        passDesc.colorAttachments[0].loadAction = .clear
+        passDesc.colorAttachments[0].storeAction = .store
+        passDesc.colorAttachments[0].clearColor = MTLClearColor(red: 0, green: 0, blue: 0, alpha: 1)
+
+        guard let encoder = commandBuffer.makeRenderCommandEncoder(descriptor: passDesc) else { return }
+        encoder.setRenderPipelineState(bloomExtractPipelineState)
+        encoder.setFragmentTexture(offscreen, index: 0)
+        encoder.setFragmentSamplerState(postProcessSampler, index: 0)
+
+        encoder.drawPrimitives(type: .triangle, vertexStart: 0, vertexCount: 3)
+        encoder.endEncoding()
+    }
+
     func encodePostProcessPass(
         commandBuffer: MTLCommandBuffer,
-        drawable: CAMetalDrawable
+        drawable: CAMetalDrawable,
+        uniforms: inout PostProcessUniforms
     ) {
-        guard let offscreen = offscreenTexture else { return }
+        guard let offscreen = offscreenTexture,
+              let bloomBlur = bloomBlurTexture else { return }
 
         let passDesc = MTLRenderPassDescriptor()
         passDesc.colorAttachments[0].texture = drawable.texture
@@ -127,10 +174,14 @@ final class RenderPassPipeline {
         guard let encoder = commandBuffer.makeRenderCommandEncoder(descriptor: passDesc) else { return }
         encoder.setRenderPipelineState(postProcessPipelineState)
         encoder.setFragmentTexture(offscreen, index: 0)
+        encoder.setFragmentTexture(bloomBlur, index: 1)
         encoder.setFragmentSamplerState(postProcessSampler, index: 0)
+        encoder.setFragmentBytes(&uniforms, length: MemoryLayout<PostProcessUniforms>.size, index: 0)
 
         encoder.drawPrimitives(type: .triangle, vertexStart: 0, vertexCount: 3)
-
         encoder.endEncoding()
     }
+
+    var bloomExtractTextureForBlur: MTLTexture? { bloomExtractTexture }
+    var bloomBlurTextureForBlur: MTLTexture? { bloomBlurTexture }
 }
