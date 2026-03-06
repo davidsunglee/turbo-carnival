@@ -1,0 +1,43 @@
+name: Project2043
+options:
+  bundleIdPrefix: com.project2043
+  deploymentTarget:
+    macOS: "14.0"
+    iOS: "17.0"
+  createIntermediateGroups: true
+
+packages:
+  Engine2043:
+    path: Engine2043
+
+targets:
+  Project2043-macOS:
+    type: application
+    platform: macOS
+    sources:
+      - path: Project2043-macOS
+    dependencies:
+      - package: Engine2043
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.project2043.macos
+        PRODUCT_NAME: "Project 2043"
+        SWIFT_VERSION: "6.0"
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_NSPrincipalClass: NSApplication
+        INFOPLIST_KEY_NSMainNibFile: ""
+
+  Project2043-iOS:
+    type: application
+    platform: iOS
+    sources:
+      - path: Project2043-iOS
+    dependencies:
+      - package: Engine2043
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.project2043.ios
+        PRODUCT_NAME: "Project 2043"
+        SWIFT_VERSION: "6.0"
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
