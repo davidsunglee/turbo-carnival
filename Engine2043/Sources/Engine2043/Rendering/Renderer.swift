@@ -24,7 +24,7 @@ public final class Renderer {
         self.renderPassPipeline = try RenderPassPipeline(device: device, library: library)
         self.spriteBatcher = try SpriteBatcher(device: device)
         self.textureAtlas = try TextureAtlas(device: device)
-        self.bloomBlurKernel = MPSImageGaussianBlur(device: device, sigma: 4.0)
+        self.bloomBlurKernel = MPSImageGaussianBlur(device: device, sigma: 6.0)
     }
 
     public func render(to drawable: CAMetalDrawable, sprites: [SpriteInstance], totalTime: Float) {

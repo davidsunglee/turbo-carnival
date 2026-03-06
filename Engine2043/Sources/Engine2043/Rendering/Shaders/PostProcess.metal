@@ -40,7 +40,7 @@ fragment float4 bloom_extract_fragment(
 ) {
     float4 color = sceneTex.sample(smp, in.texCoord);
     float luminance = dot(color.rgb, float3(0.2126, 0.7152, 0.0722));
-    float threshold = 0.7;
+    float threshold = 0.5;
     float contribution = max(luminance - threshold, 0.0) / max(1.0 - threshold, 0.001);
     return float4(color.rgb * contribution, 1.0);
 }
@@ -59,7 +59,7 @@ fragment float4 postprocess_fragment(
     // --- Chromatic aberration ---
     float2 center = float2(0.5, 0.5);
     float2 dir = uv - center;
-    float offset = 0.002;
+    float offset = 0.004;
     float r = sceneTex.sample(smp, uv + dir * offset).r;
     float g = sceneTex.sample(smp, uv).g;
     float b = sceneTex.sample(smp, uv - dir * offset).b;
