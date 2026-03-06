@@ -35,7 +35,7 @@ class MetalView: NSView {
         engine = GameEngine(renderer: renderer)
 
         inputProvider = KeyboardInputProvider()
-        let scene = PlaceholderScene()
+        let scene = Galaxy1Scene()
         scene.inputProvider = inputProvider
 
         let audio = AVAudioManager()

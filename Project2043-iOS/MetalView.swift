@@ -33,7 +33,7 @@ final class MetalView: UIView {
         engine = GameEngine(renderer: renderer)
 
         touchInput = TouchInputProvider()
-        let scene = PlaceholderScene()
+        let scene = Galaxy1Scene()
         scene.inputProvider = touchInput
 
         let audio = AVAudioManager()
