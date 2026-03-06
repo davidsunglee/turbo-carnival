@@ -43,6 +43,19 @@ public struct Uniforms: Sendable {
     }
 }
 
+public struct PostProcessUniforms: Sendable {
+    public var time: Float
+    public var bloomIntensity: Float
+    public var scanlineIntensity: Float
+    public var _pad: Float = 0
+
+    public init(time: Float, bloomIntensity: Float = 0.6, scanlineIntensity: Float = 0.15) {
+        self.time = time
+        self.bloomIntensity = bloomIntensity
+        self.scanlineIntensity = scanlineIntensity
+    }
+}
+
 public enum RendererError: Error, Sendable {
     case failedToCreateCommandQueue
     case failedToCreateTexture
