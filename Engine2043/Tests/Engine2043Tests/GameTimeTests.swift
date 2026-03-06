@@ -70,4 +70,13 @@ struct GameTimeTests {
         #expect(GameConfig.Score.tier3Turret == 100)
         #expect(GameConfig.Score.boss == 500)
     }
+
+    @Test func collisionLayersIncludeNewTypes() {
+        let bossShield = CollisionLayer.bossShield
+        let blast = CollisionLayer.blast
+        #expect(bossShield.rawValue == 1 << 5)
+        #expect(blast.rawValue == 1 << 6)
+        #expect(bossShield.intersection(.player).isEmpty)
+        #expect(blast.intersection(.enemy).isEmpty)
+    }
 }
