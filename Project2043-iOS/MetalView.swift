@@ -31,6 +31,10 @@ final class MetalView: UIView {
 
         let scene = PlaceholderScene()
         scene.inputProvider = TouchInputProvider()
+
+        let audio = AVAudioManager()
+        scene.audioProvider = audio
+
         engine.currentScene = scene
 
         displayLink = CADisplayLink(target: self, selector: #selector(render(_:)))

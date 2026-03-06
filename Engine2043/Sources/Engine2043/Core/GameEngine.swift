@@ -13,6 +13,7 @@ public final class GameEngine {
     public private(set) var time = GameTime()
     public let renderer: Renderer
     public var currentScene: (any GameScene)?
+    public var audioProvider: (any AudioProvider)?
 
     public init(renderer: Renderer) {
         self.renderer = renderer
