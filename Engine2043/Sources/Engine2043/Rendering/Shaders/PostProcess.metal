@@ -1,6 +1,13 @@
 #include <metal_stdlib>
 using namespace metal;
 
+struct PostProcessUniforms {
+    float time;
+    float bloomIntensity;
+    float scanlineIntensity;
+    float _pad;
+};
+
 struct PostProcessVertexOut {
     float4 position [[position]];
     float2 texCoord;
@@ -25,11 +32,48 @@ vertex PostProcessVertexOut postprocess_vertex(uint vertexID [[vertex_id]]) {
     return out;
 }
 
-// Passthrough stub — attachment point for future bloom/CRT effects
-fragment float4 postprocess_fragment(
+// Bloom extract — output only bright pixels above luminance threshold
+fragment float4 bloom_extract_fragment(
     PostProcessVertexOut in [[stage_in]],
-    texture2d<float> tex [[texture(0)]],
+    texture2d<float> sceneTex [[texture(0)]],
     sampler smp [[sampler(0)]]
 ) {
-    return tex.sample(smp, in.texCoord);
+    float4 color = sceneTex.sample(smp, in.texCoord);
+    float luminance = dot(color.rgb, float3(0.2126, 0.7152, 0.0722));
+    float threshold = 0.7;
+    float contribution = max(luminance - threshold, 0.0) / max(1.0 - threshold, 0.001);
+    return float4(color.rgb * contribution, 1.0);
+}
+
+// Final composite — chromatic aberration + bloom + CRT scanlines
+fragment float4 postprocess_fragment(
+    PostProcessVertexOut in [[stage_in]],
+    texture2d<float> sceneTex [[texture(0)]],
+    texture2d<float> bloomTex [[texture(1)]],
+    sampler smp [[sampler(0)]],
+    constant PostProcessUniforms &uniforms [[buffer(0)]]
+) {
+    float2 uv = in.texCoord;
+    float2 resolution = float2(sceneTex.get_width(), sceneTex.get_height());
+
+    // --- Chromatic aberration ---
+    float2 center = float2(0.5, 0.5);
+    float2 dir = uv - center;
+    float offset = 0.002;
+    float r = sceneTex.sample(smp, uv + dir * offset).r;
+    float g = sceneTex.sample(smp, uv).g;
+    float b = sceneTex.sample(smp, uv - dir * offset).b;
+    float a = sceneTex.sample(smp, uv).a;
+    float4 sceneColor = float4(r, g, b, a);
+
+    // --- Additive bloom ---
+    float4 bloom = bloomTex.sample(smp, uv);
+    sceneColor.rgb += bloom.rgb * uniforms.bloomIntensity;
+
+    // --- CRT scanlines ---
+    float scanline = sin(uv.y * resolution.y * M_PI_F + uniforms.time * 2.0);
+    float scanlineFactor = clamp(scanline * uniforms.scanlineIntensity + (1.0 - uniforms.scanlineIntensity), 0.65, 1.0);
+    sceneColor.rgb *= scanlineFactor;
+
+    return sceneColor;
 }
