@@ -10,6 +10,7 @@ final class MetalView: UIView {
     private var engine: GameEngine!
     private var displayLink: CADisplayLink!
     private var lastTimestamp: CFTimeInterval = 0
+    private var touchInput: TouchInputProvider!
 
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -22,6 +23,8 @@ final class MetalView: UIView {
     }
 
     private func setup() {
+        isMultipleTouchEnabled = true
+
         guard let device = MTLCreateSystemDefaultDevice() else { return }
         metalLayer.device = device
         metalLayer.pixelFormat = .bgra8Unorm
@@ -29,8 +32,9 @@ final class MetalView: UIView {
         let renderer = try! Renderer(device: device)
         engine = GameEngine(renderer: renderer)
 
+        touchInput = TouchInputProvider()
         let scene = PlaceholderScene()
-        scene.inputProvider = TouchInputProvider()
+        scene.inputProvider = touchInput
 
         let audio = AVAudioManager()
         scene.audioProvider = audio
@@ -48,6 +52,32 @@ final class MetalView: UIView {
             width: bounds.width * scale,
             height: bounds.height * scale
         )
+
+        // Update touch provider with screen dimensions and button rects
+        touchInput.screenSize = bounds.size
+
+        let buttonW: CGFloat = 80
+        let buttonH: CGFloat = 80
+        let margin: CGFloat = 20
+        let rightEdge = bounds.width - margin
+
+        // Primary fire: larger, lower right
+        touchInput.primaryButtonRect = CGRect(
+            x: rightEdge - buttonW,
+            y: bounds.height - margin - buttonH,
+            width: buttonW,
+            height: buttonH
+        )
+
+        // Secondary fire: smaller, above primary
+        let secW: CGFloat = 60
+        let secH: CGFloat = 60
+        touchInput.secondaryButtonRect = CGRect(
+            x: rightEdge - secW - 10,
+            y: bounds.height - margin - buttonH - 20 - secH,
+            width: secW,
+            height: secH
+        )
     }
 
     @objc private func render(_ displayLink: CADisplayLink) {
@@ -58,5 +88,23 @@ final class MetalView: UIView {
 
         guard let drawable = metalLayer.nextDrawable() else { return }
         engine.render(to: drawable)
+    }
+
+    // MARK: - Touch forwarding
+
+    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+        touchInput.touchesBegan(touches, in: self)
+    }
+
+    override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
+        touchInput.touchesMoved(touches, in: self)
+    }
+
+    override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
+        touchInput.touchesEnded(touches, in: self)
+    }
+
+    override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?) {
+        touchInput.touchesCancelled(touches, in: self)
     }
 }
