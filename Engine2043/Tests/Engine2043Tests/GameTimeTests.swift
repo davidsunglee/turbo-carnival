@@ -54,4 +54,20 @@ struct GameTimeTests {
         #expect(MemoryLayout<PostProcessUniforms>.size == 16)
         #expect(MemoryLayout<PostProcessUniforms>.stride % 16 == 0)
     }
+
+    @Test func gameConfigHasGameplayConstants() {
+        #expect(GameConfig.Player.speed == 200)
+        #expect(GameConfig.Player.size == SIMD2<Float>(30, 30))
+        #expect(GameConfig.Player.health == Float(100))
+        #expect(GameConfig.Player.fireRate == 8.0)
+        #expect(GameConfig.Player.projectileSpeed == Float(500))
+        #expect(GameConfig.Enemy.tier1HP == Float(1))
+        #expect(GameConfig.Enemy.tier2HP == Float(2))
+        #expect(GameConfig.Enemy.tier3TurretHP == Float(3))
+        #expect(GameConfig.Enemy.bossHP == Float(30))
+        #expect(GameConfig.Score.tier1 == 10)
+        #expect(GameConfig.Score.tier2 == 50)
+        #expect(GameConfig.Score.tier3Turret == 100)
+        #expect(GameConfig.Score.boss == 500)
+    }
 }
