@@ -206,6 +206,86 @@ struct SpriteFactoryTests {
         #expect(hasVisiblePixels)
     }
 
+    // MARK: - HUD Sprites
+
+    @Test func makeHudBarFrameReturnsCorrectSize() {
+        let (pixels, width, height) = SpriteFactory.makeHudBarFrame()
+        #expect(width == 64)
+        #expect(height == 8)
+        #expect(pixels.count == 64 * 8 * 4)
+    }
+
+    @Test func makeHudBarFrameHasNonTransparentPixels() {
+        let (pixels, _, _) = SpriteFactory.makeHudBarFrame()
+        let hasVisiblePixels = stride(from: 3, to: pixels.count, by: 4).contains { pixels[$0] > 0 }
+        #expect(hasVisiblePixels)
+    }
+
+    @Test func makeHudBarFillReturnsCorrectSize() {
+        let (pixels, width, height) = SpriteFactory.makeHudBarFill()
+        #expect(width == 32)
+        #expect(height == 4)
+        #expect(pixels.count == 32 * 4 * 4)
+    }
+
+    @Test func makeHudBarFillHasNonTransparentPixels() {
+        let (pixels, _, _) = SpriteFactory.makeHudBarFill()
+        let hasVisiblePixels = stride(from: 3, to: pixels.count, by: 4).contains { pixels[$0] > 0 }
+        #expect(hasVisiblePixels)
+    }
+
+    @Test func makeHudChargePipReturnsCorrectSize() {
+        let (pixels, width, height) = SpriteFactory.makeHudChargePip()
+        #expect(width == 12)
+        #expect(height == 12)
+        #expect(pixels.count == 12 * 12 * 4)
+    }
+
+    @Test func makeHudChargePipHasNonTransparentPixels() {
+        let (pixels, _, _) = SpriteFactory.makeHudChargePip()
+        let hasVisiblePixels = stride(from: 3, to: pixels.count, by: 4).contains { pixels[$0] > 0 }
+        #expect(hasVisiblePixels)
+    }
+
+    @Test func makeHudWeaponIconReturnsCorrectSize() {
+        let (pixels, width, height) = SpriteFactory.makeHudWeaponIcon()
+        #expect(width == 16)
+        #expect(height == 8)
+        #expect(pixels.count == 16 * 8 * 4)
+    }
+
+    @Test func makeHudWeaponIconHasNonTransparentPixels() {
+        let (pixels, _, _) = SpriteFactory.makeHudWeaponIcon()
+        let hasVisiblePixels = stride(from: 3, to: pixels.count, by: 4).contains { pixels[$0] > 0 }
+        #expect(hasVisiblePixels)
+    }
+
+    @Test func makeHudHeatFrameReturnsCorrectSize() {
+        let (pixels, width, height) = SpriteFactory.makeHudHeatFrame()
+        #expect(width == 16)
+        #expect(height == 3)
+        #expect(pixels.count == 16 * 3 * 4)
+    }
+
+    @Test func makeHudHeatFrameHasNonTransparentPixels() {
+        let (pixels, _, _) = SpriteFactory.makeHudHeatFrame()
+        let hasVisiblePixels = stride(from: 3, to: pixels.count, by: 4).contains { pixels[$0] > 0 }
+        #expect(hasVisiblePixels)
+    }
+
+    @Test func makeHudHeatFillReturnsCorrectSize() {
+        let (pixels, width, height) = SpriteFactory.makeHudHeatFill()
+        #expect(width == 14)
+        #expect(height == 2)
+        #expect(pixels.count == 14 * 2 * 4)
+    }
+
+    @Test func makeHudHeatFillHasNonTransparentPixels() {
+        let (pixels, _, _) = SpriteFactory.makeHudHeatFill()
+        let hasVisiblePixels = stride(from: 3, to: pixels.count, by: 4).contains { pixels[$0] > 0 }
+        #expect(hasVisiblePixels)
+    }
+
     // MARK: - Atlas
 
     @Test func textureAtlasSpriteNames() {

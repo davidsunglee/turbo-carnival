@@ -843,4 +843,159 @@ public enum SpriteFactory {
 
         return (extractPixels(from: ctx, width: w, height: h), w, h)
     }
+
+    // MARK: - HUD Bar Frame (64x8)
+    // Rounded-rect border, cyan (#00ffd2) outline, transparent interior.
+
+    public static func makeHudBarFrame() -> (pixels: [UInt8], width: Int, height: Int) {
+        let w = 64, h = 8
+        guard let ctx = makeSoftContext(width: w, height: h) else {
+            return (Array(repeating: 0, count: w * h * 4), w, h)
+        }
+
+        let rect = CGRect(x: 1, y: 1, width: CGFloat(w) - 2, height: CGFloat(h) - 2)
+        let path = CGPath(roundedRect: rect, cornerWidth: 2, cornerHeight: 2, transform: nil)
+        ctx.setStrokeColor(cgColor(0, 255, 210, 200))
+        ctx.setLineWidth(1)
+        ctx.addPath(path)
+        ctx.strokePath()
+
+        return (extractPixels(from: ctx, width: w, height: h), w, h)
+    }
+
+    // MARK: - HUD Bar Fill (32x4)
+    // Horizontal gradient pill, player cyan.
+
+    public static func makeHudBarFill() -> (pixels: [UInt8], width: Int, height: Int) {
+        let w = 32, h = 4
+        guard let ctx = makeSoftContext(width: w, height: h) else {
+            return (Array(repeating: 0, count: w * h * 4), w, h)
+        }
+
+        let rect = CGRect(x: 0, y: 0, width: CGFloat(w), height: CGFloat(h))
+        let path = CGPath(roundedRect: rect, cornerWidth: 2, cornerHeight: 2, transform: nil)
+
+        // Gradient from bright left to slightly dimmer right
+        for x in 0..<w {
+            let t = CGFloat(x) / CGFloat(w)
+            let alpha = UInt8(min(255, Int((1.0 - t * 0.3) * 255)))
+            ctx.setFillColor(cgColor(0, 255, 210, alpha))
+            ctx.fill(CGRect(x: CGFloat(x), y: 0, width: 1, height: CGFloat(h)))
+        }
+
+        // Clip to rounded rect shape
+        ctx.setBlendMode(.destinationIn)
+        ctx.addPath(path)
+        ctx.fillPath()
+        ctx.setBlendMode(.normal)
+
+        return (extractPixels(from: ctx, width: w, height: h), w, h)
+    }
+
+    // MARK: - HUD Charge Pip (12x12)
+    // Small octagon, gold outline, dark fill, bright center dot.
+
+    public static func makeHudChargePip() -> (pixels: [UInt8], width: Int, height: Int) {
+        let w = 12, h = 12
+        guard let ctx = makeSoftContext(width: w, height: h) else {
+            return (Array(repeating: 0, count: w * h * 4), w, h)
+        }
+
+        let cx = CGFloat(w) / 2
+        let cy = CGFloat(h) / 2
+        let r: CGFloat = 4.5
+
+        var pts: [CGPoint] = []
+        for i in 0..<8 {
+            let angle = CGFloat(i) * .pi / 4
+            pts.append(CGPoint(x: cx + r * cos(angle), y: cy + r * sin(angle)))
+        }
+
+        // Dark fill
+        ctx.setFillColor(cgColor(40, 30, 10))
+        ctx.beginPath()
+        ctx.move(to: pts[0])
+        for pt in pts.dropFirst() { ctx.addLine(to: pt) }
+        ctx.closePath()
+        ctx.fillPath()
+
+        // Gold outline
+        ctx.setStrokeColor(cgColor(255, 218, 77))
+        ctx.setLineWidth(1.5)
+        ctx.beginPath()
+        ctx.move(to: pts[0])
+        for pt in pts.dropFirst() { ctx.addLine(to: pt) }
+        ctx.closePath()
+        ctx.strokePath()
+
+        // Bright center
+        ctx.setFillColor(cgColor(255, 240, 180))
+        ctx.fillEllipse(in: CGRect(x: cx - 1.5, y: cy - 1.5, width: 3, height: 3))
+
+        return (extractPixels(from: ctx, width: w, height: h), w, h)
+    }
+
+    // MARK: - HUD Weapon Icon (16x8)
+    // Small chevron pointing up, tinted per weapon type at runtime.
+
+    public static func makeHudWeaponIcon() -> (pixels: [UInt8], width: Int, height: Int) {
+        let w = 16, h = 8
+        guard let ctx = makeSoftContext(width: w, height: h) else {
+            return (Array(repeating: 0, count: w * h * 4), w, h)
+        }
+
+        let cx = CGFloat(w) / 2
+
+        // White chevron (will be tinted by RenderComponent.color at runtime)
+        ctx.setFillColor(cgColor(255, 255, 255))
+        ctx.beginPath()
+        ctx.move(to: CGPoint(x: cx, y: CGFloat(h) - 1))
+        ctx.addLine(to: CGPoint(x: 2, y: 2))
+        ctx.addLine(to: CGPoint(x: 4, y: 2))
+        ctx.addLine(to: CGPoint(x: cx, y: CGFloat(h) - 3))
+        ctx.addLine(to: CGPoint(x: CGFloat(w) - 4, y: 2))
+        ctx.addLine(to: CGPoint(x: CGFloat(w) - 2, y: 2))
+        ctx.closePath()
+        ctx.fillPath()
+
+        return (extractPixels(from: ctx, width: w, height: h), w, h)
+    }
+
+    // MARK: - HUD Heat Frame (16x3)
+    // Thin rounded-rect outline, neutral gray.
+
+    public static func makeHudHeatFrame() -> (pixels: [UInt8], width: Int, height: Int) {
+        let w = 16, h = 3
+        guard let ctx = makeSoftContext(width: w, height: h) else {
+            return (Array(repeating: 0, count: w * h * 4), w, h)
+        }
+
+        let rect = CGRect(x: 0.5, y: 0.5, width: CGFloat(w) - 1, height: CGFloat(h) - 1)
+        let path = CGPath(roundedRect: rect, cornerWidth: 1, cornerHeight: 1, transform: nil)
+        ctx.setStrokeColor(cgColor(150, 150, 150, 180))
+        ctx.setLineWidth(0.5)
+        ctx.addPath(path)
+        ctx.strokePath()
+
+        return (extractPixels(from: ctx, width: w, height: h), w, h)
+    }
+
+    // MARK: - HUD Heat Fill (14x2)
+    // Simple gradient pill, tinted green-to-red at runtime.
+
+    public static func makeHudHeatFill() -> (pixels: [UInt8], width: Int, height: Int) {
+        let w = 14, h = 2
+        guard let ctx = makeSoftContext(width: w, height: h) else {
+            return (Array(repeating: 0, count: w * h * 4), w, h)
+        }
+
+        // White fill (tinted at runtime)
+        ctx.setFillColor(cgColor(255, 255, 255))
+        let rect = CGRect(x: 0, y: 0, width: CGFloat(w), height: CGFloat(h))
+        let path = CGPath(roundedRect: rect, cornerWidth: 1, cornerHeight: 1, transform: nil)
+        ctx.addPath(path)
+        ctx.fillPath()
+
+        return (extractPixels(from: ctx, width: w, height: h), w, h)
+    }
 }
