@@ -124,6 +124,47 @@ struct SpriteFactoryTests {
         #expect(hasVisiblePixels)
     }
 
+    // MARK: - Pickup Sprites
+
+    @Test func makeEnergyDropReturnsCorrectSize() {
+        let (pixels, width, height) = SpriteFactory.makeEnergyDrop()
+        #expect(width == 16)
+        #expect(height == 16)
+        #expect(pixels.count == 16 * 16 * 4)
+    }
+
+    @Test func makeEnergyDropHasNonTransparentPixels() {
+        let (pixels, _, _) = SpriteFactory.makeEnergyDrop()
+        let hasVisiblePixels = stride(from: 3, to: pixels.count, by: 4).contains { pixels[$0] > 0 }
+        #expect(hasVisiblePixels)
+    }
+
+    @Test func makeChargeCellReturnsCorrectSize() {
+        let (pixels, width, height) = SpriteFactory.makeChargeCell()
+        #expect(width == 16)
+        #expect(height == 16)
+        #expect(pixels.count == 16 * 16 * 4)
+    }
+
+    @Test func makeChargeCellHasNonTransparentPixels() {
+        let (pixels, _, _) = SpriteFactory.makeChargeCell()
+        let hasVisiblePixels = stride(from: 3, to: pixels.count, by: 4).contains { pixels[$0] > 0 }
+        #expect(hasVisiblePixels)
+    }
+
+    @Test func makeWeaponModuleSpriteReturnsCorrectSize() {
+        let (pixels, width, height) = SpriteFactory.makeWeaponModuleSprite()
+        #expect(width == 20)
+        #expect(height == 20)
+        #expect(pixels.count == 20 * 20 * 4)
+    }
+
+    @Test func makeWeaponModuleSpriteHasNonTransparentPixels() {
+        let (pixels, _, _) = SpriteFactory.makeWeaponModuleSprite()
+        let hasVisiblePixels = stride(from: 3, to: pixels.count, by: 4).contains { pixels[$0] > 0 }
+        #expect(hasVisiblePixels)
+    }
+
     // MARK: - Atlas
 
     @Test func textureAtlasSpriteNames() {

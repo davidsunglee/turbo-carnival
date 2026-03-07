@@ -583,4 +583,139 @@ public enum SpriteFactory {
 
         return (extractPixels(from: ctx, width: w, height: h), w, h)
     }
+
+    // MARK: - Energy Drop (16x16)
+    // Lightning bolt silhouette, gold (#e0af68) fill, white highlight line.
+
+    public static func makeEnergyDrop() -> (pixels: [UInt8], width: Int, height: Int) {
+        let w = 16, h = 16
+        guard let ctx = makeContext(width: w, height: h) else {
+            return (Array(repeating: 0, count: w * h * 4), w, h)
+        }
+
+        // Lightning bolt shape
+        ctx.setFillColor(cgColor(224, 175, 104))
+        ctx.beginPath()
+        ctx.move(to: CGPoint(x: 9, y: 14))
+        ctx.addLine(to: CGPoint(x: 5, y: 14))
+        ctx.addLine(to: CGPoint(x: 8, y: 8))
+        ctx.addLine(to: CGPoint(x: 5, y: 8))
+        ctx.addLine(to: CGPoint(x: 10, y: 2))
+        ctx.addLine(to: CGPoint(x: 11, y: 2))
+        ctx.addLine(to: CGPoint(x: 8, y: 7))
+        ctx.addLine(to: CGPoint(x: 11, y: 7))
+        ctx.closePath()
+        ctx.fillPath()
+
+        // White highlight line down center
+        ctx.setStrokeColor(cgColor(255, 255, 255, 200))
+        ctx.setLineWidth(1)
+        ctx.beginPath()
+        ctx.move(to: CGPoint(x: 9, y: 13))
+        ctx.addLine(to: CGPoint(x: 7, y: 8))
+        ctx.addLine(to: CGPoint(x: 10, y: 3))
+        ctx.strokePath()
+
+        return (extractPixels(from: ctx, width: w, height: h), w, h)
+    }
+
+    // MARK: - Charge Cell (16x16)
+    // Hexagonal battery, purple (#9966ff) outline, segmented interior, bright core.
+
+    public static func makeChargeCell() -> (pixels: [UInt8], width: Int, height: Int) {
+        let w = 16, h = 16
+        guard let ctx = makeContext(width: w, height: h) else {
+            return (Array(repeating: 0, count: w * h * 4), w, h)
+        }
+
+        let cx = CGFloat(w) / 2
+        let cy = CGFloat(h) / 2
+
+        // Hexagon
+        let r: CGFloat = 6
+        var hexPts: [CGPoint] = []
+        for i in 0..<6 {
+            let angle = CGFloat(i) * .pi / 3 - .pi / 6
+            hexPts.append(CGPoint(x: cx + r * cos(angle), y: cy + r * sin(angle)))
+        }
+
+        // Dark purple fill
+        ctx.setFillColor(cgColor(30, 15, 60))
+        ctx.beginPath()
+        ctx.move(to: hexPts[0])
+        for pt in hexPts.dropFirst() { ctx.addLine(to: pt) }
+        ctx.closePath()
+        ctx.fillPath()
+
+        // Purple outline
+        ctx.setStrokeColor(cgColor(153, 102, 255))
+        ctx.setLineWidth(2)
+        ctx.beginPath()
+        ctx.move(to: hexPts[0])
+        for pt in hexPts.dropFirst() { ctx.addLine(to: pt) }
+        ctx.closePath()
+        ctx.strokePath()
+
+        // Segment lines
+        ctx.setStrokeColor(cgColor(80, 50, 140))
+        ctx.setLineWidth(1)
+        ctx.beginPath()
+        ctx.move(to: CGPoint(x: 4, y: cy - 1))
+        ctx.addLine(to: CGPoint(x: CGFloat(w) - 4, y: cy - 1))
+        ctx.move(to: CGPoint(x: 4, y: cy + 1))
+        ctx.addLine(to: CGPoint(x: CGFloat(w) - 4, y: cy + 1))
+        ctx.strokePath()
+
+        // Bright core
+        ctx.setFillColor(cgColor(200, 180, 255))
+        ctx.fillEllipse(in: CGRect(x: cx - 2, y: cy - 2, width: 4, height: 4))
+
+        return (extractPixels(from: ctx, width: w, height: h), w, h)
+    }
+
+    // MARK: - Weapon Module (20x20)
+    // Diamond frame with crosshair/plus inside, blue (#4d80ff) outline, darker fill.
+
+    public static func makeWeaponModuleSprite() -> (pixels: [UInt8], width: Int, height: Int) {
+        let w = 20, h = 20
+        guard let ctx = makeContext(width: w, height: h) else {
+            return (Array(repeating: 0, count: w * h * 4), w, h)
+        }
+
+        let cx = CGFloat(w) / 2
+        let cy = CGFloat(h) / 2
+
+        // Dark fill diamond
+        ctx.setFillColor(cgColor(15, 25, 60))
+        ctx.beginPath()
+        ctx.move(to: CGPoint(x: cx, y: CGFloat(h) - 2))
+        ctx.addLine(to: CGPoint(x: 2, y: cy))
+        ctx.addLine(to: CGPoint(x: cx, y: 2))
+        ctx.addLine(to: CGPoint(x: CGFloat(w) - 2, y: cy))
+        ctx.closePath()
+        ctx.fillPath()
+
+        // Blue outline diamond
+        ctx.setStrokeColor(cgColor(77, 128, 255))
+        ctx.setLineWidth(2)
+        ctx.beginPath()
+        ctx.move(to: CGPoint(x: cx, y: CGFloat(h) - 2))
+        ctx.addLine(to: CGPoint(x: 2, y: cy))
+        ctx.addLine(to: CGPoint(x: cx, y: 2))
+        ctx.addLine(to: CGPoint(x: CGFloat(w) - 2, y: cy))
+        ctx.closePath()
+        ctx.strokePath()
+
+        // Crosshair/plus inside
+        ctx.setStrokeColor(cgColor(120, 160, 255))
+        ctx.setLineWidth(1)
+        ctx.beginPath()
+        ctx.move(to: CGPoint(x: cx, y: cy - 4))
+        ctx.addLine(to: CGPoint(x: cx, y: cy + 4))
+        ctx.move(to: CGPoint(x: cx - 4, y: cy))
+        ctx.addLine(to: CGPoint(x: cx + 4, y: cy))
+        ctx.strokePath()
+
+        return (extractPixels(from: ctx, width: w, height: h), w, h)
+    }
 }
