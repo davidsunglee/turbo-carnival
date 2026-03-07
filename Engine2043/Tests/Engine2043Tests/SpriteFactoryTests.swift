@@ -21,4 +21,11 @@ struct SpriteFactoryTests {
         #expect(height == 32)
         #expect(pixels.count == 32 * 32 * 4)
     }
+
+    @Test func makeBruiserReturnsCorrectSize() {
+        let (pixels, width, height) = SpriteFactory.makeBruiser()
+        #expect(width == 40)
+        #expect(height == 40)
+        #expect(pixels.count == 40 * 40 * 4)
+    }
 }

@@ -126,4 +126,53 @@ public enum SpriteFactory {
 
         return (extractPixels(from: ctx, width: w, height: h), w, h)
     }
+
+    // MARK: - Tier 2 Bruiser (40x40)
+    // Hexagonal body. Blue-cyan (#6490c0) outline, thick edges, turret dots, bright core.
+
+    public static func makeBruiser() -> (pixels: [UInt8], width: Int, height: Int) {
+        let w = 40, h = 40
+        guard let ctx = makeContext(width: w, height: h) else {
+            return (Array(repeating: 0, count: w * h * 4), w, h)
+        }
+
+        let cx = CGFloat(w) / 2
+        let cy = CGFloat(h) / 2
+
+        // Hexagon vertices (flat-top orientation)
+        let r: CGFloat = 17
+        var hexPoints: [CGPoint] = []
+        for i in 0..<6 {
+            let angle = CGFloat(i) * .pi / 3 - .pi / 6
+            hexPoints.append(CGPoint(x: cx + r * cos(angle), y: cy + r * sin(angle)))
+        }
+
+        // Dark blue fill
+        ctx.setFillColor(cgColor(25, 40, 80))
+        ctx.beginPath()
+        ctx.move(to: hexPoints[0])
+        for pt in hexPoints.dropFirst() { ctx.addLine(to: pt) }
+        ctx.closePath()
+        ctx.fillPath()
+
+        // Blue-cyan outline (thick)
+        ctx.setStrokeColor(cgColor(100, 144, 192))
+        ctx.setLineWidth(3)
+        ctx.beginPath()
+        ctx.move(to: hexPoints[0])
+        for pt in hexPoints.dropFirst() { ctx.addLine(to: pt) }
+        ctx.closePath()
+        ctx.strokePath()
+
+        // Turret dots on sides
+        ctx.setFillColor(cgColor(160, 200, 240))
+        ctx.fillEllipse(in: CGRect(x: 4, y: cy - 2, width: 4, height: 4))
+        ctx.fillEllipse(in: CGRect(x: CGFloat(w) - 8, y: cy - 2, width: 4, height: 4))
+
+        // Bright core
+        ctx.setFillColor(cgColor(200, 230, 255))
+        ctx.fillEllipse(in: CGRect(x: cx - 3, y: cy - 3, width: 6, height: 6))
+
+        return (extractPixels(from: ctx, width: w, height: h), w, h)
+    }
 }
