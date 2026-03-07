@@ -315,7 +315,9 @@ public final class Galaxy1Scene: GameScene {
                 color: GameConfig.Palette.enemy
             ))
 
-            entity.addComponent(HealthComponent(health: GameConfig.Enemy.tier1HP))
+            let health1 = HealthComponent(health: GameConfig.Enemy.tier1HP)
+            health1.hasInvulnerabilityFrames = false
+            entity.addComponent(health1)
             entity.addComponent(ScoreComponent(points: GameConfig.Score.tier1))
 
             let formation = FormationComponent(pattern: wave.pattern, index: i, formationID: formationID)
@@ -353,7 +355,9 @@ public final class Galaxy1Scene: GameScene {
                 color: GameConfig.Palette.tier2Enemy
             ))
 
-            entity.addComponent(HealthComponent(health: GameConfig.Enemy.tier2HP))
+            let health2 = HealthComponent(health: GameConfig.Enemy.tier2HP)
+            health2.hasInvulnerabilityFrames = false
+            entity.addComponent(health2)
             entity.addComponent(ScoreComponent(points: GameConfig.Score.tier2))
 
             let steering = SteeringComponent(behavior: i % 2 == 0 ? .hover : .strafe)
@@ -415,7 +419,9 @@ public final class Galaxy1Scene: GameScene {
                 color: GameConfig.Palette.hostileProjectile
             ))
 
-            turret.addComponent(HealthComponent(health: GameConfig.Enemy.tier3TurretHP))
+            let turretHealth = HealthComponent(health: GameConfig.Enemy.tier3TurretHP)
+            turretHealth.hasInvulnerabilityFrames = false
+            turret.addComponent(turretHealth)
             turret.addComponent(ScoreComponent(points: GameConfig.Score.tier3Turret))
 
             let turretComp = TurretComponent(trackingSpeed: 1.5)
@@ -447,7 +453,9 @@ public final class Galaxy1Scene: GameScene {
             color: GameConfig.Palette.bossCore
         ))
 
-        boss.addComponent(HealthComponent(health: GameConfig.Enemy.bossHP))
+        let bossHealth = HealthComponent(health: GameConfig.Enemy.bossHP)
+        bossHealth.hasInvulnerabilityFrames = false
+        boss.addComponent(bossHealth)
         boss.addComponent(BossPhaseComponent(totalHP: GameConfig.Enemy.bossHP))
         boss.addComponent(ScoreComponent(points: GameConfig.Score.boss))
 

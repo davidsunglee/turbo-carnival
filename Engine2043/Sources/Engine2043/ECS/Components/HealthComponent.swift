@@ -5,6 +5,7 @@ public final class HealthComponent: GKComponent {
     public var maxHealth: Float = 100
     public var isInvulnerable: Bool = false
     public var invulnerabilityTimer: Double = 0
+    public var hasInvulnerabilityFrames: Bool = true
     public static let invulnerabilityDuration: Double = 0.5
 
     public override init() { super.init() }
@@ -20,6 +21,7 @@ public final class HealthComponent: GKComponent {
     public func takeDamage(_ amount: Float) {
         guard !isInvulnerable else { return }
         currentHealth = max(0, currentHealth - amount)
+        guard hasInvulnerabilityFrames else { return }
         isInvulnerable = true
         invulnerabilityTimer = Self.invulnerabilityDuration
     }
