@@ -47,6 +47,8 @@ public final class Galaxy1Scene: GameScene {
     private var gravBombEntities: [GKEntity] = []
     private var gravBombTimers: [ObjectIdentifier: Double] = [:]
     private var blastEffects: [(entity: GKEntity, timer: Double)] = []
+    private var slowMoTimer: Double = 0
+    private var isSlowMo: Bool = false
 
     // MARK: - World
     private let worldBounds = AABB(min: SIMD2(-200, -340), max: SIMD2(200, 340))
@@ -137,6 +139,14 @@ public final class Galaxy1Scene: GameScene {
     public func fixedUpdate(time: GameTime) {
         guard gameState == .playing else { return }
 
+        // Slow-mo from EMP Sweep
+        if isSlowMo {
+            slowMoTimer -= time.fixedDeltaTime
+            if slowMoTimer <= 0 {
+                isSlowMo = false
+            }
+        }
+
         handleInput()
 
         // Background and spawn director
@@ -154,14 +164,15 @@ public final class Galaxy1Scene: GameScene {
         formationSystem.update(deltaTime: time.fixedDeltaTime)
         steeringSystem.update(deltaTime: time.fixedDeltaTime)
 
-        // Turrets
-        updateTurrets(deltaTime: time.fixedDeltaTime)
+        // Turrets and boss projectiles paused during slow-mo
+        if !isSlowMo {
+            updateTurrets(deltaTime: time.fixedDeltaTime)
 
-        // Boss
-        bossSystem.playerPosition = playerPos
-        bossSystem.update(deltaTime: time.fixedDeltaTime)
-        for spawn in bossSystem.pendingProjectileSpawns {
-            spawnEnemyProjectile(position: spawn.position, velocity: spawn.velocity, damage: spawn.damage)
+            bossSystem.playerPosition = playerPos
+            bossSystem.update(deltaTime: time.fixedDeltaTime)
+            for spawn in bossSystem.pendingProjectileSpawns {
+                spawnEnemyProjectile(position: spawn.position, velocity: spawn.velocity, damage: spawn.damage)
+            }
         }
 
         // Check boss defeat
@@ -183,9 +194,21 @@ public final class Galaxy1Scene: GameScene {
             spawnPlayerProjectile(request)
         }
 
-        // Spawn grav-bombs
+        // Handle secondary weapon spawns
         for request in weaponSystem.pendingSecondarySpawns {
-            spawnGravBomb(position: request.position, velocity: request.velocity)
+            switch request.type {
+            case .gravBomb:
+                spawnGravBomb(position: request.position, velocity: request.velocity)
+            case .empSweep:
+                activateEMPSweep()
+            case .overcharge:
+                activateOvercharge()
+            }
+        }
+
+        // Process Phase Laser hitscans
+        for hitscan in weaponSystem.pendingLaserHitscans {
+            processLaserHitscan(hitscan)
         }
 
         // Update grav-bomb timers
@@ -260,6 +283,31 @@ public final class Galaxy1Scene: GameScene {
         }
 
         sprites.append(contentsOf: renderSystem.collectSprites())
+
+        // Phase Laser beam visual
+        if let weapon = player.component(ofType: WeaponComponent.self),
+           weapon.weaponType == .phaseLaser,
+           weapon.isLaserBurstActive,
+           let transform = player.component(ofType: TransformComponent.self) {
+            let beamHeight = GameConfig.designHeight / 2 + 50 - transform.position.y
+            sprites.append(SpriteInstance(
+                position: SIMD2(transform.position.x, transform.position.y + beamHeight / 2),
+                size: SIMD2(GameConfig.Weapon.laserWidth, beamHeight),
+                color: GameConfig.Palette.laserBeam
+            ))
+        }
+
+        // Overcharge visual
+        if let weapon = player.component(ofType: WeaponComponent.self),
+           weapon.overchargeActive,
+           let transform = player.component(ofType: TransformComponent.self) {
+            sprites.append(SpriteInstance(
+                position: transform.position,
+                size: GameConfig.Player.size * 1.5,
+                color: GameConfig.Palette.overchargeGlow
+            ))
+        }
+
         appendHUD(to: &sprites)
 
         if gameState == .gameOver {
@@ -282,7 +330,17 @@ public final class Galaxy1Scene: GameScene {
 
         if let weapon = player.component(ofType: WeaponComponent.self) {
             weapon.isFiring = input.primaryFire
-            weapon.isSecondaryFiring = input.secondaryFire
+
+            // Map secondary fire buttons — first pressed wins
+            if input.secondaryFire1 {
+                weapon.secondaryFiring = .gravBomb
+            } else if input.secondaryFire2 {
+                weapon.secondaryFiring = .empSweep
+            } else if input.secondaryFire3 {
+                weapon.secondaryFiring = .overcharge
+            } else {
+                weapon.secondaryFiring = nil
+            }
         }
 
         if let transform = player.component(ofType: TransformComponent.self) {
@@ -517,8 +575,17 @@ public final class Galaxy1Scene: GameScene {
         let entity = GKEntity()
         entity.addComponent(TransformComponent(position: request.position))
 
+        let weapon = player.component(ofType: WeaponComponent.self)
+        var projSize = GameConfig.Player.projectileSize
+        if weapon?.weaponType == .vulcanAutoGun {
+            projSize = GameConfig.Weapon.vulcanProjectileSize
+        }
+        if weapon?.overchargeActive == true {
+            projSize *= GameConfig.Weapon.overchargeHitboxScale
+        }
+
         let physics = PhysicsComponent(
-            collisionSize: GameConfig.Player.projectileSize,
+            collisionSize: projSize,
             layer: .playerProjectile,
             mask: [.enemy, .bossShield, .item]
         )
@@ -526,7 +593,7 @@ public final class Galaxy1Scene: GameScene {
         entity.addComponent(physics)
 
         entity.addComponent(RenderComponent(
-            size: GameConfig.Player.projectileSize,
+            size: projSize,
             color: SIMD4(1, 1, 1, 1)
         ))
 
@@ -692,6 +759,68 @@ public final class Galaxy1Scene: GameScene {
         blast.addComponent(blastPhysics)
         registerEntity(blast)
         blastEffects.append((entity: blast, timer: 0.15))
+    }
+
+    private func activateEMPSweep() {
+        // Cancel all enemy projectiles
+        for proj in enemyProjectiles {
+            pendingRemovals.append(proj)
+        }
+
+        // Visual flash
+        let flash = GKEntity()
+        flash.addComponent(TransformComponent(position: .zero))
+        flash.addComponent(RenderComponent(
+            size: SIMD2(GameConfig.designWidth, GameConfig.designHeight),
+            color: GameConfig.Palette.empFlash
+        ))
+        let flashPhysics = PhysicsComponent(collisionSize: .zero, layer: [], mask: [])
+        flash.addComponent(flashPhysics)
+        registerEntity(flash)
+        blastEffects.append((entity: flash, timer: 0.2))
+
+        // Start slow-mo
+        slowMoTimer = GameConfig.Weapon.empSlowMoDuration
+        isSlowMo = true
+    }
+
+    private func activateOvercharge() {
+        if let weapon = player.component(ofType: WeaponComponent.self) {
+            weapon.overchargeActive = true
+            weapon.overchargeTimer = GameConfig.Weapon.overchargeDuration
+        }
+    }
+
+    private func processLaserHitscan(_ hitscan: LaserHitscanRequest) {
+        let halfWidth = hitscan.width / 2
+        let laserMinX = hitscan.position.x - halfWidth
+        let laserMaxX = hitscan.position.x + halfWidth
+        let laserMinY = hitscan.position.y
+        let laserMaxY = GameConfig.designHeight / 2 + 50
+
+        for enemy in enemies {
+            guard let transform = enemy.component(ofType: TransformComponent.self),
+                  let health = enemy.component(ofType: HealthComponent.self),
+                  health.isAlive else { continue }
+
+            let size = enemy.component(ofType: RenderComponent.self)?.size ?? .zero
+            let enemyMinX = transform.position.x - size.x / 2
+            let enemyMaxX = transform.position.x + size.x / 2
+            let enemyMinY = transform.position.y - size.y / 2
+            let enemyMaxY = transform.position.y + size.y / 2
+
+            if laserMaxX >= enemyMinX && laserMinX <= enemyMaxX &&
+               laserMaxY >= enemyMinY && laserMinY <= enemyMaxY {
+                health.takeDamage(hitscan.damagePerTick)
+                if !health.isAlive {
+                    if let score = enemy.component(ofType: ScoreComponent.self) {
+                        scoreSystem.addScore(score.points)
+                    }
+                    pendingRemovals.append(enemy)
+                    checkFormationWipe(enemy: enemy)
+                }
+            }
+        }
     }
 
     // MARK: - Collisions
