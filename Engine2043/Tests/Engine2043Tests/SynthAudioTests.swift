@@ -2,6 +2,26 @@ import Testing
 @testable import Engine2043
 
 struct SynthAudioTests {
+    @Test @MainActor func synthEngineInitializesWithoutCrash() {
+        let engine = SynthAudioEngine()
+        #expect(engine.volume >= 0)
+    }
+
+    @Test @MainActor func synthEnginePlayDoesNotCrash() {
+        let engine = SynthAudioEngine()
+        engine.play(.doubleCannonFire)
+        engine.play(.enemyHit)
+        engine.play(.itemPickup)
+    }
+
+    @Test @MainActor func synthEngineVolumeClamps() {
+        let engine = SynthAudioEngine()
+        engine.volume = 1.5
+        #expect(engine.volume == 1.0)
+        engine.volume = -0.5
+        #expect(engine.volume == 0.0)
+    }
+
     @Test func sfxTypeHasAllExpectedCases() {
         let allCases = SFXType.allCases
         #expect(allCases.count == 9)
