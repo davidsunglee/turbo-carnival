@@ -1,9 +1,0 @@
-Target dependency graph (4 targets)
-Target 'Project2043-macOS' in project 'Project2043'
-➜ Explicit dependency on target 'Engine2043' in project 'Engine2043'
-Target 'Engine2043' in project 'Engine2043'
-➜ Explicit dependency on target 'Engine2043' in project 'Engine2043'
-➜ Explicit dependency on target 'Engine2043_Engine2043' in project 'Engine2043'
-Target 'Engine2043' in project 'Engine2043'
-➜ Explicit dependency on target 'Engine2043_Engine2043' in project 'Engine2043'
-Target 'Engine2043_Engine2043' in project 'Engine2043' (no dependencies)
