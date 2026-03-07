@@ -876,11 +876,14 @@ public final class Galaxy1Scene: GameScene {
                laserMaxY >= enemyMinY && laserMinY <= enemyMaxY {
                 health.takeDamage(hitscan.damagePerTick)
                 if !health.isAlive {
+                    sfx?.play(.enemyDestroyed)
                     if let score = enemy.component(ofType: ScoreComponent.self) {
                         scoreSystem.addScore(score.points)
                     }
                     pendingRemovals.append(enemy)
                     checkFormationWipe(enemy: enemy)
+                } else {
+                    sfx?.play(.enemyHit)
                 }
             }
         }
@@ -942,11 +945,14 @@ public final class Galaxy1Scene: GameScene {
         if let health = enemy.component(ofType: HealthComponent.self) {
             health.takeDamage(GameConfig.Player.damage)
             if !health.isAlive {
+                sfx?.play(.enemyDestroyed)
                 if let score = enemy.component(ofType: ScoreComponent.self) {
                     scoreSystem.addScore(score.points)
                 }
                 pendingRemovals.append(enemy)
                 checkFormationWipe(enemy: enemy)
+            } else {
+                sfx?.play(.enemyHit)
             }
         }
         pendingRemovals.append(projectile)
@@ -954,6 +960,7 @@ public final class Galaxy1Scene: GameScene {
 
     private func handlePlayerEnemyCollision(enemy: GKEntity) {
         player.component(ofType: HealthComponent.self)?.takeDamage(GameConfig.Player.collisionDamage)
+        sfx?.play(.playerDamaged)
         if let health = enemy.component(ofType: HealthComponent.self) {
             health.takeDamage(health.currentHealth)
             if !health.isAlive {
@@ -967,6 +974,7 @@ public final class Galaxy1Scene: GameScene {
 
     private func handlePlayerHitByProjectile(projectile: GKEntity) {
         player.component(ofType: HealthComponent.self)?.takeDamage(5)
+        sfx?.play(.playerDamaged)
         pendingRemovals.append(projectile)
     }
 
