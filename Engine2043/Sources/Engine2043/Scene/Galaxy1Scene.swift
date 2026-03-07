@@ -317,6 +317,45 @@ public final class Galaxy1Scene: GameScene {
             ))
         }
 
+        // Lightning Arc visuals
+        for arc in lightningArcSystem.activeArcs {
+            let segments = 4
+            var points: [SIMD2<Float>] = [arc.from]
+            for i in 1..<segments {
+                let t = Float(i) / Float(segments)
+                let mid = arc.from + (arc.to - arc.from) * t
+                let jitter = SIMD2<Float>(Float.random(in: -6...6), Float.random(in: -6...6))
+                points.append(mid + jitter)
+            }
+            points.append(arc.to)
+
+            let alpha = 0.6 + arc.damageMultiplier * 0.4
+            for i in 0..<points.count - 1 {
+                let from = points[i]
+                let to = points[i + 1]
+                let diff = to - from
+                let length = simd_length(diff)
+                guard length > 0 else { continue }
+                let midpoint = (from + to) / 2
+                let angle = atan2(diff.x, diff.y)
+
+                // Outer glow (cyan)
+                sprites.append(SpriteInstance(
+                    position: midpoint,
+                    size: SIMD2(3, length),
+                    color: SIMD4<Float>(0.3, 0.6, 1.0, alpha * 0.5),
+                    rotation: -angle
+                ))
+                // Inner core (white-blue)
+                sprites.append(SpriteInstance(
+                    position: midpoint,
+                    size: SIMD2(1, length),
+                    color: SIMD4<Float>(0.8, 0.9, 1.0, alpha),
+                    rotation: -angle
+                ))
+            }
+        }
+
         if gameState == .gameOver {
             appendGameOverOverlay(to: &sprites)
         } else if gameState == .victory {
