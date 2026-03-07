@@ -100,8 +100,8 @@ public final class WeaponSystem {
                 // Standard projectile weapons
                 weapon.timeSinceLastShot += time.fixedDeltaTime
                 var effectiveFireRate = weapon.fireRate
-                if weapon.weaponType == .vulcanAutoGun {
-                    effectiveFireRate *= GameConfig.Weapon.vulcanFireRateMultiplier
+                if weapon.weaponType == .lightningArc {
+                    effectiveFireRate = GameConfig.Weapon.lightningArcTickRate
                 }
                 if weapon.overchargeActive {
                     effectiveFireRate *= GameConfig.Weapon.overchargeFireRateMultiplier
@@ -187,12 +187,10 @@ public final class WeaponSystem {
                 damage: damage
             ))
 
-        case .vulcanAutoGun:
-            pendingSpawns.append(ProjectileSpawnRequest(
-                position: position,
-                velocity: SIMD2(0, weapon.projectileSpeed * direction),
-                damage: GameConfig.Weapon.vulcanDamage
-            ))
+        case .lightningArc:
+            // Lightning arc uses hitscan-style targeting, not projectiles.
+            // Primary target acquisition and chain logic handled by LightningArcSystem.
+            break
 
         case .phaseLaser:
             break // Handled via hitscan, not projectiles
