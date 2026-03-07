@@ -74,10 +74,12 @@ public final class Galaxy1Scene: GameScene {
         )
         player.addComponent(physics)
 
-        player.addComponent(RenderComponent(
+        let playerRender = RenderComponent(
             size: GameConfig.Player.size,
-            color: GameConfig.Palette.player
-        ))
+            color: SIMD4(1, 1, 1, 1)
+        )
+        playerRender.spriteId = "player"
+        player.addComponent(playerRender)
 
         player.addComponent(HealthComponent(health: GameConfig.Player.health))
 
@@ -271,23 +273,25 @@ public final class Galaxy1Scene: GameScene {
         }
     }
 
-    public func collectSprites() -> [SpriteInstance] {
+    public func collectSprites(atlas: TextureAtlas?) -> [SpriteInstance] {
         var sprites = backgroundSystem.collectSprites()
 
         // Capital ship hulls render behind gameplay entities
         for hull in capitalShipHulls {
             if let transform = hull.component(ofType: TransformComponent.self),
                let render = hull.component(ofType: RenderComponent.self) {
+                let uv = atlas?.uvRect(for: render.spriteId) ?? SIMD4<Float>(0, 0, 1, 1)
                 sprites.append(SpriteInstance(
                     position: transform.position,
                     size: render.size,
                     color: render.color,
-                    rotation: transform.rotation
+                    rotation: transform.rotation,
+                    uvRect: uv
                 ))
             }
         }
 
-        sprites.append(contentsOf: renderSystem.collectSprites())
+        sprites.append(contentsOf: renderSystem.collectSprites(atlas: atlas))
 
         // Phase Laser beam visual
         if let weapon = player.component(ofType: WeaponComponent.self),
@@ -410,10 +414,12 @@ public final class Galaxy1Scene: GameScene {
             )
             entity.addComponent(physics)
 
-            entity.addComponent(RenderComponent(
+            let tier1Render = RenderComponent(
                 size: GameConfig.Enemy.tier1Size,
-                color: GameConfig.Palette.enemy
-            ))
+                color: SIMD4(1, 1, 1, 1)
+            )
+            tier1Render.spriteId = "swarmer"
+            entity.addComponent(tier1Render)
 
             let health1 = HealthComponent(health: GameConfig.Enemy.tier1HP)
             health1.hasInvulnerabilityFrames = false
@@ -450,10 +456,12 @@ public final class Galaxy1Scene: GameScene {
             physics.velocity = SIMD2(0, -GameConfig.Enemy.tier2Speed)
             entity.addComponent(physics)
 
-            entity.addComponent(RenderComponent(
+            let tier2Render = RenderComponent(
                 size: GameConfig.Enemy.tier2Size,
-                color: GameConfig.Palette.tier2Enemy
-            ))
+                color: SIMD4(1, 1, 1, 1)
+            )
+            tier2Render.spriteId = "bruiser"
+            entity.addComponent(tier2Render)
 
             let health2 = HealthComponent(health: GameConfig.Enemy.tier2HP)
             health2.hasInvulnerabilityFrames = false
@@ -479,10 +487,12 @@ public final class Galaxy1Scene: GameScene {
     private func spawnCapitalShip(wave: WaveDefinition) {
         let hull = GKEntity()
         hull.addComponent(TransformComponent(position: SIMD2(0, wave.spawnY + 100)))
-        hull.addComponent(RenderComponent(
+        let hullRender = RenderComponent(
             size: GameConfig.Enemy.tier3HullSize,
-            color: GameConfig.Palette.capitalShipHull
-        ))
+            color: SIMD4(1, 1, 1, 1)
+        )
+        hullRender.spriteId = "capitalHull"
+        hull.addComponent(hullRender)
         let hullPhysics = PhysicsComponent(collisionSize: .zero, layer: [], mask: [])
         hullPhysics.velocity = SIMD2(0, -GameConfig.Background.starScrollSpeed * GameConfig.Enemy.tier3ScrollMultiplier)
         hull.addComponent(hullPhysics)
@@ -515,10 +525,12 @@ public final class Galaxy1Scene: GameScene {
             turretPhysics.velocity = SIMD2(0, -GameConfig.Background.starScrollSpeed * GameConfig.Enemy.tier3ScrollMultiplier)
             turret.addComponent(turretPhysics)
 
-            turret.addComponent(RenderComponent(
+            let turretRender = RenderComponent(
                 size: GameConfig.Enemy.tier3TurretSize,
-                color: GameConfig.Palette.turret
-            ))
+                color: SIMD4(1, 1, 1, 1)
+            )
+            turretRender.spriteId = "turret"
+            turret.addComponent(turretRender)
 
             let turretHealth = HealthComponent(health: GameConfig.Enemy.tier3TurretHP)
             turretHealth.hasInvulnerabilityFrames = false
@@ -549,10 +561,12 @@ public final class Galaxy1Scene: GameScene {
         )
         boss.addComponent(physics)
 
-        boss.addComponent(RenderComponent(
+        let bossRender = RenderComponent(
             size: GameConfig.Enemy.bossSize,
-            color: GameConfig.Palette.bossCore
-        ))
+            color: SIMD4(1, 1, 1, 1)
+        )
+        bossRender.spriteId = "bossCore"
+        boss.addComponent(bossRender)
 
         let bossHealth = HealthComponent(health: GameConfig.Enemy.bossHP)
         bossHealth.hasInvulnerabilityFrames = false
@@ -571,10 +585,12 @@ public final class Galaxy1Scene: GameScene {
             shield.addComponent(TransformComponent(
                 position: SIMD2(cos(angle) * 60, 250 + sin(angle) * 60)
             ))
-            shield.addComponent(RenderComponent(
+            let shieldRender = RenderComponent(
                 size: SIMD2(40, 12),
-                color: GameConfig.Palette.bossShield
-            ))
+                color: SIMD4(1, 1, 1, 1)
+            )
+            shieldRender.spriteId = "bossShield"
+            shield.addComponent(shieldRender)
             let shieldPhysics = PhysicsComponent(
                 collisionSize: SIMD2(40, 12),
                 layer: .bossShield,

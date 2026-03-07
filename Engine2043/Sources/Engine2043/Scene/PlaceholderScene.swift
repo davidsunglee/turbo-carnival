@@ -201,8 +201,8 @@ public final class PlaceholderScene: GameScene {
         }
     }
 
-    public func collectSprites() -> [SpriteInstance] {
-        var sprites = renderSystem.collectSprites()
+    public func collectSprites(atlas: TextureAtlas?) -> [SpriteInstance] {
+        var sprites = renderSystem.collectSprites(atlas: atlas)
 
         // HUD: energy bar background
         sprites.append(SpriteInstance(
