@@ -55,7 +55,7 @@ public final class ItemSystem {
                 switch item.displayedWeapon {
                 case .doubleCannon: render.color = GameConfig.Palette.weaponDoubleCannon
                 case .triSpread: render.color = GameConfig.Palette.weaponTriSpread
-                case .vulcanAutoGun: render.color = GameConfig.Palette.weaponVulcan
+                case .lightningArc: render.color = GameConfig.Palette.weaponLightningArc
                 case .phaseLaser: render.color = GameConfig.Palette.weaponPhaseLaser
                 }
             } else {
