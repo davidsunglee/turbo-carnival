@@ -47,7 +47,7 @@ public final class SynthAudioEngine {
     // Rate limiting: last play time per SFX type
     private var lastPlayTime: [SFXType: CFTimeInterval] = [:]
     private var cooldowns: [SFXType: CFTimeInterval] = [
-        .vulcanFire: 0.06,
+        .lightningArcZap: 0.08,
         .bossShieldDeflect: 0.08
     ]
 
@@ -107,7 +107,14 @@ public final class SynthAudioEngine {
     private func synthesizeAllBuffers() {
         buffers[.doubleCannonFire] = synthesize(duration: 0.08, generator: squareSweep(from: 440, to: 220))
         buffers[.triSpreadFire] = synthesize(duration: 0.10, generator: mixedSweep(square: (330, 165), noiseMix: 0.3))
-        buffers[.vulcanFire] = synthesize(duration: 0.04, generator: sawtoothSweep(from: 880, to: 660))
+        buffers[.lightningArcZap] = synthesize(duration: 0.06, generator: { t, progress in
+            // White noise burst with resonant filter for electric crackle
+            let noise = Float.random(in: -1...1)
+            let freq: Float = 1200 - 600 * progress
+            let resonance = sin(freq * t * .pi * 2) * 0.3
+            let envelope = 1.0 - progress * 0.7
+            return (noise * 0.6 + resonance) * envelope
+        })
         buffers[.enemyHit] = synthesize(duration: 0.03, generator: noiseBurst())
         buffers[.enemyDestroyed] = synthesize(duration: 0.20, generator: explosion(squareFrom: 200, squareTo: 50))
         buffers[.playerDamaged] = synthesize(duration: 0.15, generator: squareSweep(from: 100, to: 60))

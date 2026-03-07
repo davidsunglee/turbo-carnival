@@ -199,6 +199,9 @@ public final class Galaxy1Scene: GameScene {
 
         // Lightning Arc
         lightningArcSystem.update(deltaTime: time.fixedDeltaTime)
+        if !lightningArcSystem.pendingDamage.isEmpty {
+            sfx?.play(.lightningArcZap)
+        }
         for (entity, damage) in lightningArcSystem.pendingDamage {
             if let health = entity.component(ofType: HealthComponent.self) {
                 health.currentHealth -= damage
