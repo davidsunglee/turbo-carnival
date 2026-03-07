@@ -5,6 +5,7 @@ public final class RenderComponent: GKComponent {
     public var size: SIMD2<Float> = SIMD2(32, 32)
     public var color: SIMD4<Float> = SIMD4(1, 1, 1, 1)
     public var isVisible: Bool = true
+    public var spriteId: String?
 
     public override init() { super.init() }
 
