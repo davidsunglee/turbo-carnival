@@ -117,6 +117,9 @@ public final class SynthAudioEngine {
         buffers[.gravBombDetonate] = synthesize(duration: 0.30, generator: explosion(squareFrom: 150, squareTo: 30))
         buffers[.empSweep] = synthesize(duration: 0.25, generator: empZap())
         buffers[.overchargeActivate] = synthesize(duration: 0.15, generator: sineChord(freqs: [330, 440, 660]))
+        buffers[.bossShieldDeflect] = synthesize(duration: 0.04, generator: squareSweep(from: 1200, to: 1400))
+        buffers[.playerDeath] = synthesize(duration: 0.50, generator: deathGroan())
+        buffers[.victory] = synthesize(duration: 0.60, generator: sineChord(freqs: [440, 550, 660, 880]))
     }
 
     private func synthesize(duration: Double, generator: (Float, Float) -> Float) -> AVAudioPCMBuffer {
@@ -199,6 +202,14 @@ public final class SynthAudioEngine {
         let noise = noiseBurst()
         return { t, progress in
             sweep(t, progress) * 0.6 + noise(t, progress) * 0.4
+        }
+    }
+
+    private func deathGroan() -> (Float, Float) -> Float {
+        let sq = squareSweep(from: 200, to: 40)
+        let noise = noiseBurst()
+        return { t, progress in
+            sq(t, progress) * 0.5 + noise(t, progress) * 0.5
         }
     }
 
