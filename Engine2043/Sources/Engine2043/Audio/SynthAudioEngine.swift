@@ -113,6 +113,10 @@ public final class SynthAudioEngine {
         buffers[.itemSpawn] = synthesize(duration: 0.12, generator: sineSweep(from: 660, to: 880))
         buffers[.itemCycle] = synthesize(duration: 0.06, generator: sineSweep(from: 440, to: 550))
         buffers[.itemPickup] = synthesize(duration: 0.20, generator: sineChord(freqs: [440, 660, 880]))
+        buffers[.gravBombLaunch] = synthesize(duration: 0.10, generator: sineSweep(from: 300, to: 100))
+        buffers[.gravBombDetonate] = synthesize(duration: 0.30, generator: explosion(squareFrom: 150, squareTo: 30))
+        buffers[.empSweep] = synthesize(duration: 0.25, generator: empZap())
+        buffers[.overchargeActivate] = synthesize(duration: 0.15, generator: sineChord(freqs: [330, 440, 660]))
     }
 
     private func synthesize(duration: Double, generator: (Float, Float) -> Float) -> AVAudioPCMBuffer {
@@ -187,6 +191,14 @@ public final class SynthAudioEngine {
         let noise = noiseBurst()
         return { t, progress in
             sq(t, progress) * 0.4 + noise(t, progress) * 0.6
+        }
+    }
+
+    private func empZap() -> (Float, Float) -> Float {
+        let sweep = sineSweep(from: 200, to: 2000)
+        let noise = noiseBurst()
+        return { t, progress in
+            sweep(t, progress) * 0.6 + noise(t, progress) * 0.4
         }
     }
 
