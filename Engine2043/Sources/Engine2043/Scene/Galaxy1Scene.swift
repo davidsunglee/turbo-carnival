@@ -182,6 +182,8 @@ public final class Galaxy1Scene: GameScene {
            bossPhase.isDefeated {
             gameState = .victory
             scoreSystem.addScore(GameConfig.Score.boss)
+            sfx?.play(.victory)
+            sfx?.stopLaser()
         }
 
         // Physics
@@ -241,6 +243,8 @@ public final class Galaxy1Scene: GameScene {
         // Check game over
         if let health = player.component(ofType: HealthComponent.self), !health.isAlive {
             gameState = .gameOver
+            sfx?.play(.playerDeath)
+            sfx?.stopLaser()
         }
 
         // Capital ship hull updates
@@ -924,8 +928,10 @@ public final class Galaxy1Scene: GameScene {
                 handleProjectileHitEnemy(projectile: entityB, enemy: entityA)
             } else if layerA.contains(.playerProjectile) && layerB.contains(.bossShield) {
                 pendingRemovals.append(entityA)
+                sfx?.play(.bossShieldDeflect)
             } else if layerB.contains(.playerProjectile) && layerA.contains(.bossShield) {
                 pendingRemovals.append(entityB)
+                sfx?.play(.bossShieldDeflect)
             } else if layerA.contains(.playerProjectile) && layerB.contains(.item) {
                 itemSystem.handleProjectileHit(on: entityB)
                 sfx?.play(.itemCycle)
