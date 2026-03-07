@@ -39,6 +39,23 @@ public enum SpriteFactory {
         )
     }
 
+    static func makeSoftContext(width: Int, height: Int) -> CGContext? {
+        let colorSpace = CGColorSpaceCreateDeviceRGB()
+        guard let ctx = CGContext(
+            data: nil,
+            width: width,
+            height: height,
+            bitsPerComponent: 8,
+            bytesPerRow: width * 4,
+            space: colorSpace,
+            bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+        ) else { return nil }
+        ctx.setShouldAntialias(true)
+        ctx.setAllowsAntialiasing(true)
+        ctx.interpolationQuality = .high
+        return ctx
+    }
+
     // MARK: - Player Ship (48x48)
     // Diamond/chevron pointing up. Cyan (#00ffd2) outline, dark interior, bright core, engine glow.
 
@@ -715,6 +732,114 @@ public enum SpriteFactory {
         ctx.move(to: CGPoint(x: cx - 4, y: cy))
         ctx.addLine(to: CGPoint(x: cx + 4, y: cy))
         ctx.strokePath()
+
+        return (extractPixels(from: ctx, width: w, height: h), w, h)
+    }
+
+    // MARK: - Grav Bomb Blast (128x128)
+    // Radial gradient ring — gold-white center fading to transparent gold. Hollow center.
+
+    public static func makeGravBombBlast() -> (pixels: [UInt8], width: Int, height: Int) {
+        let w = 128, h = 128
+        guard let ctx = makeSoftContext(width: w, height: h) else {
+            return (Array(repeating: 0, count: w * h * 4), w, h)
+        }
+
+        let cx = CGFloat(w) / 2
+        let cy = CGFloat(h) / 2
+
+        // Draw radial gradient ring manually with concentric circles
+        let maxR: CGFloat = 60
+        let minR: CGFloat = 20
+        let steps = 40
+        for i in 0..<steps {
+            let t = CGFloat(i) / CGFloat(steps)
+            let r = maxR - t * (maxR - minR)
+            let alpha = UInt8(min(255, Int((1.0 - t) * 0.6 * 255)))
+            let green = UInt8(min(255, 218 + Int(t * 37)))
+            ctx.setFillColor(cgColor(255, green, UInt8(min(255, 77 + Int(t * 103))), alpha))
+            ctx.fillEllipse(in: CGRect(x: cx - r, y: cy - r, width: r * 2, height: r * 2))
+        }
+
+        // Hollow center — clear inner circle
+        ctx.setBlendMode(.clear)
+        ctx.fillEllipse(in: CGRect(x: cx - minR + 4, y: cy - minR + 4,
+                                    width: (minR - 4) * 2, height: (minR - 4) * 2))
+        ctx.setBlendMode(.normal)
+
+        // Bright ring at inner edge
+        ctx.setStrokeColor(cgColor(255, 255, 230, 200))
+        ctx.setLineWidth(2)
+        ctx.strokeEllipse(in: CGRect(x: cx - minR + 3, y: cy - minR + 3,
+                                      width: (minR - 3) * 2, height: (minR - 3) * 2))
+
+        return (extractPixels(from: ctx, width: w, height: h), w, h)
+    }
+
+    // MARK: - EMP Flash (128x128)
+    // Full radial gradient — cyan-white center fading to transparent blue.
+
+    public static func makeEmpFlash() -> (pixels: [UInt8], width: Int, height: Int) {
+        let w = 128, h = 128
+        guard let ctx = makeSoftContext(width: w, height: h) else {
+            return (Array(repeating: 0, count: w * h * 4), w, h)
+        }
+
+        let cx = CGFloat(w) / 2
+        let cy = CGFloat(h) / 2
+
+        // Radial gradient from bright center to transparent edge
+        let maxR: CGFloat = 60
+        let steps = 50
+        for i in (0..<steps).reversed() {
+            let t = CGFloat(i) / CGFloat(steps)
+            let r = maxR * (1.0 - t)
+            let alpha = UInt8(min(255, Int(t * 0.5 * 255)))
+            let red = UInt8(min(255, Int(128 * t + 80 * (1.0 - t))))
+            let green = UInt8(min(255, Int(178 * t + 120 * (1.0 - t))))
+            ctx.setFillColor(cgColor(red, green, 255, alpha))
+            ctx.fillEllipse(in: CGRect(x: cx - r, y: cy - r, width: r * 2, height: r * 2))
+        }
+
+        // Bright white center
+        ctx.setFillColor(cgColor(220, 240, 255, 180))
+        ctx.fillEllipse(in: CGRect(x: cx - 8, y: cy - 8, width: 16, height: 16))
+
+        return (extractPixels(from: ctx, width: w, height: h), w, h)
+    }
+
+    // MARK: - Overcharge Glow (64x64)
+    // Soft diamond/star shape — orange-yellow center with transparent falloff.
+
+    public static func makeOverchargeGlow() -> (pixels: [UInt8], width: Int, height: Int) {
+        let w = 64, h = 64
+        guard let ctx = makeSoftContext(width: w, height: h) else {
+            return (Array(repeating: 0, count: w * h * 4), w, h)
+        }
+
+        let cx = CGFloat(w) / 2
+        let cy = CGFloat(h) / 2
+
+        // Layered diamond shapes from outer (transparent) to inner (bright)
+        let layers = 8
+        for i in (0..<layers).reversed() {
+            let t = CGFloat(i) / CGFloat(layers)
+            let size = 28 * (1.0 - t) + 4
+            let alpha = UInt8(min(255, Int(t * 0.8 * 255)))
+            let green = UInt8(min(255, Int(153 * t + 100 * (1.0 - t))))
+            ctx.setFillColor(cgColor(255, green, 0, alpha))
+            ctx.beginPath()
+            ctx.move(to: CGPoint(x: cx, y: cy + size))
+            ctx.addLine(to: CGPoint(x: cx - size * 0.6, y: cy))
+            ctx.addLine(to: CGPoint(x: cx, y: cy - size))
+            ctx.addLine(to: CGPoint(x: cx + size * 0.6, y: cy))
+            ctx.closePath()
+            ctx.fillPath()
+        }
+
+        // Bright center
+        ctx.setFillColor(cgColor(255, 230, 150, 220))
+        ctx.fillEllipse(in: CGRect(x: cx - 4, y: cy - 4, width: 8, height: 8))
 
         return (extractPixels(from: ctx, width: w, height: h), w, h)
     }

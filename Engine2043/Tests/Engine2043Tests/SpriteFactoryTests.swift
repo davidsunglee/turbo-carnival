@@ -165,6 +165,47 @@ struct SpriteFactoryTests {
         #expect(hasVisiblePixels)
     }
 
+    // MARK: - Effect Sprites
+
+    @Test func makeGravBombBlastReturnsCorrectSize() {
+        let (pixels, width, height) = SpriteFactory.makeGravBombBlast()
+        #expect(width == 128)
+        #expect(height == 128)
+        #expect(pixels.count == 128 * 128 * 4)
+    }
+
+    @Test func makeGravBombBlastHasNonTransparentPixels() {
+        let (pixels, _, _) = SpriteFactory.makeGravBombBlast()
+        let hasVisiblePixels = stride(from: 3, to: pixels.count, by: 4).contains { pixels[$0] > 0 }
+        #expect(hasVisiblePixels)
+    }
+
+    @Test func makeEmpFlashReturnsCorrectSize() {
+        let (pixels, width, height) = SpriteFactory.makeEmpFlash()
+        #expect(width == 128)
+        #expect(height == 128)
+        #expect(pixels.count == 128 * 128 * 4)
+    }
+
+    @Test func makeEmpFlashHasNonTransparentPixels() {
+        let (pixels, _, _) = SpriteFactory.makeEmpFlash()
+        let hasVisiblePixels = stride(from: 3, to: pixels.count, by: 4).contains { pixels[$0] > 0 }
+        #expect(hasVisiblePixels)
+    }
+
+    @Test func makeOverchargeGlowReturnsCorrectSize() {
+        let (pixels, width, height) = SpriteFactory.makeOverchargeGlow()
+        #expect(width == 64)
+        #expect(height == 64)
+        #expect(pixels.count == 64 * 64 * 4)
+    }
+
+    @Test func makeOverchargeGlowHasNonTransparentPixels() {
+        let (pixels, _, _) = SpriteFactory.makeOverchargeGlow()
+        let hasVisiblePixels = stride(from: 3, to: pixels.count, by: 4).contains { pixels[$0] > 0 }
+        #expect(hasVisiblePixels)
+    }
+
     // MARK: - Atlas
 
     @Test func textureAtlasSpriteNames() {
