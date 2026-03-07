@@ -85,15 +85,15 @@ struct SpriteFactoryTests {
         #expect(hasVisiblePixels)
     }
 
-    @Test func makeVulcanBulletReturnsCorrectSize() {
-        let (pixels, width, height) = SpriteFactory.makeVulcanBullet()
-        #expect(width == 4)
+    @Test func makeLightningArcIconReturnsCorrectSize() {
+        let (pixels, width, height) = SpriteFactory.makeLightningArcIcon()
+        #expect(width == 8)
         #expect(height == 8)
-        #expect(pixels.count == 4 * 8 * 4)
+        #expect(pixels.count == 8 * 8 * 4)
     }
 
-    @Test func makeVulcanBulletHasNonTransparentPixels() {
-        let (pixels, _, _) = SpriteFactory.makeVulcanBullet()
+    @Test func makeLightningArcIconHasNonTransparentPixels() {
+        let (pixels, _, _) = SpriteFactory.makeLightningArcIcon()
         let hasVisiblePixels = stride(from: 3, to: pixels.count, by: 4).contains { pixels[$0] > 0 }
         #expect(hasVisiblePixels)
     }
@@ -316,7 +316,7 @@ struct SpriteFactoryTests {
         let names = TextureAtlas.spriteNames
         #expect(names.contains("playerBullet"))
         #expect(names.contains("triSpreadBullet"))
-        #expect(names.contains("vulcanBullet"))
+        #expect(names.contains("lightningArcIcon"))
         #expect(names.contains("enemyBullet"))
         #expect(names.contains("gravBombSprite"))
         #expect(names.contains("energyDrop"))

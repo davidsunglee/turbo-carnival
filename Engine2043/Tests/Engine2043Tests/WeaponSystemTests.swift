@@ -76,6 +76,27 @@ struct WeaponSystemTests {
         #expect(weapon.secondaryCharges == 0)
     }
 
+    @Test @MainActor func lightningArcDoesNotSpawnProjectiles() {
+        let system = WeaponSystem()
+
+        let entity = GKEntity()
+        entity.addComponent(TransformComponent(position: SIMD2(0, 0)))
+        let weapon = WeaponComponent(fireRate: 4, damage: 1, projectileSpeed: 500)
+        weapon.weaponType = .lightningArc
+        weapon.isFiring = true
+        weapon.timeSinceLastShot = 1.0
+        entity.addComponent(weapon)
+
+        system.register(entity)
+
+        var time = GameTime()
+        time.advance(by: 1.0 / 60.0)
+        _ = time.shouldPerformFixedUpdate()
+        system.update(time: time)
+
+        #expect(system.pendingSpawns.isEmpty, "Lightning Arc should not create projectile spawns")
+    }
+
     @Test @MainActor func weaponSystemEnemyFiresDownward() {
         let system = WeaponSystem()
 
