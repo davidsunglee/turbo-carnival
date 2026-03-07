@@ -1041,8 +1041,9 @@ public final class Galaxy1Scene: GameScene {
             color: SIMD4(1, 1, 1, 0.8)
         ))
 
-        // Grav-bomb charges
-        let charges = player.component(ofType: WeaponComponent.self)?.secondaryCharges ?? 0
+        // Secondary charges (bottom-right)
+        let weapon = player.component(ofType: WeaponComponent.self)
+        let charges = weapon?.secondaryCharges ?? 0
         for i in 0..<charges {
             sprites.append(SpriteInstance(
                 position: SIMD2(140 - Float(i) * 14, -GameConfig.designHeight / 2 + 20),
@@ -1051,14 +1052,52 @@ public final class Galaxy1Scene: GameScene {
             ))
         }
 
-        // Weapon indicator
-        let weaponType = player.component(ofType: WeaponComponent.self)?.weaponType ?? .doubleCannon
-        let weaponColor: SIMD4<Float> = weaponType == .triSpread ? GameConfig.Palette.weaponModule : SIMD4(1, 1, 1, 0.5)
+        // Weapon indicator (bottom-center) — color per weapon type
+        let weaponType = weapon?.weaponType ?? .doubleCannon
+        let weaponColor: SIMD4<Float>
+        switch weaponType {
+        case .doubleCannon:
+            weaponColor = SIMD4(1, 1, 1, 0.5)
+        case .triSpread:
+            weaponColor = GameConfig.Palette.weaponModule
+        case .vulcanAutoGun:
+            weaponColor = SIMD4(1, 0.3, 0.3, 0.8)
+        case .phaseLaser:
+            weaponColor = GameConfig.Palette.laserBeam
+        }
         sprites.append(SpriteInstance(
             position: SIMD2(0, -GameConfig.designHeight / 2 + 20),
             size: SIMD2(20, 6),
             color: weaponColor
         ))
+
+        // Phase Laser cooldown indicator
+        if weaponType == .phaseLaser, let w = weapon {
+            if w.laserCooldownTimer > 0 {
+                let cooldownFrac = Float(w.laserCooldownTimer / GameConfig.Weapon.laserCooldownDuration)
+                sprites.append(SpriteInstance(
+                    position: SIMD2(0, -GameConfig.designHeight / 2 + 30),
+                    size: SIMD2(20 * cooldownFrac, 3),
+                    color: SIMD4(0.5, 0.5, 0.5, 0.6)
+                ))
+            } else if w.isLaserBurstActive {
+                let burstFrac = Float(w.laserBurstTimer / GameConfig.Weapon.laserBurstDuration)
+                sprites.append(SpriteInstance(
+                    position: SIMD2(0, -GameConfig.designHeight / 2 + 30),
+                    size: SIMD2(20 * burstFrac, 3),
+                    color: GameConfig.Palette.laserBeam
+                ))
+            }
+        }
+
+        // Overcharge active indicator
+        if weapon?.overchargeActive == true {
+            sprites.append(SpriteInstance(
+                position: SIMD2(0, -GameConfig.designHeight / 2 + 38),
+                size: SIMD2(20, 3),
+                color: GameConfig.Palette.overchargeGlow
+            ))
+        }
     }
 
     private func appendGameOverOverlay(to sprites: inout [SpriteInstance]) {
