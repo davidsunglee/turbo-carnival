@@ -55,6 +55,14 @@ struct ComponentTests {
         #expect(turret.timeSinceLastShot == 0)
     }
 
+    @Test func renderComponentSpriteId() {
+        let rc = RenderComponent(size: SIMD2(32, 32), color: SIMD4(1, 1, 1, 1))
+        #expect(rc.spriteId == nil)
+
+        rc.spriteId = "player"
+        #expect(rc.spriteId == "player")
+    }
+
     @Test func bossPhaseComponentTransitions() {
         let boss = BossPhaseComponent(totalHP: 30)
         #expect(boss.currentPhase == 0)

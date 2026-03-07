@@ -16,7 +16,7 @@ public final class RenderSystem {
         entities.removeAll { $0 === entity }
     }
 
-    public func collectSprites() -> [SpriteInstance] {
+    public func collectSprites(atlas: TextureAtlas? = nil) -> [SpriteInstance] {
         var sprites: [SpriteInstance] = []
         sprites.reserveCapacity(entities.count)
 
@@ -25,11 +25,14 @@ public final class RenderSystem {
                   let render = entity.component(ofType: RenderComponent.self),
                   render.isVisible else { continue }
 
+            let uv = atlas?.uvRect(for: render.spriteId) ?? SpriteInstance.defaultUVRect
+
             sprites.append(SpriteInstance(
                 position: transform.position,
                 size: render.size,
                 color: render.color,
-                rotation: transform.rotation
+                rotation: transform.rotation,
+                uvRect: uv
             ))
         }
 

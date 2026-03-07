@@ -9,7 +9,7 @@ public final class Renderer {
     private let commandQueue: MTLCommandQueue
     private let spriteBatcher: SpriteBatcher
     private let renderPassPipeline: RenderPassPipeline
-    private let textureAtlas: TextureAtlas
+    public let textureAtlas: TextureAtlas
     private let bloomBlurKernel: MPSImageGaussianBlur
 
     public init(device: MTLDevice) throws {

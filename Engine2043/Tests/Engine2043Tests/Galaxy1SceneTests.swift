@@ -24,7 +24,7 @@ final class MockInputProvider: InputProvider {
 struct Galaxy1SceneTests {
     @Test @MainActor func sceneInitializesWithPlayer() {
         let scene = Galaxy1Scene()
-        let sprites = scene.collectSprites()
+        let sprites = scene.collectSprites(atlas: nil)
         // Should have background sprites + player + HUD elements
         #expect(sprites.count > 0)
     }
@@ -45,7 +45,7 @@ struct Galaxy1SceneTests {
             scene.update(time: time)
         }
 
-        let sprites = scene.collectSprites()
+        let sprites = scene.collectSprites(atlas: nil)
         #expect(sprites.count > 0)
     }
 

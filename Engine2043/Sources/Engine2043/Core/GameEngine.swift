@@ -5,7 +5,7 @@ import QuartzCore
 public protocol GameScene: AnyObject {
     func fixedUpdate(time: GameTime)
     func update(time: GameTime)
-    func collectSprites() -> [SpriteInstance]
+    func collectSprites(atlas: TextureAtlas?) -> [SpriteInstance]
 }
 
 @MainActor
@@ -31,7 +31,7 @@ public final class GameEngine {
     }
 
     public func render(to drawable: CAMetalDrawable) {
-        let sprites = currentScene?.collectSprites() ?? []
+        let sprites = currentScene?.collectSprites(atlas: renderer.textureAtlas) ?? []
         renderer.render(to: drawable, sprites: sprites, totalTime: Float(time.totalTime))
     }
 }
