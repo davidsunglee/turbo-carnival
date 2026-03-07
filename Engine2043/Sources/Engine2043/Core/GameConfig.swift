@@ -11,7 +11,7 @@ public enum GameConfig {
         public static let speed: Float = 200
         public static let size = SIMD2<Float>(30, 30)
         public static let health: Float = 100
-        public static let fireRate: Double = 8.0
+        public static let fireRate: Double = 4.0
         public static let damage: Float = 1.0
         public static let projectileSpeed: Float = 500
         public static let projectileSize = SIMD2<Float>(6, 12)
@@ -20,17 +20,17 @@ public enum GameConfig {
     }
 
     public enum Enemy {
-        public static let tier1HP: Float = 1
+        public static let tier1HP: Float = 2
         public static let tier1Size = SIMD2<Float>(24, 24)
         public static let tier1Speed: Float = 80
-        public static let tier2HP: Float = 2
+        public static let tier2HP: Float = 4
         public static let tier2Size = SIMD2<Float>(32, 32)
         public static let tier2Speed: Float = 60
         public static let tier3HullSize = SIMD2<Float>(280, 120)
-        public static let tier3TurretHP: Float = 3
+        public static let tier3TurretHP: Float = 6
         public static let tier3TurretSize = SIMD2<Float>(20, 20)
         public static let tier3ScrollMultiplier: Float = 0.5
-        public static let bossHP: Float = 30
+        public static let bossHP: Float = 60
         public static let bossSize = SIMD2<Float>(80, 80)
     }
 
@@ -49,6 +49,28 @@ public enum GameConfig {
         public static let gravBombDetonateTime: Double = 0.4
         public static let gravBombBlastRadius: Float = 120
         public static let gravBombDamage: Float = 3
+
+        // Vulcan Auto-Gun
+        public static let vulcanFireRateMultiplier: Double = 2.0
+        public static let vulcanDamage: Float = 1.0
+        public static let vulcanProjectileSize = SIMD2<Float>(4, 10)
+
+        // Phase Laser
+        public static let laserTickInterval: Double = 0.1
+        public static let laserDamagePerTick: Float = 1.0
+        public static let laserWidth: Float = 8
+        public static let laserHeatPerSecond: Double = 1.0
+        public static let laserCoolPerSecond: Double = 2.0
+        public static let laserMaxHeat: Double = 1.0
+        public static let laserOverheatCooldown: Double = 1.0
+
+        // EMP Sweep
+        public static let empSlowMoDuration: Double = 0.3
+
+        // Overcharge Protocol
+        public static let overchargeDuration: Double = 5.0
+        public static let overchargeFireRateMultiplier: Double = 2.0
+        public static let overchargeHitboxScale: Float = 1.5
     }
 
     public enum Item {
@@ -56,6 +78,8 @@ public enum GameConfig {
         public static let driftSpeed: Float = 40
         public static let despawnTime: Double = 8.0
         public static let energyRestoreAmount: Float = 15
+        public static let chargeRestoreAmount: Int = 1
+        public static let scoreBonusAmount: Int = 200
     }
 
     public enum Background {
@@ -80,5 +104,10 @@ public enum GameConfig {
         public static let gravBomb = SIMD4<Float>(1.0, 0.85, 0.3, 1.0)
         public static let gravBombBlast = SIMD4<Float>(1.0, 1.0, 0.8, 0.6)
         public static let turret = SIMD4<Float>(1.0, 0.4, 0.2, 1.0)
+        public static let empFlash = SIMD4<Float>(0.5, 0.7, 1.0, 0.4)
+        public static let overchargeGlow = SIMD4<Float>(1.0, 0.6, 0.0, 0.8)
+        public static let laserBeam = SIMD4<Float>(0.4, 1.0, 0.4, 0.9)
+        public static let chargeCell = SIMD4<Float>(0.6, 0.3, 1.0, 1.0)
+        public static let scoreBonus = SIMD4<Float>(1.0, 1.0, 0.4, 1.0)
     }
 }

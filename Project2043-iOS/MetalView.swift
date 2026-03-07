@@ -69,14 +69,29 @@ final class MetalView: UIView {
             height: buttonH
         )
 
-        // Secondary fire: smaller, above primary
+        // Secondary buttons: stacked vertically above primary
         let secW: CGFloat = 60
-        let secH: CGFloat = 60
-        touchInput.secondaryButtonRect = CGRect(
-            x: rightEdge - secW - 10,
-            y: bounds.height - margin - buttonH - 20 - secH,
-            width: secW,
-            height: secH
+        let secH: CGFloat = 50
+        let secGap: CGFloat = 10
+        let secX = rightEdge - secW - 10
+        let secBaseY = bounds.height - margin - buttonH - secGap
+
+        // Secondary 1 (Grav-Bomb): lowest, just above primary
+        touchInput.secondary1ButtonRect = CGRect(
+            x: secX, y: secBaseY - secH,
+            width: secW, height: secH
+        )
+
+        // Secondary 2 (EMP Sweep): middle
+        touchInput.secondary2ButtonRect = CGRect(
+            x: secX, y: secBaseY - secH * 2 - secGap,
+            width: secW, height: secH
+        )
+
+        // Secondary 3 (Overcharge): top
+        touchInput.secondary3ButtonRect = CGRect(
+            x: secX, y: secBaseY - secH * 3 - secGap * 2,
+            width: secW, height: secH
         )
     }
 
