@@ -79,5 +79,6 @@ public enum GameConfig {
         public static let weaponModule = SIMD4<Float>(0.3, 0.5, 1.0, 1.0)
         public static let gravBomb = SIMD4<Float>(1.0, 0.85, 0.3, 1.0)
         public static let gravBombBlast = SIMD4<Float>(1.0, 1.0, 0.8, 0.6)
+        public static let turret = SIMD4<Float>(1.0, 0.4, 0.2, 1.0)
     }
 }

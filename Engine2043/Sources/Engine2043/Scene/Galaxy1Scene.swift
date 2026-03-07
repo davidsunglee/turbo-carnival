@@ -234,6 +234,20 @@ public final class Galaxy1Scene: GameScene {
 
     public func collectSprites() -> [SpriteInstance] {
         var sprites = backgroundSystem.collectSprites()
+
+        // Capital ship hulls render behind gameplay entities
+        for hull in capitalShipHulls {
+            if let transform = hull.component(ofType: TransformComponent.self),
+               let render = hull.component(ofType: RenderComponent.self) {
+                sprites.append(SpriteInstance(
+                    position: transform.position,
+                    size: render.size,
+                    color: render.color,
+                    rotation: transform.rotation
+                ))
+            }
+        }
+
         sprites.append(contentsOf: renderSystem.collectSprites())
         appendHUD(to: &sprites)
 
@@ -386,7 +400,8 @@ public final class Galaxy1Scene: GameScene {
         let hullPhysics = PhysicsComponent(collisionSize: .zero, layer: [], mask: [])
         hullPhysics.velocity = SIMD2(0, -GameConfig.Background.starScrollSpeed * GameConfig.Enemy.tier3ScrollMultiplier)
         hull.addComponent(hullPhysics)
-        registerEntity(hull)
+        // Register hull with physics only — rendered manually as background layer
+        physicsSystem.register(hull)
         capitalShipHulls.append(hull)
 
         let turretOffsets: [SIMD2<Float>] = [
@@ -416,7 +431,7 @@ public final class Galaxy1Scene: GameScene {
 
             turret.addComponent(RenderComponent(
                 size: GameConfig.Enemy.tier3TurretSize,
-                color: GameConfig.Palette.hostileProjectile
+                color: GameConfig.Palette.turret
             ))
 
             let turretHealth = HealthComponent(health: GameConfig.Enemy.tier3TurretHP)
