@@ -28,4 +28,18 @@ struct SpriteFactoryTests {
         #expect(height == 40)
         #expect(pixels.count == 40 * 40 * 4)
     }
+
+    @Test func makeCapitalHullReturnsCorrectSize() {
+        let (pixels, width, height) = SpriteFactory.makeCapitalHull()
+        #expect(width == 140)
+        #expect(height == 60)
+        #expect(pixels.count == 140 * 60 * 4)
+    }
+
+    @Test func makeTurretReturnsCorrectSize() {
+        let (pixels, width, height) = SpriteFactory.makeTurret()
+        #expect(width == 24)
+        #expect(height == 24)
+        #expect(pixels.count == 24 * 24 * 4)
+    }
 }
