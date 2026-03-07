@@ -42,4 +42,18 @@ struct SpriteFactoryTests {
         #expect(height == 24)
         #expect(pixels.count == 24 * 24 * 4)
     }
+
+    @Test func makeBossCoreReturnsCorrectSize() {
+        let (pixels, width, height) = SpriteFactory.makeBossCore()
+        #expect(width == 64)
+        #expect(height == 64)
+        #expect(pixels.count == 64 * 64 * 4)
+    }
+
+    @Test func makeBossShieldReturnsCorrectSize() {
+        let (pixels, width, height) = SpriteFactory.makeBossShield()
+        #expect(width == 40)
+        #expect(height == 12)
+        #expect(pixels.count == 40 * 12 * 4)
+    }
 }

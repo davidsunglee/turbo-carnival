@@ -280,4 +280,111 @@ public enum SpriteFactory {
 
         return (extractPixels(from: ctx, width: w, height: h), w, h)
     }
+
+    // MARK: - Boss Core (64x64)
+    // Concentric geometric rings. Blue (#4499ff) outer, white-blue center, octagonal edges.
+
+    public static func makeBossCore() -> (pixels: [UInt8], width: Int, height: Int) {
+        let w = 64, h = 64
+        guard let ctx = makeContext(width: w, height: h) else {
+            return (Array(repeating: 0, count: w * h * 4), w, h)
+        }
+
+        let cx = CGFloat(w) / 2
+        let cy = CGFloat(h) / 2
+
+        func octagon(center: CGPoint, radius: CGFloat) -> [CGPoint] {
+            (0..<8).map { i in
+                let angle = CGFloat(i) * .pi / 4
+                return CGPoint(x: center.x + radius * cos(angle), y: center.y + radius * sin(angle))
+            }
+        }
+
+        let center = CGPoint(x: cx, y: cy)
+
+        // Dim outer glow ring
+        let outerPts = octagon(center: center, radius: 28)
+        ctx.setFillColor(cgColor(30, 60, 120))
+        ctx.beginPath()
+        ctx.move(to: outerPts[0])
+        for pt in outerPts.dropFirst() { ctx.addLine(to: pt) }
+        ctx.closePath()
+        ctx.fillPath()
+
+        // Blue outer ring stroke
+        ctx.setStrokeColor(cgColor(68, 153, 255))
+        ctx.setLineWidth(3)
+        ctx.beginPath()
+        ctx.move(to: outerPts[0])
+        for pt in outerPts.dropFirst() { ctx.addLine(to: pt) }
+        ctx.closePath()
+        ctx.strokePath()
+
+        // Mid ring
+        let midPts = octagon(center: center, radius: 18)
+        ctx.setFillColor(cgColor(20, 40, 80))
+        ctx.beginPath()
+        ctx.move(to: midPts[0])
+        for pt in midPts.dropFirst() { ctx.addLine(to: pt) }
+        ctx.closePath()
+        ctx.fillPath()
+
+        ctx.setStrokeColor(cgColor(100, 180, 255))
+        ctx.setLineWidth(2)
+        ctx.beginPath()
+        ctx.move(to: midPts[0])
+        for pt in midPts.dropFirst() { ctx.addLine(to: pt) }
+        ctx.closePath()
+        ctx.strokePath()
+
+        // Inner core
+        let innerPts = octagon(center: center, radius: 8)
+        ctx.setFillColor(cgColor(150, 210, 255))
+        ctx.beginPath()
+        ctx.move(to: innerPts[0])
+        for pt in innerPts.dropFirst() { ctx.addLine(to: pt) }
+        ctx.closePath()
+        ctx.fillPath()
+
+        // Bright center dot
+        ctx.setFillColor(cgColor(220, 240, 255))
+        ctx.fillEllipse(in: CGRect(x: cx - 3, y: cy - 3, width: 6, height: 6))
+
+        return (extractPixels(from: ctx, width: w, height: h), w, h)
+    }
+
+    // MARK: - Boss Shield Segment (40x12)
+    // Elongated bar. Light cyan (#99ccff) with bright edge highlights.
+
+    public static func makeBossShield() -> (pixels: [UInt8], width: Int, height: Int) {
+        let w = 40, h = 12
+        guard let ctx = makeContext(width: w, height: h) else {
+            return (Array(repeating: 0, count: w * h * 4), w, h)
+        }
+
+        // Rounded-rect body
+        let rect = CGRect(x: 2, y: 2, width: CGFloat(w) - 4, height: CGFloat(h) - 4)
+        let path = CGPath(roundedRect: rect, cornerWidth: 3, cornerHeight: 3, transform: nil)
+
+        // Fill with semi-transparent cyan
+        ctx.setFillColor(cgColor(100, 170, 220, 180))
+        ctx.addPath(path)
+        ctx.fillPath()
+
+        // Bright edge highlight
+        ctx.setStrokeColor(cgColor(153, 204, 255))
+        ctx.setLineWidth(2)
+        ctx.addPath(path)
+        ctx.strokePath()
+
+        // Center highlight line
+        ctx.setStrokeColor(cgColor(200, 230, 255, 150))
+        ctx.setLineWidth(1)
+        ctx.beginPath()
+        ctx.move(to: CGPoint(x: 6, y: CGFloat(h) / 2))
+        ctx.addLine(to: CGPoint(x: CGFloat(w) - 6, y: CGFloat(h) / 2))
+        ctx.strokePath()
+
+        return (extractPixels(from: ctx, width: w, height: h), w, h)
+    }
 }
