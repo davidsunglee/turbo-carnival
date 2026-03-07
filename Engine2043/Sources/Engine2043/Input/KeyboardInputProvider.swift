@@ -13,6 +13,8 @@ public final class KeyboardInputProvider: InputProvider {
         static let upArrow:    UInt16 = 126
         static let space:      UInt16 = 49
         static let z:          UInt16 = 6
+        static let x:          UInt16 = 7
+        static let c:          UInt16 = 8
     }
 
     public init() {}
@@ -39,7 +41,9 @@ public final class KeyboardInputProvider: InputProvider {
         }
 
         input.primaryFire = keysPressed.contains(KeyCode.space)
-        input.secondaryFire = keysPressed.contains(KeyCode.z)
+        input.secondaryFire1 = keysPressed.contains(KeyCode.z)
+        input.secondaryFire2 = keysPressed.contains(KeyCode.x)
+        input.secondaryFire3 = keysPressed.contains(KeyCode.c)
 
         return input
     }

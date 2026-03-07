@@ -11,9 +11,13 @@ public final class TouchInputProvider: InputProvider {
 
     // Button state
     private var primaryFireActive: Bool = false
-    private var secondaryFireActive: Bool = false
+    private var secondary1Active: Bool = false
+    private var secondary2Active: Bool = false
+    private var secondary3Active: Bool = false
     private var primaryTouchID: ObjectIdentifier?
-    private var secondaryTouchID: ObjectIdentifier?
+    private var secondary1TouchID: ObjectIdentifier?
+    private var secondary2TouchID: ObjectIdentifier?
+    private var secondary3TouchID: ObjectIdentifier?
 
     // Configuration
     private let maxJoystickRadius: Float = 60
@@ -24,7 +28,9 @@ public final class TouchInputProvider: InputProvider {
 
     // Button rects (set by MetalView on layout)
     public var primaryButtonRect: CGRect = .zero
-    public var secondaryButtonRect: CGRect = .zero
+    public var secondary1ButtonRect: CGRect = .zero
+    public var secondary2ButtonRect: CGRect = .zero
+    public var secondary3ButtonRect: CGRect = .zero
 
     public init() {}
 
@@ -42,12 +48,13 @@ public final class TouchInputProvider: InputProvider {
             }
 
             input.movement = delta / maxJoystickRadius
-            // Flip Y: screen Y goes down, game Y goes up
             input.movement.y = -input.movement.y
         }
 
         input.primaryFire = primaryFireActive
-        input.secondaryFire = secondaryFireActive
+        input.secondaryFire1 = secondary1Active
+        input.secondaryFire2 = secondary2Active
+        input.secondaryFire3 = secondary3Active
 
         return input
     }
@@ -61,15 +68,19 @@ public final class TouchInputProvider: InputProvider {
             let touchID = ObjectIdentifier(touch)
 
             if loc.x < screenSize.width / 2 && joystickTouchID == nil {
-                // Left half: joystick
                 joystickOrigin = point
                 joystickCurrent = point
                 joystickTouchID = touchID
             } else if loc.x >= screenSize.width / 2 {
-                // Right half: buttons
-                if secondaryButtonRect.contains(loc) && secondaryTouchID == nil {
-                    secondaryFireActive = true
-                    secondaryTouchID = touchID
+                if secondary3ButtonRect.contains(loc) && secondary3TouchID == nil {
+                    secondary3Active = true
+                    secondary3TouchID = touchID
+                } else if secondary2ButtonRect.contains(loc) && secondary2TouchID == nil {
+                    secondary2Active = true
+                    secondary2TouchID = touchID
+                } else if secondary1ButtonRect.contains(loc) && secondary1TouchID == nil {
+                    secondary1Active = true
+                    secondary1TouchID = touchID
                 } else if primaryTouchID == nil {
                     primaryFireActive = true
                     primaryTouchID = touchID
@@ -108,9 +119,17 @@ public final class TouchInputProvider: InputProvider {
                 primaryFireActive = false
                 primaryTouchID = nil
             }
-            if touchID == secondaryTouchID {
-                secondaryFireActive = false
-                secondaryTouchID = nil
+            if touchID == secondary1TouchID {
+                secondary1Active = false
+                secondary1TouchID = nil
+            }
+            if touchID == secondary2TouchID {
+                secondary2Active = false
+                secondary2TouchID = nil
+            }
+            if touchID == secondary3TouchID {
+                secondary3Active = false
+                secondary3TouchID = nil
             }
         }
     }
