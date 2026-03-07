@@ -62,18 +62,20 @@ public final class WeaponSystem {
                 }
             }
 
-            // Phase Laser: separate burst/cooldown logic
+            // Phase Laser: continuous beam with heat
             if weapon.weaponType == .phaseLaser {
-                if weapon.isFiring && !weapon.isLaserBurstActive && weapon.laserCooldownTimer <= 0 {
-                    weapon.isLaserBurstActive = true
-                    weapon.laserBurstTimer = GameConfig.Weapon.laserBurstDuration
-                    weapon.timeSinceLastShot = 0
-                }
-
-                if weapon.isLaserBurstActive {
-                    weapon.laserBurstTimer -= time.fixedDeltaTime
+                if weapon.isLaserOverheated {
+                    weapon.laserOverheatTimer -= time.fixedDeltaTime
+                    if weapon.laserOverheatTimer <= 0 {
+                        weapon.isLaserOverheated = false
+                        weapon.laserHeat = 0
+                    }
+                } else if weapon.isFiring {
+                    // Accumulate heat
+                    weapon.laserHeat += GameConfig.Weapon.laserHeatPerSecond * time.fixedDeltaTime
                     weapon.timeSinceLastShot += time.fixedDeltaTime
 
+                    // Fire damage ticks
                     let tickInterval = GameConfig.Weapon.laserTickInterval
                     if weapon.timeSinceLastShot >= tickInterval {
                         weapon.timeSinceLastShot -= tickInterval
@@ -84,12 +86,15 @@ public final class WeaponSystem {
                         ))
                     }
 
-                    if weapon.laserBurstTimer <= 0 {
-                        weapon.isLaserBurstActive = false
-                        weapon.laserCooldownTimer = GameConfig.Weapon.laserCooldownDuration
+                    // Check overheat
+                    if weapon.laserHeat >= GameConfig.Weapon.laserMaxHeat {
+                        weapon.isLaserOverheated = true
+                        weapon.laserOverheatTimer = GameConfig.Weapon.laserOverheatCooldown
                     }
                 } else {
-                    weapon.laserCooldownTimer = max(0, weapon.laserCooldownTimer - time.fixedDeltaTime)
+                    // Cool down when not firing
+                    weapon.laserHeat = max(0, weapon.laserHeat - GameConfig.Weapon.laserCoolPerSecond * time.fixedDeltaTime)
+                    weapon.timeSinceLastShot = 0
                 }
             } else if weapon.isFiring {
                 // Standard projectile weapons

@@ -287,7 +287,7 @@ public final class Galaxy1Scene: GameScene {
         // Phase Laser beam visual
         if let weapon = player.component(ofType: WeaponComponent.self),
            weapon.weaponType == .phaseLaser,
-           weapon.isLaserBurstActive,
+           weapon.isFiring && !weapon.isLaserOverheated,
            let transform = player.component(ofType: TransformComponent.self) {
             let beamHeight = GameConfig.designHeight / 2 + 50 - transform.position.y
             sprites.append(SpriteInstance(
@@ -939,9 +939,9 @@ public final class Galaxy1Scene: GameScene {
             if let weapon = player.component(ofType: WeaponComponent.self) {
                 weapon.weaponType = itemComp.displayedWeapon
                 // Reset weapon-specific state
-                weapon.isLaserBurstActive = false
-                weapon.laserBurstTimer = 0
-                weapon.laserCooldownTimer = 0
+                weapon.laserHeat = 0
+                weapon.isLaserOverheated = false
+                weapon.laserOverheatTimer = 0
                 // Update damage for weapon type
                 switch weapon.weaponType {
                 case .doubleCannon, .vulcanAutoGun:
@@ -958,6 +958,12 @@ public final class Galaxy1Scene: GameScene {
                 if let health = player.component(ofType: HealthComponent.self) {
                     health.currentHealth = min(health.maxHealth, health.currentHealth + GameConfig.Item.energyRestoreAmount)
                 }
+            case .chargeCell:
+                if let weapon = player.component(ofType: WeaponComponent.self) {
+                    weapon.secondaryCharges = min(GameConfig.Weapon.gravBombMaxCharges, weapon.secondaryCharges + GameConfig.Item.chargeRestoreAmount)
+                }
+            case .scoreBonus:
+                scoreSystem.addScore(GameConfig.Item.scoreBonusAmount)
             }
         }
 
@@ -1071,21 +1077,24 @@ public final class Galaxy1Scene: GameScene {
             color: weaponColor
         ))
 
-        // Phase Laser cooldown indicator
+        // Phase Laser heat gauge
         if weaponType == .phaseLaser, let w = weapon {
-            if w.laserCooldownTimer > 0 {
-                let cooldownFrac = Float(w.laserCooldownTimer / GameConfig.Weapon.laserCooldownDuration)
+            let heatFrac = Float(w.laserHeat / GameConfig.Weapon.laserMaxHeat)
+            if w.isLaserOverheated {
+                // Overheated — show red bar shrinking during cooldown
+                let cooldownFrac = Float(w.laserOverheatTimer / GameConfig.Weapon.laserOverheatCooldown)
                 sprites.append(SpriteInstance(
                     position: SIMD2(0, -GameConfig.designHeight / 2 + 30),
                     size: SIMD2(20 * cooldownFrac, 3),
-                    color: SIMD4(0.5, 0.5, 0.5, 0.6)
+                    color: SIMD4(1, 0.2, 0.2, 0.8)
                 ))
-            } else if w.isLaserBurstActive {
-                let burstFrac = Float(w.laserBurstTimer / GameConfig.Weapon.laserBurstDuration)
+            } else if heatFrac > 0 {
+                // Heat building — green shifting to red
+                let color = SIMD4<Float>(heatFrac, 1.0 - heatFrac * 0.6, 0.2, 0.8)
                 sprites.append(SpriteInstance(
                     position: SIMD2(0, -GameConfig.designHeight / 2 + 30),
-                    size: SIMD2(20 * burstFrac, 3),
-                    color: GameConfig.Palette.laserBeam
+                    size: SIMD2(20 * heatFrac, 3),
+                    color: color
                 ))
             }
         }

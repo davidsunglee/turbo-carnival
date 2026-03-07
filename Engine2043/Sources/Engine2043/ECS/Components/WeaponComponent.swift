@@ -26,9 +26,9 @@ public final class WeaponComponent: GKComponent {
     public var firesDownward: Bool = false
 
     // Phase Laser state
-    public var laserBurstTimer: Double = 0
-    public var laserCooldownTimer: Double = 0
-    public var isLaserBurstActive: Bool = false
+    public var laserHeat: Double = 0
+    public var isLaserOverheated: Bool = false
+    public var laserOverheatTimer: Double = 0
 
     // Overcharge state
     public var overchargeActive: Bool = false
