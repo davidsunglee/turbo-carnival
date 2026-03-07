@@ -57,7 +57,7 @@ struct SynthAudioTests {
 
     @Test func sfxTypeHasAllExpectedCases() {
         let allCases = SFXType.allCases
-        #expect(allCases.count == 9)
+        #expect(allCases.count == 16)
         #expect(allCases.contains(.doubleCannonFire))
         #expect(allCases.contains(.triSpreadFire))
         #expect(allCases.contains(.vulcanFire))
@@ -67,5 +67,12 @@ struct SynthAudioTests {
         #expect(allCases.contains(.itemSpawn))
         #expect(allCases.contains(.itemCycle))
         #expect(allCases.contains(.itemPickup))
+        #expect(allCases.contains(.gravBombLaunch))
+        #expect(allCases.contains(.gravBombDetonate))
+        #expect(allCases.contains(.empSweep))
+        #expect(allCases.contains(.overchargeActivate))
+        #expect(allCases.contains(.bossShieldDeflect))
+        #expect(allCases.contains(.playerDeath))
+        #expect(allCases.contains(.victory))
     }
 }

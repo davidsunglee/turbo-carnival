@@ -182,6 +182,8 @@ public final class Galaxy1Scene: GameScene {
            bossPhase.isDefeated {
             gameState = .victory
             scoreSystem.addScore(GameConfig.Score.boss)
+            sfx?.play(.victory) // TODO: victory SFX not audible during gameplay — needs debugging
+            sfx?.stopLaser()
         }
 
         // Physics
@@ -241,6 +243,8 @@ public final class Galaxy1Scene: GameScene {
         // Check game over
         if let health = player.component(ofType: HealthComponent.self), !health.isAlive {
             gameState = .gameOver
+            sfx?.play(.playerDeath)
+            sfx?.stopLaser()
         }
 
         // Capital ship hull updates
@@ -665,6 +669,7 @@ public final class Galaxy1Scene: GameScene {
         registerEntity(entity)
         gravBombEntities.append(entity)
         gravBombTimers[ObjectIdentifier(entity)] = 0
+        sfx?.play(.gravBombLaunch)
     }
 
     private func spawnItem(at position: SIMD2<Float>) {
@@ -787,6 +792,7 @@ public final class Galaxy1Scene: GameScene {
 
     private func detonateGravBomb(_ bomb: GKEntity) {
         guard let transform = bomb.component(ofType: TransformComponent.self) else { return }
+        sfx?.play(.gravBombDetonate)
         let center = transform.position
         let radius = GameConfig.Weapon.gravBombBlastRadius
 
@@ -827,6 +833,7 @@ public final class Galaxy1Scene: GameScene {
     }
 
     private func activateEMPSweep() {
+        sfx?.play(.empSweep)
         // Cancel all enemy projectiles
         for proj in enemyProjectiles {
             pendingRemovals.append(proj)
@@ -853,6 +860,7 @@ public final class Galaxy1Scene: GameScene {
         if let weapon = player.component(ofType: WeaponComponent.self) {
             weapon.overchargeActive = true
             weapon.overchargeTimer = GameConfig.Weapon.overchargeDuration
+            sfx?.play(.overchargeActivate)
         }
     }
 
@@ -920,8 +928,10 @@ public final class Galaxy1Scene: GameScene {
                 handleProjectileHitEnemy(projectile: entityB, enemy: entityA)
             } else if layerA.contains(.playerProjectile) && layerB.contains(.bossShield) {
                 pendingRemovals.append(entityA)
+                sfx?.play(.bossShieldDeflect)
             } else if layerB.contains(.playerProjectile) && layerA.contains(.bossShield) {
                 pendingRemovals.append(entityB)
+                sfx?.play(.bossShieldDeflect)
             } else if layerA.contains(.playerProjectile) && layerB.contains(.item) {
                 itemSystem.handleProjectileHit(on: entityB)
                 sfx?.play(.itemCycle)
