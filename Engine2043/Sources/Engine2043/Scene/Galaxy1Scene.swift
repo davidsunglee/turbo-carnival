@@ -22,6 +22,7 @@ public final class Galaxy1Scene: GameScene {
     private let backgroundSystem = BackgroundSystem()
     private let bossSystem = BossSystem()
     private let spawnDirector = SpawnDirector()
+    private var lightningArcSystem: LightningArcSystem!
 
     // MARK: - Input / Audio
     public var inputProvider: (any InputProvider)?
@@ -59,6 +60,7 @@ public final class Galaxy1Scene: GameScene {
     public init() {
         collisionSystem = CollisionSystem(worldBounds: worldBounds)
         setupPlayer()
+        lightningArcSystem = LightningArcSystem(player: player)
     }
 
     private func setupPlayer() {
@@ -118,6 +120,7 @@ public final class Galaxy1Scene: GameScene {
 
     private func removeEntity(_ entity: GKEntity) {
         unregisterEntity(entity)
+        lightningArcSystem.unregisterEnemy(entity)
         enemies.removeAll { $0 === entity }
         projectiles.removeAll { $0 === entity }
         enemyProjectiles.removeAll { $0 === entity }
@@ -193,6 +196,14 @@ public final class Galaxy1Scene: GameScene {
         physicsSystem.update(time: time)
         collisionSystem.update(time: time)
         weaponSystem.update(time: time)
+
+        // Lightning Arc
+        lightningArcSystem.update(deltaTime: time.fixedDeltaTime)
+        for (entity, damage) in lightningArcSystem.pendingDamage {
+            if let health = entity.component(ofType: HealthComponent.self) {
+                health.currentHealth -= damage
+            }
+        }
 
         // Spawn player projectiles
         for request in weaponSystem.pendingSpawns {
@@ -410,7 +421,7 @@ public final class Galaxy1Scene: GameScene {
         switch weaponType {
         case .doubleCannon: weaponColor = SIMD4(1, 1, 1, 0.5)
         case .triSpread:    weaponColor = GameConfig.Palette.weaponModule
-        case .vulcanAutoGun: weaponColor = SIMD4(1, 0.3, 0.3, 0.8)
+        case .lightningArc: weaponColor = GameConfig.Palette.weaponLightningArc
         case .phaseLaser:   weaponColor = GameConfig.Palette.laserBeam
         }
         if let uv = effectSheet.uvRect(for: "hudWeaponIcon") {
@@ -575,6 +586,7 @@ public final class Galaxy1Scene: GameScene {
             registerEntity(entity)
             enemies.append(entity)
             members.append(entity)
+            lightningArcSystem.registerEnemy(entity)
         }
 
         formationEnemies[formationID] = members
@@ -621,6 +633,7 @@ public final class Galaxy1Scene: GameScene {
 
             registerEntity(entity)
             enemies.append(entity)
+            lightningArcSystem.registerEnemy(entity)
         }
     }
 
@@ -684,6 +697,7 @@ public final class Galaxy1Scene: GameScene {
 
             registerEntity(turret)
             enemies.append(turret)
+            lightningArcSystem.registerEnemy(turret)
             turretMembers.append(turret)
         }
 
@@ -717,6 +731,7 @@ public final class Galaxy1Scene: GameScene {
         registerEntity(boss)
         bossSystem.register(boss)
         enemies.append(boss)
+        lightningArcSystem.registerEnemy(boss)
         bossEntity = boss
 
         for i in 0..<2 {
@@ -750,9 +765,6 @@ public final class Galaxy1Scene: GameScene {
 
         let weapon = player.component(ofType: WeaponComponent.self)
         var projSize = GameConfig.Player.projectileSize
-        if weapon?.weaponType == .vulcanAutoGun {
-            projSize = GameConfig.Weapon.vulcanProjectileSize
-        }
         if weapon?.overchargeActive == true {
             projSize *= GameConfig.Weapon.overchargeHitboxScale
         }
@@ -770,7 +782,7 @@ public final class Galaxy1Scene: GameScene {
         switch weaponType {
         case .doubleCannon: spriteId = "playerBullet"
         case .triSpread:    spriteId = "triSpreadBullet"
-        case .vulcanAutoGun: spriteId = "vulcanBullet"
+        case .lightningArc: spriteId = "playerBullet" // arc doesn't use projectiles
         case .phaseLaser:   spriteId = "playerBullet"
         }
 
@@ -786,7 +798,7 @@ public final class Galaxy1Scene: GameScene {
             switch weaponType {
             case .doubleCannon: sfx?.play(.doubleCannonFire)
             case .triSpread: sfx?.play(.triSpreadFire)
-            case .vulcanAutoGun: sfx?.play(.vulcanFire)
+            case .lightningArc: break // handled by continuous audio in render loop
             case .phaseLaser: break // handled by real-time laser node
             }
         }
@@ -882,7 +894,7 @@ public final class Galaxy1Scene: GameScene {
 
         // Build weapon cycle excluding current player weapon
         let currentWeapon = player.component(ofType: WeaponComponent.self)?.weaponType ?? .doubleCannon
-        let allWeapons: [WeaponType] = [.doubleCannon, .triSpread, .vulcanAutoGun, .phaseLaser]
+        let allWeapons: [WeaponType] = [.doubleCannon, .triSpread, .lightningArc, .phaseLaser]
         itemComp.weaponCycle = allWeapons.filter { $0 != currentWeapon }
         if let first = itemComp.weaponCycle.first {
             itemComp.displayedWeapon = first
@@ -1170,8 +1182,10 @@ public final class Galaxy1Scene: GameScene {
                 weapon.laserOverheatTimer = 0
                 // Update damage for weapon type
                 switch weapon.weaponType {
-                case .doubleCannon, .vulcanAutoGun:
+                case .doubleCannon:
                     weapon.damage = GameConfig.Player.damage
+                case .lightningArc:
+                    weapon.damage = GameConfig.Weapon.lightningArcDamagePerTick
                 case .triSpread:
                     weapon.damage = GameConfig.Weapon.triSpreadDamage
                 case .phaseLaser:
