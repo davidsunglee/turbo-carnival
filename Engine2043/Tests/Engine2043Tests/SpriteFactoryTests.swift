@@ -56,4 +56,15 @@ struct SpriteFactoryTests {
         #expect(height == 12)
         #expect(pixels.count == 40 * 12 * 4)
     }
+
+    @Test func textureAtlasSpriteNames() {
+        let names = TextureAtlas.spriteNames
+        #expect(names.contains("player"))
+        #expect(names.contains("swarmer"))
+        #expect(names.contains("bruiser"))
+        #expect(names.contains("capitalHull"))
+        #expect(names.contains("turret"))
+        #expect(names.contains("bossCore"))
+        #expect(names.contains("bossShield"))
+    }
 }
