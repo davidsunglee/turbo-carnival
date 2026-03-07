@@ -299,6 +299,19 @@ struct SpriteFactoryTests {
         #expect(names.contains("bossShield"))
     }
 
+    @Test func effectTextureSheetSpriteNames() {
+        let names = EffectTextureSheet.spriteNames
+        #expect(names.contains("gravBombBlast"))
+        #expect(names.contains("empFlash"))
+        #expect(names.contains("overchargeGlow"))
+        #expect(names.contains("hudBarFrame"))
+        #expect(names.contains("hudBarFill"))
+        #expect(names.contains("hudChargePip"))
+        #expect(names.contains("hudWeaponIcon"))
+        #expect(names.contains("hudHeatFrame"))
+        #expect(names.contains("hudHeatFill"))
+    }
+
     @Test func textureAtlasIncludesProjectileAndPickupSprites() {
         let names = TextureAtlas.spriteNames
         #expect(names.contains("playerBullet"))
