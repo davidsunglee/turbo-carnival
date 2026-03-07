@@ -49,6 +49,26 @@ public enum GameConfig {
         public static let gravBombDetonateTime: Double = 0.4
         public static let gravBombBlastRadius: Float = 120
         public static let gravBombDamage: Float = 3
+
+        // Vulcan Auto-Gun
+        public static let vulcanFireRateMultiplier: Double = 2.0
+        public static let vulcanDamage: Float = 1.0
+        public static let vulcanProjectileSize = SIMD2<Float>(4, 10)
+
+        // Phase Laser
+        public static let laserBurstDuration: Double = 0.8
+        public static let laserCooldownDuration: Double = 0.5
+        public static let laserTickInterval: Double = 0.1
+        public static let laserDamagePerTick: Float = 0.4
+        public static let laserWidth: Float = 8
+
+        // EMP Sweep
+        public static let empSlowMoDuration: Double = 0.3
+
+        // Overcharge Protocol
+        public static let overchargeDuration: Double = 5.0
+        public static let overchargeFireRateMultiplier: Double = 2.0
+        public static let overchargeHitboxScale: Float = 1.5
     }
 
     public enum Item {
@@ -80,5 +100,8 @@ public enum GameConfig {
         public static let gravBomb = SIMD4<Float>(1.0, 0.85, 0.3, 1.0)
         public static let gravBombBlast = SIMD4<Float>(1.0, 1.0, 0.8, 0.6)
         public static let turret = SIMD4<Float>(1.0, 0.4, 0.2, 1.0)
+        public static let empFlash = SIMD4<Float>(0.5, 0.7, 1.0, 0.4)
+        public static let overchargeGlow = SIMD4<Float>(1.0, 0.6, 0.0, 0.8)
+        public static let laserBeam = SIMD4<Float>(0.4, 1.0, 0.4, 0.9)
     }
 }

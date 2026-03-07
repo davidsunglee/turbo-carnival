@@ -1,8 +1,16 @@
 import GameplayKit
 
-public enum WeaponType: Sendable {
-    case doubleCannon
-    case triSpread
+public enum WeaponType: Int, CaseIterable, Sendable {
+    case doubleCannon = 0
+    case triSpread = 1
+    case vulcanAutoGun = 2
+    case phaseLaser = 3
+}
+
+public enum SecondaryType: Sendable {
+    case gravBomb
+    case empSweep
+    case overcharge
 }
 
 public final class WeaponComponent: GKComponent {
@@ -13,9 +21,18 @@ public final class WeaponComponent: GKComponent {
     public var isFiring: Bool = false
     public var weaponType: WeaponType = .doubleCannon
     public var secondaryCharges: Int = 1
-    public var isSecondaryFiring: Bool = false
-    public var secondaryCooldown: Double = 0.5  // Start ready to fire
+    public var secondaryFiring: SecondaryType? = nil
+    public var secondaryCooldown: Double = 0.5
     public var firesDownward: Bool = false
+
+    // Phase Laser state
+    public var laserBurstTimer: Double = 0
+    public var laserCooldownTimer: Double = 0
+    public var isLaserBurstActive: Bool = false
+
+    // Overcharge state
+    public var overchargeActive: Bool = false
+    public var overchargeTimer: Double = 0
 
     public override init() { super.init() }
 
