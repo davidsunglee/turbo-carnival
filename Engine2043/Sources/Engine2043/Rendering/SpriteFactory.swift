@@ -387,4 +387,200 @@ public enum SpriteFactory {
 
         return (extractPixels(from: ctx, width: w, height: h), w, h)
     }
+
+    // MARK: - Player Bullet (6x12)
+    // Vertical elongated diamond, white core with cyan (#00ffd2) trailing edge.
+
+    public static func makePlayerBullet() -> (pixels: [UInt8], width: Int, height: Int) {
+        let w = 6, h = 12
+        guard let ctx = makeContext(width: w, height: h) else {
+            return (Array(repeating: 0, count: w * h * 4), w, h)
+        }
+
+        let cx = CGFloat(w) / 2
+
+        // Cyan trailing edge (bottom half)
+        ctx.setFillColor(cgColor(0, 255, 210))
+        ctx.beginPath()
+        ctx.move(to: CGPoint(x: cx, y: CGFloat(h) - 1))
+        ctx.addLine(to: CGPoint(x: 1, y: CGFloat(h) / 2))
+        ctx.addLine(to: CGPoint(x: cx, y: 2))
+        ctx.addLine(to: CGPoint(x: CGFloat(w) - 1, y: CGFloat(h) / 2))
+        ctx.closePath()
+        ctx.fillPath()
+
+        // White core (upper portion)
+        ctx.setFillColor(cgColor(255, 255, 255))
+        ctx.beginPath()
+        ctx.move(to: CGPoint(x: cx, y: CGFloat(h) - 2))
+        ctx.addLine(to: CGPoint(x: 2, y: CGFloat(h) / 2 + 1))
+        ctx.addLine(to: CGPoint(x: cx, y: 4))
+        ctx.addLine(to: CGPoint(x: CGFloat(w) - 2, y: CGFloat(h) / 2 + 1))
+        ctx.closePath()
+        ctx.fillPath()
+
+        return (extractPixels(from: ctx, width: w, height: h), w, h)
+    }
+
+    // MARK: - Tri-Spread Bullet (8x8)
+    // Small rotated diamond, orange (#ff8033) outline, bright center.
+
+    public static func makeTriSpreadBullet() -> (pixels: [UInt8], width: Int, height: Int) {
+        let w = 8, h = 8
+        guard let ctx = makeContext(width: w, height: h) else {
+            return (Array(repeating: 0, count: w * h * 4), w, h)
+        }
+
+        let cx = CGFloat(w) / 2
+        let cy = CGFloat(h) / 2
+
+        // Dark orange fill
+        ctx.setFillColor(cgColor(100, 50, 20))
+        ctx.beginPath()
+        ctx.move(to: CGPoint(x: cx, y: CGFloat(h) - 1))
+        ctx.addLine(to: CGPoint(x: 1, y: cy))
+        ctx.addLine(to: CGPoint(x: cx, y: 1))
+        ctx.addLine(to: CGPoint(x: CGFloat(w) - 1, y: cy))
+        ctx.closePath()
+        ctx.fillPath()
+
+        // Orange outline
+        ctx.setStrokeColor(cgColor(255, 128, 51))
+        ctx.setLineWidth(1)
+        ctx.beginPath()
+        ctx.move(to: CGPoint(x: cx, y: CGFloat(h) - 1))
+        ctx.addLine(to: CGPoint(x: 1, y: cy))
+        ctx.addLine(to: CGPoint(x: cx, y: 1))
+        ctx.addLine(to: CGPoint(x: CGFloat(w) - 1, y: cy))
+        ctx.closePath()
+        ctx.strokePath()
+
+        // Bright center
+        ctx.setFillColor(cgColor(255, 200, 150))
+        ctx.fillEllipse(in: CGRect(x: cx - 1, y: cy - 1, width: 2, height: 2))
+
+        return (extractPixels(from: ctx, width: w, height: h), w, h)
+    }
+
+    // MARK: - Vulcan Bullet (4x8)
+    // Narrow dart, red (#ff3333) outline, white tip.
+
+    public static func makeVulcanBullet() -> (pixels: [UInt8], width: Int, height: Int) {
+        let w = 4, h = 8
+        guard let ctx = makeContext(width: w, height: h) else {
+            return (Array(repeating: 0, count: w * h * 4), w, h)
+        }
+
+        let cx = CGFloat(w) / 2
+
+        // Dark red fill
+        ctx.setFillColor(cgColor(80, 15, 15))
+        ctx.beginPath()
+        ctx.move(to: CGPoint(x: cx, y: CGFloat(h) - 1))
+        ctx.addLine(to: CGPoint(x: 0, y: 2))
+        ctx.addLine(to: CGPoint(x: cx, y: 0))
+        ctx.addLine(to: CGPoint(x: CGFloat(w), y: 2))
+        ctx.closePath()
+        ctx.fillPath()
+
+        // Red outline
+        ctx.setStrokeColor(cgColor(255, 51, 51))
+        ctx.setLineWidth(1)
+        ctx.beginPath()
+        ctx.move(to: CGPoint(x: cx, y: CGFloat(h) - 1))
+        ctx.addLine(to: CGPoint(x: 0, y: 2))
+        ctx.addLine(to: CGPoint(x: cx, y: 0))
+        ctx.addLine(to: CGPoint(x: CGFloat(w), y: 2))
+        ctx.closePath()
+        ctx.strokePath()
+
+        // White tip
+        ctx.setFillColor(cgColor(255, 255, 255))
+        ctx.fillEllipse(in: CGRect(x: cx - 1, y: CGFloat(h) - 3, width: 2, height: 2))
+
+        return (extractPixels(from: ctx, width: w, height: h), w, h)
+    }
+
+    // MARK: - Enemy Bullet (8x8)
+    // Downward-pointing arrowhead, hostile orange (#ff9e64) outline, dark fill.
+
+    public static func makeEnemyBullet() -> (pixels: [UInt8], width: Int, height: Int) {
+        let w = 8, h = 8
+        guard let ctx = makeContext(width: w, height: h) else {
+            return (Array(repeating: 0, count: w * h * 4), w, h)
+        }
+
+        let cx = CGFloat(w) / 2
+
+        // Dark fill
+        ctx.setFillColor(cgColor(80, 40, 20))
+        ctx.beginPath()
+        ctx.move(to: CGPoint(x: cx, y: 1))
+        ctx.addLine(to: CGPoint(x: 1, y: CGFloat(h) - 2))
+        ctx.addLine(to: CGPoint(x: cx, y: CGFloat(h) - 4))
+        ctx.addLine(to: CGPoint(x: CGFloat(w) - 1, y: CGFloat(h) - 2))
+        ctx.closePath()
+        ctx.fillPath()
+
+        // Orange outline
+        ctx.setStrokeColor(cgColor(255, 158, 100))
+        ctx.setLineWidth(1)
+        ctx.beginPath()
+        ctx.move(to: CGPoint(x: cx, y: 1))
+        ctx.addLine(to: CGPoint(x: 1, y: CGFloat(h) - 2))
+        ctx.addLine(to: CGPoint(x: cx, y: CGFloat(h) - 4))
+        ctx.addLine(to: CGPoint(x: CGFloat(w) - 1, y: CGFloat(h) - 2))
+        ctx.closePath()
+        ctx.strokePath()
+
+        // Bright core
+        ctx.setFillColor(cgColor(255, 220, 180))
+        ctx.fillEllipse(in: CGRect(x: cx - 1, y: 3, width: 2, height: 2))
+
+        return (extractPixels(from: ctx, width: w, height: h), w, h)
+    }
+
+    // MARK: - Gravity Bomb Sprite (16x16)
+    // Octagonal shell, gold (#ffda4d) outline, dark center, bright core dot.
+
+    public static func makeGravBombSprite() -> (pixels: [UInt8], width: Int, height: Int) {
+        let w = 16, h = 16
+        guard let ctx = makeContext(width: w, height: h) else {
+            return (Array(repeating: 0, count: w * h * 4), w, h)
+        }
+
+        let cx = CGFloat(w) / 2
+        let cy = CGFloat(h) / 2
+
+        // Octagon
+        let r: CGFloat = 6
+        var pts: [CGPoint] = []
+        for i in 0..<8 {
+            let angle = CGFloat(i) * .pi / 4
+            pts.append(CGPoint(x: cx + r * cos(angle), y: cy + r * sin(angle)))
+        }
+
+        // Dark fill
+        ctx.setFillColor(cgColor(50, 40, 10))
+        ctx.beginPath()
+        ctx.move(to: pts[0])
+        for pt in pts.dropFirst() { ctx.addLine(to: pt) }
+        ctx.closePath()
+        ctx.fillPath()
+
+        // Gold outline
+        ctx.setStrokeColor(cgColor(255, 218, 77))
+        ctx.setLineWidth(2)
+        ctx.beginPath()
+        ctx.move(to: pts[0])
+        for pt in pts.dropFirst() { ctx.addLine(to: pt) }
+        ctx.closePath()
+        ctx.strokePath()
+
+        // Bright core dot
+        ctx.setFillColor(cgColor(255, 240, 180))
+        ctx.fillEllipse(in: CGRect(x: cx - 2, y: cy - 2, width: 4, height: 4))
+
+        return (extractPixels(from: ctx, width: w, height: h), w, h)
+    }
 }

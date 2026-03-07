@@ -57,6 +57,75 @@ struct SpriteFactoryTests {
         #expect(pixels.count == 40 * 12 * 4)
     }
 
+    // MARK: - Projectile Sprites
+
+    @Test func makePlayerBulletReturnsCorrectSize() {
+        let (pixels, width, height) = SpriteFactory.makePlayerBullet()
+        #expect(width == 6)
+        #expect(height == 12)
+        #expect(pixels.count == 6 * 12 * 4)
+    }
+
+    @Test func makePlayerBulletHasNonTransparentPixels() {
+        let (pixels, _, _) = SpriteFactory.makePlayerBullet()
+        let hasVisiblePixels = stride(from: 3, to: pixels.count, by: 4).contains { pixels[$0] > 0 }
+        #expect(hasVisiblePixels)
+    }
+
+    @Test func makeTriSpreadBulletReturnsCorrectSize() {
+        let (pixels, width, height) = SpriteFactory.makeTriSpreadBullet()
+        #expect(width == 8)
+        #expect(height == 8)
+        #expect(pixels.count == 8 * 8 * 4)
+    }
+
+    @Test func makeTriSpreadBulletHasNonTransparentPixels() {
+        let (pixels, _, _) = SpriteFactory.makeTriSpreadBullet()
+        let hasVisiblePixels = stride(from: 3, to: pixels.count, by: 4).contains { pixels[$0] > 0 }
+        #expect(hasVisiblePixels)
+    }
+
+    @Test func makeVulcanBulletReturnsCorrectSize() {
+        let (pixels, width, height) = SpriteFactory.makeVulcanBullet()
+        #expect(width == 4)
+        #expect(height == 8)
+        #expect(pixels.count == 4 * 8 * 4)
+    }
+
+    @Test func makeVulcanBulletHasNonTransparentPixels() {
+        let (pixels, _, _) = SpriteFactory.makeVulcanBullet()
+        let hasVisiblePixels = stride(from: 3, to: pixels.count, by: 4).contains { pixels[$0] > 0 }
+        #expect(hasVisiblePixels)
+    }
+
+    @Test func makeEnemyBulletReturnsCorrectSize() {
+        let (pixels, width, height) = SpriteFactory.makeEnemyBullet()
+        #expect(width == 8)
+        #expect(height == 8)
+        #expect(pixels.count == 8 * 8 * 4)
+    }
+
+    @Test func makeEnemyBulletHasNonTransparentPixels() {
+        let (pixels, _, _) = SpriteFactory.makeEnemyBullet()
+        let hasVisiblePixels = stride(from: 3, to: pixels.count, by: 4).contains { pixels[$0] > 0 }
+        #expect(hasVisiblePixels)
+    }
+
+    @Test func makeGravBombSpriteReturnsCorrectSize() {
+        let (pixels, width, height) = SpriteFactory.makeGravBombSprite()
+        #expect(width == 16)
+        #expect(height == 16)
+        #expect(pixels.count == 16 * 16 * 4)
+    }
+
+    @Test func makeGravBombSpriteHasNonTransparentPixels() {
+        let (pixels, _, _) = SpriteFactory.makeGravBombSprite()
+        let hasVisiblePixels = stride(from: 3, to: pixels.count, by: 4).contains { pixels[$0] > 0 }
+        #expect(hasVisiblePixels)
+    }
+
+    // MARK: - Atlas
+
     @Test func textureAtlasSpriteNames() {
         let names = TextureAtlas.spriteNames
         #expect(names.contains("player"))
