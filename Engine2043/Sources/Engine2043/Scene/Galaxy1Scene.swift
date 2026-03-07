@@ -645,6 +645,12 @@ public final class Galaxy1Scene: GameScene {
     }
 
     private func spawnItem(at position: SIMD2<Float>) {
+        // 20% chance to spawn weapon module instead of utility item
+        if Float.random(in: 0..<1) < 0.2 {
+            spawnWeaponModuleItem(at: position)
+            return
+        }
+
         let entity = GKEntity()
         entity.addComponent(TransformComponent(position: position))
 
@@ -661,6 +667,40 @@ public final class Galaxy1Scene: GameScene {
         ))
 
         entity.addComponent(ItemComponent())
+
+        registerEntity(entity)
+        items.append(entity)
+    }
+
+    private func spawnWeaponModuleItem(at position: SIMD2<Float>) {
+        let entity = GKEntity()
+        entity.addComponent(TransformComponent(position: position))
+
+        let physics = PhysicsComponent(
+            collisionSize: GameConfig.Item.size,
+            layer: .item,
+            mask: [.player, .playerProjectile]
+        )
+        entity.addComponent(physics)
+
+        entity.addComponent(RenderComponent(
+            size: GameConfig.Item.size,
+            color: GameConfig.Palette.weaponModule
+        ))
+
+        let itemComp = ItemComponent()
+        itemComp.isWeaponModule = true
+
+        // Build weapon cycle excluding current player weapon
+        let currentWeapon = player.component(ofType: WeaponComponent.self)?.weaponType ?? .doubleCannon
+        let allWeapons: [WeaponType] = [.doubleCannon, .triSpread, .vulcanAutoGun, .phaseLaser]
+        itemComp.weaponCycle = allWeapons.filter { $0 != currentWeapon }
+        if let first = itemComp.weaponCycle.first {
+            itemComp.displayedWeapon = first
+            itemComp.weaponCycleIndex = 0
+        }
+
+        entity.addComponent(itemComp)
 
         registerEntity(entity)
         items.append(entity)
@@ -895,15 +935,29 @@ public final class Galaxy1Scene: GameScene {
     private func handlePlayerCollectsItem(item: GKEntity) {
         guard let itemComp = item.component(ofType: ItemComponent.self) else { return }
 
-        switch itemComp.itemType {
-        case .energyCell:
-            if let health = player.component(ofType: HealthComponent.self) {
-                health.currentHealth = min(health.maxHealth, health.currentHealth + GameConfig.Item.energyRestoreAmount)
-            }
-        case .weaponModule:
+        if itemComp.isWeaponModule {
             if let weapon = player.component(ofType: WeaponComponent.self) {
-                weapon.weaponType = weapon.weaponType == .doubleCannon ? .triSpread : .doubleCannon
-                weapon.damage = weapon.weaponType == .triSpread ? GameConfig.Weapon.triSpreadDamage : GameConfig.Player.damage
+                weapon.weaponType = itemComp.displayedWeapon
+                // Reset weapon-specific state
+                weapon.isLaserBurstActive = false
+                weapon.laserBurstTimer = 0
+                weapon.laserCooldownTimer = 0
+                // Update damage for weapon type
+                switch weapon.weaponType {
+                case .doubleCannon, .vulcanAutoGun:
+                    weapon.damage = GameConfig.Player.damage
+                case .triSpread:
+                    weapon.damage = GameConfig.Weapon.triSpreadDamage
+                case .phaseLaser:
+                    weapon.damage = GameConfig.Weapon.laserDamagePerTick
+                }
+            }
+        } else {
+            switch itemComp.utilityItemType {
+            case .energyCell:
+                if let health = player.component(ofType: HealthComponent.self) {
+                    health.currentHealth = min(health.maxHealth, health.currentHealth + GameConfig.Item.energyRestoreAmount)
+                }
             }
         }
 
@@ -919,7 +973,13 @@ public final class Galaxy1Scene: GameScene {
                 }
                 if alive.isEmpty {
                     if let transform = enemy.component(ofType: TransformComponent.self) {
-                        spawnItem(at: transform.position)
+                        // Capital ship turrets always drop weapon module
+                        let isTurretFormation = members.first?.component(ofType: TurretComponent.self)?.parentEntity != nil
+                        if isTurretFormation {
+                            spawnWeaponModuleItem(at: transform.position)
+                        } else {
+                            spawnItem(at: transform.position)
+                        }
                     }
                     formationEnemies.removeValue(forKey: id)
                 }

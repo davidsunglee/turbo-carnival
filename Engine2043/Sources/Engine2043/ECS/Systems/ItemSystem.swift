@@ -51,11 +51,13 @@ public final class ItemSystem {
                 item.bounceDirection = 1
             }
 
-            switch item.itemType {
-            case .energyCell:
-                render.color = GameConfig.Palette.item
-            case .weaponModule:
+            if item.isWeaponModule {
                 render.color = GameConfig.Palette.weaponModule
+            } else {
+                switch item.utilityItemType {
+                case .energyCell:
+                    render.color = GameConfig.Palette.item
+                }
             }
         }
     }
