@@ -280,7 +280,7 @@ public final class Galaxy1Scene: GameScene {
         for hull in capitalShipHulls {
             if let transform = hull.component(ofType: TransformComponent.self),
                let render = hull.component(ofType: RenderComponent.self) {
-                let uv = atlas?.uvRect(for: render.spriteId) ?? SIMD4<Float>(0, 0, 1, 1)
+                let uv = atlas?.uvRect(for: render.spriteId) ?? SpriteInstance.defaultUVRect
                 sprites.append(SpriteInstance(
                     position: transform.position,
                     size: render.size,

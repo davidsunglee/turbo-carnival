@@ -1,0 +1,429 @@
+{
+  "" : {
+    "diagnostics" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/Engine2043-primary.dia",
+    "emit-module-dependencies" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/Engine2043-primary-emit-module.d",
+    "emit-module-diagnostics" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/Engine2043-primary-emit-module.dia",
+    "pch" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/Engine2043-primary-Bridging-header.pch",
+    "swift-dependencies" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/Engine2043-primary.swiftdeps"
+  },
+  "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/Sources/Engine2043/Audio/AudioManager.swift" : {
+    "const-values" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/AudioManager.swiftconstvalues",
+    "dependencies" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/AudioManager.d",
+    "diagnostics" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/AudioManager.dia",
+    "index-unit-output-path" : "/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/AudioManager.o",
+    "llvm-bc" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/AudioManager.bc",
+    "object" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/AudioManager.o",
+    "swift-dependencies" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/AudioManager.swiftdeps",
+    "swiftmodule" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/AudioManager~partial.swiftmodule"
+  },
+  "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/Sources/Engine2043/Audio/SFXType.swift" : {
+    "const-values" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/SFXType.swiftconstvalues",
+    "dependencies" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/SFXType.d",
+    "diagnostics" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/SFXType.dia",
+    "index-unit-output-path" : "/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/SFXType.o",
+    "llvm-bc" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/SFXType.bc",
+    "object" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/SFXType.o",
+    "swift-dependencies" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/SFXType.swiftdeps",
+    "swiftmodule" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/SFXType~partial.swiftmodule"
+  },
+  "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/Sources/Engine2043/Audio/SynthAudioEngine.swift" : {
+    "const-values" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/SynthAudioEngine.swiftconstvalues",
+    "dependencies" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/SynthAudioEngine.d",
+    "diagnostics" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/SynthAudioEngine.dia",
+    "index-unit-output-path" : "/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/SynthAudioEngine.o",
+    "llvm-bc" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/SynthAudioEngine.bc",
+    "object" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/SynthAudioEngine.o",
+    "swift-dependencies" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/SynthAudioEngine.swiftdeps",
+    "swiftmodule" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/SynthAudioEngine~partial.swiftmodule"
+  },
+  "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/Sources/Engine2043/Core/GameConfig.swift" : {
+    "const-values" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/GameConfig.swiftconstvalues",
+    "dependencies" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/GameConfig.d",
+    "diagnostics" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/GameConfig.dia",
+    "index-unit-output-path" : "/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/GameConfig.o",
+    "llvm-bc" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/GameConfig.bc",
+    "object" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/GameConfig.o",
+    "swift-dependencies" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/GameConfig.swiftdeps",
+    "swiftmodule" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/GameConfig~partial.swiftmodule"
+  },
+  "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/Sources/Engine2043/Core/GameEngine.swift" : {
+    "const-values" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/GameEngine.swiftconstvalues",
+    "dependencies" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/GameEngine.d",
+    "diagnostics" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/GameEngine.dia",
+    "index-unit-output-path" : "/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/GameEngine.o",
+    "llvm-bc" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/GameEngine.bc",
+    "object" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/GameEngine.o",
+    "swift-dependencies" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/GameEngine.swiftdeps",
+    "swiftmodule" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/GameEngine~partial.swiftmodule"
+  },
+  "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/Sources/Engine2043/Core/GameTime.swift" : {
+    "const-values" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/GameTime.swiftconstvalues",
+    "dependencies" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/GameTime.d",
+    "diagnostics" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/GameTime.dia",
+    "index-unit-output-path" : "/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/GameTime.o",
+    "llvm-bc" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/GameTime.bc",
+    "object" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/GameTime.o",
+    "swift-dependencies" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/GameTime.swiftdeps",
+    "swiftmodule" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/GameTime~partial.swiftmodule"
+  },
+  "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/Sources/Engine2043/ECS/Components/BossPhaseComponent.swift" : {
+    "const-values" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/BossPhaseComponent.swiftconstvalues",
+    "dependencies" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/BossPhaseComponent.d",
+    "diagnostics" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/BossPhaseComponent.dia",
+    "index-unit-output-path" : "/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/BossPhaseComponent.o",
+    "llvm-bc" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/BossPhaseComponent.bc",
+    "object" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/BossPhaseComponent.o",
+    "swift-dependencies" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/BossPhaseComponent.swiftdeps",
+    "swiftmodule" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/BossPhaseComponent~partial.swiftmodule"
+  },
+  "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/Sources/Engine2043/ECS/Components/FormationComponent.swift" : {
+    "const-values" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/FormationComponent.swiftconstvalues",
+    "dependencies" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/FormationComponent.d",
+    "diagnostics" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/FormationComponent.dia",
+    "index-unit-output-path" : "/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/FormationComponent.o",
+    "llvm-bc" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/FormationComponent.bc",
+    "object" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/FormationComponent.o",
+    "swift-dependencies" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/FormationComponent.swiftdeps",
+    "swiftmodule" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/FormationComponent~partial.swiftmodule"
+  },
+  "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/Sources/Engine2043/ECS/Components/HealthComponent.swift" : {
+    "const-values" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/HealthComponent.swiftconstvalues",
+    "dependencies" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/HealthComponent.d",
+    "diagnostics" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/HealthComponent.dia",
+    "index-unit-output-path" : "/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/HealthComponent.o",
+    "llvm-bc" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/HealthComponent.bc",
+    "object" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/HealthComponent.o",
+    "swift-dependencies" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/HealthComponent.swiftdeps",
+    "swiftmodule" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/HealthComponent~partial.swiftmodule"
+  },
+  "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/Sources/Engine2043/ECS/Components/ItemComponent.swift" : {
+    "const-values" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/ItemComponent.swiftconstvalues",
+    "dependencies" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/ItemComponent.d",
+    "diagnostics" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/ItemComponent.dia",
+    "index-unit-output-path" : "/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/ItemComponent.o",
+    "llvm-bc" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/ItemComponent.bc",
+    "object" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/ItemComponent.o",
+    "swift-dependencies" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/ItemComponent.swiftdeps",
+    "swiftmodule" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/ItemComponent~partial.swiftmodule"
+  },
+  "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/Sources/Engine2043/ECS/Components/PhysicsComponent.swift" : {
+    "const-values" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/PhysicsComponent.swiftconstvalues",
+    "dependencies" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/PhysicsComponent.d",
+    "diagnostics" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/PhysicsComponent.dia",
+    "index-unit-output-path" : "/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/PhysicsComponent.o",
+    "llvm-bc" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/PhysicsComponent.bc",
+    "object" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/PhysicsComponent.o",
+    "swift-dependencies" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/PhysicsComponent.swiftdeps",
+    "swiftmodule" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/PhysicsComponent~partial.swiftmodule"
+  },
+  "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/Sources/Engine2043/ECS/Components/RenderComponent.swift" : {
+    "const-values" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/RenderComponent.swiftconstvalues",
+    "dependencies" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/RenderComponent.d",
+    "diagnostics" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/RenderComponent.dia",
+    "index-unit-output-path" : "/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/RenderComponent.o",
+    "llvm-bc" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/RenderComponent.bc",
+    "object" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/RenderComponent.o",
+    "swift-dependencies" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/RenderComponent.swiftdeps",
+    "swiftmodule" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/RenderComponent~partial.swiftmodule"
+  },
+  "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/Sources/Engine2043/ECS/Components/ScoreComponent.swift" : {
+    "const-values" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/ScoreComponent.swiftconstvalues",
+    "dependencies" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/ScoreComponent.d",
+    "diagnostics" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/ScoreComponent.dia",
+    "index-unit-output-path" : "/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/ScoreComponent.o",
+    "llvm-bc" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/ScoreComponent.bc",
+    "object" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/ScoreComponent.o",
+    "swift-dependencies" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/ScoreComponent.swiftdeps",
+    "swiftmodule" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/ScoreComponent~partial.swiftmodule"
+  },
+  "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/Sources/Engine2043/ECS/Components/SteeringComponent.swift" : {
+    "const-values" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/SteeringComponent.swiftconstvalues",
+    "dependencies" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/SteeringComponent.d",
+    "diagnostics" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/SteeringComponent.dia",
+    "index-unit-output-path" : "/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/SteeringComponent.o",
+    "llvm-bc" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/SteeringComponent.bc",
+    "object" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/SteeringComponent.o",
+    "swift-dependencies" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/SteeringComponent.swiftdeps",
+    "swiftmodule" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/SteeringComponent~partial.swiftmodule"
+  },
+  "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/Sources/Engine2043/ECS/Components/TransformComponent.swift" : {
+    "const-values" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/TransformComponent.swiftconstvalues",
+    "dependencies" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/TransformComponent.d",
+    "diagnostics" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/TransformComponent.dia",
+    "index-unit-output-path" : "/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/TransformComponent.o",
+    "llvm-bc" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/TransformComponent.bc",
+    "object" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/TransformComponent.o",
+    "swift-dependencies" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/TransformComponent.swiftdeps",
+    "swiftmodule" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/TransformComponent~partial.swiftmodule"
+  },
+  "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/Sources/Engine2043/ECS/Components/TurretComponent.swift" : {
+    "const-values" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/TurretComponent.swiftconstvalues",
+    "dependencies" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/TurretComponent.d",
+    "diagnostics" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/TurretComponent.dia",
+    "index-unit-output-path" : "/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/TurretComponent.o",
+    "llvm-bc" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/TurretComponent.bc",
+    "object" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/TurretComponent.o",
+    "swift-dependencies" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/TurretComponent.swiftdeps",
+    "swiftmodule" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/TurretComponent~partial.swiftmodule"
+  },
+  "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/Sources/Engine2043/ECS/Components/WeaponComponent.swift" : {
+    "const-values" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/WeaponComponent.swiftconstvalues",
+    "dependencies" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/WeaponComponent.d",
+    "diagnostics" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/WeaponComponent.dia",
+    "index-unit-output-path" : "/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/WeaponComponent.o",
+    "llvm-bc" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/WeaponComponent.bc",
+    "object" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/WeaponComponent.o",
+    "swift-dependencies" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/WeaponComponent.swiftdeps",
+    "swiftmodule" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/WeaponComponent~partial.swiftmodule"
+  },
+  "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/Sources/Engine2043/ECS/Entity.swift" : {
+    "const-values" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/Entity.swiftconstvalues",
+    "dependencies" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/Entity.d",
+    "diagnostics" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/Entity.dia",
+    "index-unit-output-path" : "/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/Entity.o",
+    "llvm-bc" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/Entity.bc",
+    "object" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/Entity.o",
+    "swift-dependencies" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/Entity.swiftdeps",
+    "swiftmodule" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/Entity~partial.swiftmodule"
+  },
+  "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/Sources/Engine2043/ECS/Systems/BackgroundSystem.swift" : {
+    "const-values" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/BackgroundSystem.swiftconstvalues",
+    "dependencies" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/BackgroundSystem.d",
+    "diagnostics" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/BackgroundSystem.dia",
+    "index-unit-output-path" : "/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/BackgroundSystem.o",
+    "llvm-bc" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/BackgroundSystem.bc",
+    "object" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/BackgroundSystem.o",
+    "swift-dependencies" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/BackgroundSystem.swiftdeps",
+    "swiftmodule" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/BackgroundSystem~partial.swiftmodule"
+  },
+  "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/Sources/Engine2043/ECS/Systems/BossSystem.swift" : {
+    "const-values" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/BossSystem.swiftconstvalues",
+    "dependencies" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/BossSystem.d",
+    "diagnostics" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/BossSystem.dia",
+    "index-unit-output-path" : "/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/BossSystem.o",
+    "llvm-bc" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/BossSystem.bc",
+    "object" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/BossSystem.o",
+    "swift-dependencies" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/BossSystem.swiftdeps",
+    "swiftmodule" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/BossSystem~partial.swiftmodule"
+  },
+  "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/Sources/Engine2043/ECS/Systems/CollisionSystem.swift" : {
+    "const-values" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/CollisionSystem.swiftconstvalues",
+    "dependencies" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/CollisionSystem.d",
+    "diagnostics" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/CollisionSystem.dia",
+    "index-unit-output-path" : "/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/CollisionSystem.o",
+    "llvm-bc" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/CollisionSystem.bc",
+    "object" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/CollisionSystem.o",
+    "swift-dependencies" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/CollisionSystem.swiftdeps",
+    "swiftmodule" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/CollisionSystem~partial.swiftmodule"
+  },
+  "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/Sources/Engine2043/ECS/Systems/FormationSystem.swift" : {
+    "const-values" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/FormationSystem.swiftconstvalues",
+    "dependencies" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/FormationSystem.d",
+    "diagnostics" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/FormationSystem.dia",
+    "index-unit-output-path" : "/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/FormationSystem.o",
+    "llvm-bc" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/FormationSystem.bc",
+    "object" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/FormationSystem.o",
+    "swift-dependencies" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/FormationSystem.swiftdeps",
+    "swiftmodule" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/FormationSystem~partial.swiftmodule"
+  },
+  "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/Sources/Engine2043/ECS/Systems/ItemSystem.swift" : {
+    "const-values" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/ItemSystem.swiftconstvalues",
+    "dependencies" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/ItemSystem.d",
+    "diagnostics" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/ItemSystem.dia",
+    "index-unit-output-path" : "/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/ItemSystem.o",
+    "llvm-bc" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/ItemSystem.bc",
+    "object" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/ItemSystem.o",
+    "swift-dependencies" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/ItemSystem.swiftdeps",
+    "swiftmodule" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/ItemSystem~partial.swiftmodule"
+  },
+  "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/Sources/Engine2043/ECS/Systems/PhysicsSystem.swift" : {
+    "const-values" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/PhysicsSystem.swiftconstvalues",
+    "dependencies" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/PhysicsSystem.d",
+    "diagnostics" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/PhysicsSystem.dia",
+    "index-unit-output-path" : "/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/PhysicsSystem.o",
+    "llvm-bc" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/PhysicsSystem.bc",
+    "object" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/PhysicsSystem.o",
+    "swift-dependencies" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/PhysicsSystem.swiftdeps",
+    "swiftmodule" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/PhysicsSystem~partial.swiftmodule"
+  },
+  "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/Sources/Engine2043/ECS/Systems/RenderSystem.swift" : {
+    "const-values" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/RenderSystem.swiftconstvalues",
+    "dependencies" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/RenderSystem.d",
+    "diagnostics" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/RenderSystem.dia",
+    "index-unit-output-path" : "/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/RenderSystem.o",
+    "llvm-bc" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/RenderSystem.bc",
+    "object" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/RenderSystem.o",
+    "swift-dependencies" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/RenderSystem.swiftdeps",
+    "swiftmodule" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/RenderSystem~partial.swiftmodule"
+  },
+  "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/Sources/Engine2043/ECS/Systems/ScoreSystem.swift" : {
+    "const-values" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/ScoreSystem.swiftconstvalues",
+    "dependencies" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/ScoreSystem.d",
+    "diagnostics" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/ScoreSystem.dia",
+    "index-unit-output-path" : "/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/ScoreSystem.o",
+    "llvm-bc" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/ScoreSystem.bc",
+    "object" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/ScoreSystem.o",
+    "swift-dependencies" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/ScoreSystem.swiftdeps",
+    "swiftmodule" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/ScoreSystem~partial.swiftmodule"
+  },
+  "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/Sources/Engine2043/ECS/Systems/SpawnDirector.swift" : {
+    "const-values" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/SpawnDirector.swiftconstvalues",
+    "dependencies" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/SpawnDirector.d",
+    "diagnostics" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/SpawnDirector.dia",
+    "index-unit-output-path" : "/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/SpawnDirector.o",
+    "llvm-bc" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/SpawnDirector.bc",
+    "object" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/SpawnDirector.o",
+    "swift-dependencies" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/SpawnDirector.swiftdeps",
+    "swiftmodule" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/SpawnDirector~partial.swiftmodule"
+  },
+  "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/Sources/Engine2043/ECS/Systems/SteeringSystem.swift" : {
+    "const-values" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/SteeringSystem.swiftconstvalues",
+    "dependencies" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/SteeringSystem.d",
+    "diagnostics" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/SteeringSystem.dia",
+    "index-unit-output-path" : "/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/SteeringSystem.o",
+    "llvm-bc" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/SteeringSystem.bc",
+    "object" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/SteeringSystem.o",
+    "swift-dependencies" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/SteeringSystem.swiftdeps",
+    "swiftmodule" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/SteeringSystem~partial.swiftmodule"
+  },
+  "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/Sources/Engine2043/ECS/Systems/WeaponSystem.swift" : {
+    "const-values" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/WeaponSystem.swiftconstvalues",
+    "dependencies" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/WeaponSystem.d",
+    "diagnostics" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/WeaponSystem.dia",
+    "index-unit-output-path" : "/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/WeaponSystem.o",
+    "llvm-bc" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/WeaponSystem.bc",
+    "object" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/WeaponSystem.o",
+    "swift-dependencies" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/WeaponSystem.swiftdeps",
+    "swiftmodule" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/WeaponSystem~partial.swiftmodule"
+  },
+  "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/Sources/Engine2043/Input/InputManager.swift" : {
+    "const-values" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/InputManager.swiftconstvalues",
+    "dependencies" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/InputManager.d",
+    "diagnostics" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/InputManager.dia",
+    "index-unit-output-path" : "/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/InputManager.o",
+    "llvm-bc" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/InputManager.bc",
+    "object" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/InputManager.o",
+    "swift-dependencies" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/InputManager.swiftdeps",
+    "swiftmodule" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/InputManager~partial.swiftmodule"
+  },
+  "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/Sources/Engine2043/Input/KeyboardInputProvider.swift" : {
+    "const-values" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/KeyboardInputProvider.swiftconstvalues",
+    "dependencies" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/KeyboardInputProvider.d",
+    "diagnostics" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/KeyboardInputProvider.dia",
+    "index-unit-output-path" : "/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/KeyboardInputProvider.o",
+    "llvm-bc" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/KeyboardInputProvider.bc",
+    "object" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/KeyboardInputProvider.o",
+    "swift-dependencies" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/KeyboardInputProvider.swiftdeps",
+    "swiftmodule" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/KeyboardInputProvider~partial.swiftmodule"
+  },
+  "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/Sources/Engine2043/Input/TouchInputProvider.swift" : {
+    "const-values" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/TouchInputProvider.swiftconstvalues",
+    "dependencies" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/TouchInputProvider.d",
+    "diagnostics" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/TouchInputProvider.dia",
+    "index-unit-output-path" : "/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/TouchInputProvider.o",
+    "llvm-bc" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/TouchInputProvider.bc",
+    "object" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/TouchInputProvider.o",
+    "swift-dependencies" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/TouchInputProvider.swiftdeps",
+    "swiftmodule" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/TouchInputProvider~partial.swiftmodule"
+  },
+  "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/Sources/Engine2043/Rendering/RenderPassPipeline.swift" : {
+    "const-values" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/RenderPassPipeline.swiftconstvalues",
+    "dependencies" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/RenderPassPipeline.d",
+    "diagnostics" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/RenderPassPipeline.dia",
+    "index-unit-output-path" : "/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/RenderPassPipeline.o",
+    "llvm-bc" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/RenderPassPipeline.bc",
+    "object" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/RenderPassPipeline.o",
+    "swift-dependencies" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/RenderPassPipeline.swiftdeps",
+    "swiftmodule" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/RenderPassPipeline~partial.swiftmodule"
+  },
+  "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/Sources/Engine2043/Rendering/RenderTypes.swift" : {
+    "const-values" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/RenderTypes.swiftconstvalues",
+    "dependencies" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/RenderTypes.d",
+    "diagnostics" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/RenderTypes.dia",
+    "index-unit-output-path" : "/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/RenderTypes.o",
+    "llvm-bc" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/RenderTypes.bc",
+    "object" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/RenderTypes.o",
+    "swift-dependencies" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/RenderTypes.swiftdeps",
+    "swiftmodule" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/RenderTypes~partial.swiftmodule"
+  },
+  "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/Sources/Engine2043/Rendering/Renderer.swift" : {
+    "const-values" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/Renderer.swiftconstvalues",
+    "dependencies" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/Renderer.d",
+    "diagnostics" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/Renderer.dia",
+    "index-unit-output-path" : "/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/Renderer.o",
+    "llvm-bc" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/Renderer.bc",
+    "object" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/Renderer.o",
+    "swift-dependencies" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/Renderer.swiftdeps",
+    "swiftmodule" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/Renderer~partial.swiftmodule"
+  },
+  "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/Sources/Engine2043/Rendering/SpriteBatcher.swift" : {
+    "const-values" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/SpriteBatcher.swiftconstvalues",
+    "dependencies" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/SpriteBatcher.d",
+    "diagnostics" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/SpriteBatcher.dia",
+    "index-unit-output-path" : "/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/SpriteBatcher.o",
+    "llvm-bc" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/SpriteBatcher.bc",
+    "object" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/SpriteBatcher.o",
+    "swift-dependencies" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/SpriteBatcher.swiftdeps",
+    "swiftmodule" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/SpriteBatcher~partial.swiftmodule"
+  },
+  "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/Sources/Engine2043/Rendering/SpriteFactory.swift" : {
+    "const-values" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/SpriteFactory.swiftconstvalues",
+    "dependencies" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/SpriteFactory.d",
+    "diagnostics" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/SpriteFactory.dia",
+    "index-unit-output-path" : "/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/SpriteFactory.o",
+    "llvm-bc" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/SpriteFactory.bc",
+    "object" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/SpriteFactory.o",
+    "swift-dependencies" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/SpriteFactory.swiftdeps",
+    "swiftmodule" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/SpriteFactory~partial.swiftmodule"
+  },
+  "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/Sources/Engine2043/Rendering/TextureAtlas.swift" : {
+    "const-values" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/TextureAtlas.swiftconstvalues",
+    "dependencies" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/TextureAtlas.d",
+    "diagnostics" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/TextureAtlas.dia",
+    "index-unit-output-path" : "/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/TextureAtlas.o",
+    "llvm-bc" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/TextureAtlas.bc",
+    "object" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/TextureAtlas.o",
+    "swift-dependencies" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/TextureAtlas.swiftdeps",
+    "swiftmodule" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/TextureAtlas~partial.swiftmodule"
+  },
+  "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/Sources/Engine2043/Scene/Galaxy1Scene.swift" : {
+    "const-values" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/Galaxy1Scene.swiftconstvalues",
+    "dependencies" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/Galaxy1Scene.d",
+    "diagnostics" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/Galaxy1Scene.dia",
+    "index-unit-output-path" : "/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/Galaxy1Scene.o",
+    "llvm-bc" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/Galaxy1Scene.bc",
+    "object" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/Galaxy1Scene.o",
+    "swift-dependencies" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/Galaxy1Scene.swiftdeps",
+    "swiftmodule" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/Galaxy1Scene~partial.swiftmodule"
+  },
+  "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/Sources/Engine2043/Scene/PlaceholderScene.swift" : {
+    "const-values" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/PlaceholderScene.swiftconstvalues",
+    "dependencies" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/PlaceholderScene.d",
+    "diagnostics" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/PlaceholderScene.dia",
+    "index-unit-output-path" : "/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/PlaceholderScene.o",
+    "llvm-bc" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/PlaceholderScene.bc",
+    "object" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/PlaceholderScene.o",
+    "swift-dependencies" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/PlaceholderScene.swiftdeps",
+    "swiftmodule" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/PlaceholderScene~partial.swiftmodule"
+  },
+  "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/Sources/Engine2043/Scene/SceneManager.swift" : {
+    "const-values" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/SceneManager.swiftconstvalues",
+    "dependencies" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/SceneManager.d",
+    "diagnostics" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/SceneManager.dia",
+    "index-unit-output-path" : "/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/SceneManager.o",
+    "llvm-bc" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/SceneManager.bc",
+    "object" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/SceneManager.o",
+    "swift-dependencies" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/SceneManager.swiftdeps",
+    "swiftmodule" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/SceneManager~partial.swiftmodule"
+  },
+  "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/DerivedSources/resource_bundle_accessor.swift" : {
+    "const-values" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/resource_bundle_accessor.swiftconstvalues",
+    "dependencies" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/resource_bundle_accessor.d",
+    "diagnostics" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/resource_bundle_accessor.dia",
+    "index-unit-output-path" : "/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/resource_bundle_accessor.o",
+    "llvm-bc" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/resource_bundle_accessor.bc",
+    "object" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/resource_bundle_accessor.o",
+    "swift-dependencies" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/resource_bundle_accessor.swiftdeps",
+    "swiftmodule" : "/Users/david/Code/XCode/turbo-carnival/.worktrees/feature-sprite-art-cgcontext/Engine2043/build/Engine2043.build/Debug/Engine2043.build/Objects-normal/x86_64/resource_bundle_accessor~partial.swiftmodule"
+  }
+}

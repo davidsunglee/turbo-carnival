@@ -11,6 +11,8 @@ public struct SpriteVertex: Sendable {
 }
 
 public struct SpriteInstance: Sendable {
+    public static let defaultUVRect = SIMD4<Float>(511.0 / 512.0, 511.0 / 512.0, 1.0 / 512.0, 1.0 / 512.0)
+
     public var position: SIMD2<Float>
     public var size: SIMD2<Float>
     public var uvRect: SIMD4<Float>
@@ -25,7 +27,7 @@ public struct SpriteInstance: Sendable {
         size: SIMD2<Float>,
         color: SIMD4<Float>,
         rotation: Float = 0,
-        uvRect: SIMD4<Float> = SIMD4<Float>(0, 0, 1, 1)
+        uvRect: SIMD4<Float> = SpriteInstance.defaultUVRect
     ) {
         self.position = position
         self.size = size

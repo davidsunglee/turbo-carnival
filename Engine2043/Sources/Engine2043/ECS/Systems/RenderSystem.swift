@@ -25,7 +25,7 @@ public final class RenderSystem {
                   let render = entity.component(ofType: RenderComponent.self),
                   render.isVisible else { continue }
 
-            let uv = atlas?.uvRect(for: render.spriteId) ?? SIMD4<Float>(0, 0, 1, 1)
+            let uv = atlas?.uvRect(for: render.spriteId) ?? SpriteInstance.defaultUVRect
 
             sprites.append(SpriteInstance(
                 position: transform.position,

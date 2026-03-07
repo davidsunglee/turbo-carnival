@@ -86,7 +86,7 @@ struct ECSTests {
 
         let sprites = system.collectSprites(atlas: nil)
         #expect(sprites.count == 1)
-        #expect(sprites[0].uvRect == SIMD4<Float>(0, 0, 1, 1))
+        #expect(sprites[0].uvRect == SpriteInstance.defaultUVRect)
     }
 
     @Test @MainActor func physicsSystemUnregister() {

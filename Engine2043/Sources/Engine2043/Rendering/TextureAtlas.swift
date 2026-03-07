@@ -96,7 +96,7 @@ public final class TextureAtlas {
 
     public func uvRect(for spriteId: String?) -> SIMD4<Float> {
         guard let id = spriteId, let rect = uvRects[id] else {
-            return uvRects["_white"] ?? SIMD4<Float>(0, 0, 1, 1)
+            return uvRects["_white"] ?? SpriteInstance.defaultUVRect
         }
         return rect
     }
