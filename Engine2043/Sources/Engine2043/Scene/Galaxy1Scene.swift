@@ -46,6 +46,7 @@ public final class Galaxy1Scene: GameScene {
     public private(set) var gameState: GameState = .playing
     private var gravBombEntities: [GKEntity] = []
     private var gravBombTimers: [ObjectIdentifier: Double] = [:]
+    private var blastEffects: [(entity: GKEntity, timer: Double)] = []
 
     // MARK: - World
     private let worldBounds = AABB(min: SIMD2(-200, -340), max: SIMD2(200, 340))
@@ -189,6 +190,16 @@ public final class Galaxy1Scene: GameScene {
 
         // Update grav-bomb timers
         updateGravBombs(deltaTime: time.fixedDeltaTime)
+
+        // Update blast effects
+        blastEffects = blastEffects.compactMap { effect in
+            let remaining = effect.timer - time.fixedDeltaTime
+            if remaining <= 0 {
+                pendingRemovals.append(effect.entity)
+                return nil
+            }
+            return (entity: effect.entity, timer: remaining)
+        }
 
         // Item system
         itemSystem.update(deltaTime: time.fixedDeltaTime)
@@ -670,7 +681,7 @@ public final class Galaxy1Scene: GameScene {
             }
         }
 
-        // Visual blast ring (removed next frame)
+        // Visual blast ring — visible for a short duration
         let blast = GKEntity()
         blast.addComponent(TransformComponent(position: center))
         blast.addComponent(RenderComponent(
@@ -680,7 +691,7 @@ public final class Galaxy1Scene: GameScene {
         let blastPhysics = PhysicsComponent(collisionSize: .zero, layer: [], mask: [])
         blast.addComponent(blastPhysics)
         registerEntity(blast)
-        pendingRemovals.append(blast)
+        blastEffects.append((entity: blast, timer: 0.15))
     }
 
     // MARK: - Collisions
@@ -798,6 +809,10 @@ public final class Galaxy1Scene: GameScene {
         let maxX = GameConfig.designWidth / 2 + margin
 
         for entity in (enemies + projectiles + enemyProjectiles) {
+            // Don't cull turrets attached to a hull — they scroll in from above
+            if let turret = entity.component(ofType: TurretComponent.self),
+               turret.parentEntity != nil { continue }
+
             guard let transform = entity.component(ofType: TransformComponent.self) else { continue }
             if transform.position.y < minY || transform.position.y > maxY ||
                transform.position.x < minX || transform.position.x > maxX {
