@@ -61,7 +61,7 @@ struct WeaponSystemTests {
         entity.addComponent(TransformComponent(position: SIMD2(0, 0)))
         let weapon = WeaponComponent(fireRate: 8, damage: 1, projectileSpeed: 500)
         weapon.secondaryCharges = 1
-        weapon.isSecondaryFiring = true
+        weapon.secondaryFiring = .gravBomb
         weapon.secondaryCooldown = 0.5  // Ready to fire
         entity.addComponent(weapon)
 

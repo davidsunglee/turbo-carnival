@@ -26,6 +26,7 @@ public final class Galaxy1Scene: GameScene {
     // MARK: - Input / Audio
     public var inputProvider: (any InputProvider)?
     public var audioProvider: (any AudioProvider)?
+    public var sfx: SynthAudioEngine?
 
     // MARK: - Entities
     private var player: GKEntity!
@@ -331,6 +332,18 @@ public final class Galaxy1Scene: GameScene {
         if let weapon = player.component(ofType: WeaponComponent.self) {
             weapon.isFiring = input.primaryFire
 
+            // Phase Laser audio
+            if weapon.weaponType == .phaseLaser {
+                if input.primaryFire && !weapon.isLaserOverheated {
+                    sfx?.startLaser()
+                    sfx?.setLaserHeat(Float(weapon.laserHeat / GameConfig.Weapon.laserMaxHeat))
+                } else {
+                    sfx?.stopLaser()
+                }
+            } else {
+                sfx?.stopLaser()
+            }
+
             // Map secondary fire buttons — first pressed wins
             if input.secondaryFire1 {
                 weapon.secondaryFiring = .gravBomb
@@ -599,6 +612,16 @@ public final class Galaxy1Scene: GameScene {
 
         registerEntity(entity)
         projectiles.append(entity)
+
+        // Play weapon fire SFX
+        if let weaponType = player.component(ofType: WeaponComponent.self)?.weaponType {
+            switch weaponType {
+            case .doubleCannon: sfx?.play(.doubleCannonFire)
+            case .triSpread: sfx?.play(.triSpreadFire)
+            case .vulcanAutoGun: sfx?.play(.vulcanFire)
+            case .phaseLaser: break // handled by real-time laser node
+            }
+        }
     }
 
     private func spawnEnemyProjectile(position: SIMD2<Float>, velocity: SIMD2<Float>, damage: Float) {
@@ -670,6 +693,7 @@ public final class Galaxy1Scene: GameScene {
 
         registerEntity(entity)
         items.append(entity)
+        sfx?.play(.itemSpawn)
     }
 
     private func spawnWeaponModuleItem(at position: SIMD2<Float>) {
@@ -704,6 +728,7 @@ public final class Galaxy1Scene: GameScene {
 
         registerEntity(entity)
         items.append(entity)
+        sfx?.play(.itemSpawn)
     }
 
     // MARK: - Updates
@@ -853,11 +878,14 @@ public final class Galaxy1Scene: GameScene {
                laserMaxY >= enemyMinY && laserMinY <= enemyMaxY {
                 health.takeDamage(hitscan.damagePerTick)
                 if !health.isAlive {
+                    sfx?.play(.enemyDestroyed)
                     if let score = enemy.component(ofType: ScoreComponent.self) {
                         scoreSystem.addScore(score.points)
                     }
                     pendingRemovals.append(enemy)
                     checkFormationWipe(enemy: enemy)
+                } else {
+                    sfx?.play(.enemyHit)
                 }
             }
         }
@@ -874,6 +902,7 @@ public final class Galaxy1Scene: GameScene {
             if laserMaxX >= itemMinX && laserMinX <= itemMaxX &&
                laserMaxY >= itemMinY && laserMinY <= itemMaxY {
                 itemSystem.handleProjectileHit(on: item)
+                sfx?.play(.itemCycle)
             }
         }
     }
@@ -895,9 +924,11 @@ public final class Galaxy1Scene: GameScene {
                 pendingRemovals.append(entityB)
             } else if layerA.contains(.playerProjectile) && layerB.contains(.item) {
                 itemSystem.handleProjectileHit(on: entityB)
+                sfx?.play(.itemCycle)
                 pendingRemovals.append(entityA)
             } else if layerB.contains(.playerProjectile) && layerA.contains(.item) {
                 itemSystem.handleProjectileHit(on: entityA)
+                sfx?.play(.itemCycle)
                 pendingRemovals.append(entityB)
             } else if layerA.contains(.player) && layerB.contains(.enemy) {
                 handlePlayerEnemyCollision(enemy: entityB)
@@ -919,11 +950,14 @@ public final class Galaxy1Scene: GameScene {
         if let health = enemy.component(ofType: HealthComponent.self) {
             health.takeDamage(GameConfig.Player.damage)
             if !health.isAlive {
+                sfx?.play(.enemyDestroyed)
                 if let score = enemy.component(ofType: ScoreComponent.self) {
                     scoreSystem.addScore(score.points)
                 }
                 pendingRemovals.append(enemy)
                 checkFormationWipe(enemy: enemy)
+            } else {
+                sfx?.play(.enemyHit)
             }
         }
         pendingRemovals.append(projectile)
@@ -931,6 +965,7 @@ public final class Galaxy1Scene: GameScene {
 
     private func handlePlayerEnemyCollision(enemy: GKEntity) {
         player.component(ofType: HealthComponent.self)?.takeDamage(GameConfig.Player.collisionDamage)
+        sfx?.play(.playerDamaged)
         if let health = enemy.component(ofType: HealthComponent.self) {
             health.takeDamage(health.currentHealth)
             if !health.isAlive {
@@ -944,10 +979,12 @@ public final class Galaxy1Scene: GameScene {
 
     private func handlePlayerHitByProjectile(projectile: GKEntity) {
         player.component(ofType: HealthComponent.self)?.takeDamage(5)
+        sfx?.play(.playerDamaged)
         pendingRemovals.append(projectile)
     }
 
     private func handlePlayerCollectsItem(item: GKEntity) {
+        sfx?.play(.itemPickup)
         guard let itemComp = item.component(ofType: ItemComponent.self) else { return }
 
         if itemComp.isWeaponModule {

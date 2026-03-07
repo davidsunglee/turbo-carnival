@@ -39,6 +39,9 @@ final class MetalView: UIView {
         let audio = AVAudioManager()
         scene.audioProvider = audio
 
+        let sfxEngine = SynthAudioEngine()
+        scene.sfx = sfxEngine
+
         engine.currentScene = scene
 
         displayLink = CADisplayLink(target: self, selector: #selector(render(_:)))

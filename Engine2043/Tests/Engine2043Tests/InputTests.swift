@@ -7,7 +7,9 @@ struct InputTests {
         let input = PlayerInput()
         #expect(input.movement == .zero)
         #expect(input.primaryFire == false)
-        #expect(input.secondaryFire == false)
+        #expect(input.secondaryFire1 == false)
+        #expect(input.secondaryFire2 == false)
+        #expect(input.secondaryFire3 == false)
     }
 
     @Test func touchZoneClassification() {

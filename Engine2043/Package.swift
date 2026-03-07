@@ -5,8 +5,8 @@ import PackageDescription
 let package = Package(
     name: "Engine2043",
     platforms: [
-        .macOS(.v14),
-        .iOS(.v17)
+        .macOS(.v15),
+        .iOS(.v18)
     ],
     products: [
         .library(name: "Engine2043", targets: ["Engine2043"])

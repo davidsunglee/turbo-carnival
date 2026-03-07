@@ -41,6 +41,9 @@ class MetalView: NSView {
         let audio = AVAudioManager()
         scene.audioProvider = audio
 
+        let sfxEngine = SynthAudioEngine()
+        scene.sfx = sfxEngine
+
         engine.currentScene = scene
     }
 
