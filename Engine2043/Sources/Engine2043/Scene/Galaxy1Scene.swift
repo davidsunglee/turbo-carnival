@@ -711,10 +711,9 @@ public final class Galaxy1Scene: GameScene {
         )
         entity.addComponent(physics)
 
-        entity.addComponent(RenderComponent(
-            size: GameConfig.Item.size,
-            color: GameConfig.Palette.item
-        ))
+        let render = RenderComponent(size: GameConfig.Item.size, color: SIMD4(1, 1, 1, 1))
+        render.spriteId = "energyDrop"
+        entity.addComponent(render)
 
         entity.addComponent(ItemComponent())
 
@@ -734,10 +733,9 @@ public final class Galaxy1Scene: GameScene {
         )
         entity.addComponent(physics)
 
-        entity.addComponent(RenderComponent(
-            size: GameConfig.Item.size,
-            color: GameConfig.Palette.weaponModule
-        ))
+        let render = RenderComponent(size: GameConfig.Item.size, color: GameConfig.Palette.weaponModule)
+        render.spriteId = "weaponModule"
+        entity.addComponent(render)
 
         let itemComp = ItemComponent()
         itemComp.isWeaponModule = true
