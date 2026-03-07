@@ -120,7 +120,7 @@ public final class SynthAudioEngine {
         buffers[.overchargeActivate] = synthesize(duration: 0.15, generator: sineChord(freqs: [330, 440, 660]))
         buffers[.bossShieldDeflect] = synthesize(duration: 0.04, generator: squareSweep(from: 1200, to: 1400))
         buffers[.playerDeath] = synthesize(duration: 0.50, generator: deathGroan())
-        buffers[.victory] = synthesize(duration: 0.60, generator: sineChord(freqs: [440, 550, 660, 880]))
+        buffers[.victory] = synthesize(duration: 1.0, generator: victoryFanfare())
     }
 
     private func synthesize(duration: Double, generator: (Float, Float) -> Float) -> AVAudioPCMBuffer {
@@ -203,6 +203,30 @@ public final class SynthAudioEngine {
         let noise = noiseBurst()
         return { t, progress in
             sweep(t, progress) * 0.6 + noise(t, progress) * 0.4
+        }
+    }
+
+    private func victoryFanfare() -> (Float, Float) -> Float {
+        // Ascending 4-note arpeggio: C5 → E5 → G5 → C6
+        // Each note has its own envelope; compensate for global AD decay
+        let notes: [(freq: Float, onset: Float)] = [
+            (523.25, 0.0), (659.25, 0.15), (783.99, 0.30), (1046.50, 0.50)
+        ]
+        return { t, progress in
+            // Compensate for global AD envelope decay (linear from 1→0 after 8% attack)
+            let compensation: Float = progress > 0.08 ? 1.0 / max(0.15, 1.0 - progress) : 1.0
+
+            var sum: Float = 0
+            for note in notes {
+                guard progress >= note.onset else { continue }
+                let localT = t - note.onset * 1.0
+                let noteAge = progress - note.onset
+                let noteEnv = max(0, 1.0 - noteAge * 1.2)
+                let sine = sin(2.0 * .pi * note.freq * localT)
+                let square = sign(sin(2.0 * .pi * note.freq * localT))
+                sum += (sine * 0.7 + square * 0.3) * noteEnv
+            }
+            return (sum / 2.0) * min(compensation, 3.0)
         }
     }
 

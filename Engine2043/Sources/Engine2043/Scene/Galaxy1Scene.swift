@@ -182,7 +182,7 @@ public final class Galaxy1Scene: GameScene {
            bossPhase.isDefeated {
             gameState = .victory
             scoreSystem.addScore(GameConfig.Score.boss)
-            sfx?.play(.victory)
+            sfx?.play(.victory) // TODO: victory SFX not audible during gameplay — needs debugging
             sfx?.stopLaser()
         }
 
