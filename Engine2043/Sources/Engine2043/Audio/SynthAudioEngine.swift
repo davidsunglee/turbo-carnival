@@ -1,5 +1,5 @@
 import AVFoundation
-import os
+import Synchronization
 
 @MainActor
 public final class SynthAudioEngine {
@@ -17,8 +17,8 @@ public final class SynthAudioEngine {
 
     // Phase Laser real-time synthesis
     private var laserNode: AVAudioSourceNode?
-    private let laserFrequency = OSAllocatedUnfairLock(initialState: Float(120.0))
-    private let laserAmplitude = OSAllocatedUnfairLock(initialState: Float(0.0))
+    private let laserFrequency = Mutex<Float>(120.0)
+    private let laserAmplitude = Mutex<Float>(0.0)
     private var laserPhase: Float = 0
     private var isLaserActive = false
 
