@@ -57,6 +57,10 @@ public final class ItemSystem {
                 switch item.utilityItemType {
                 case .energyCell:
                     render.color = GameConfig.Palette.item
+                case .chargeCell:
+                    render.color = GameConfig.Palette.chargeCell
+                case .scoreBonus:
+                    render.color = GameConfig.Palette.scoreBonus
                 }
             }
         }

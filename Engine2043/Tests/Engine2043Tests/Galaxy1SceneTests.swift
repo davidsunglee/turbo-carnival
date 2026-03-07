@@ -7,19 +7,16 @@ import simd
 final class MockInputProvider: InputProvider {
     var movement: SIMD2<Float>
     var primary: Bool
-    var secondary: Bool
 
-    init(movement: SIMD2<Float> = .zero, primary: Bool = false, secondary: Bool = false) {
+    init(movement: SIMD2<Float> = .zero, primary: Bool = false) {
         self.movement = movement
         self.primary = primary
-        self.secondary = secondary
     }
 
     func poll() -> PlayerInput {
         var input = PlayerInput()
         input.movement = movement
         input.primaryFire = primary
-        input.secondaryFire = secondary
         return input
     }
 }

@@ -73,8 +73,8 @@ struct ItemSystemTests {
 
         system.register(entity)
 
-        #expect(item.itemType == .energyCell)
+        #expect(item.utilityItemType == .energyCell)
         system.handleProjectileHit(on: entity)
-        #expect(item.itemType == .weaponModule)
+        #expect(item.utilityItemType == .chargeCell)
     }
 }

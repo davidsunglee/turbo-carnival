@@ -11,15 +11,19 @@ struct ComponentTests {
     @Test func itemComponentCycling() {
         let item = ItemComponent()
         #expect(item.currentCycleIndex == 0)
-        #expect(item.itemType == .energyCell)
+        #expect(item.utilityItemType == .energyCell)
 
         item.advanceCycle()
         #expect(item.currentCycleIndex == 1)
-        #expect(item.itemType == .weaponModule)
+        #expect(item.utilityItemType == .chargeCell)
+
+        item.advanceCycle()
+        #expect(item.currentCycleIndex == 2)
+        #expect(item.utilityItemType == .scoreBonus)
 
         item.advanceCycle()
         #expect(item.currentCycleIndex == 0)
-        #expect(item.itemType == .energyCell)
+        #expect(item.utilityItemType == .energyCell)
     }
 
     @Test func itemComponentDespawnTimer() {
