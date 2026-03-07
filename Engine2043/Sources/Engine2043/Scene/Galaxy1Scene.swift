@@ -625,10 +625,18 @@ public final class Galaxy1Scene: GameScene {
         physics.velocity = request.velocity
         entity.addComponent(physics)
 
-        entity.addComponent(RenderComponent(
-            size: projSize,
-            color: SIMD4(1, 1, 1, 1)
-        ))
+        let weaponType = weapon?.weaponType ?? .doubleCannon
+        let spriteId: String
+        switch weaponType {
+        case .doubleCannon: spriteId = "playerBullet"
+        case .triSpread:    spriteId = "triSpreadBullet"
+        case .vulcanAutoGun: spriteId = "vulcanBullet"
+        case .phaseLaser:   spriteId = "playerBullet"
+        }
+
+        let render = RenderComponent(size: projSize, color: SIMD4(1, 1, 1, 1))
+        render.spriteId = spriteId
+        entity.addComponent(render)
 
         registerEntity(entity)
         projectiles.append(entity)
@@ -656,10 +664,9 @@ public final class Galaxy1Scene: GameScene {
         physics.velocity = velocity
         entity.addComponent(physics)
 
-        entity.addComponent(RenderComponent(
-            size: SIMD2(8, 8),
-            color: GameConfig.Palette.hostileProjectile
-        ))
+        let render = RenderComponent(size: SIMD2(8, 8), color: SIMD4(1, 1, 1, 1))
+        render.spriteId = "enemyBullet"
+        entity.addComponent(render)
 
         registerEntity(entity)
         enemyProjectiles.append(entity)
@@ -677,10 +684,9 @@ public final class Galaxy1Scene: GameScene {
         physics.velocity = velocity
         entity.addComponent(physics)
 
-        entity.addComponent(RenderComponent(
-            size: SIMD2(16, 16),
-            color: GameConfig.Palette.gravBomb
-        ))
+        let render = RenderComponent(size: SIMD2(16, 16), color: SIMD4(1, 1, 1, 1))
+        render.spriteId = "gravBombSprite"
+        entity.addComponent(render)
 
         registerEntity(entity)
         gravBombEntities.append(entity)
