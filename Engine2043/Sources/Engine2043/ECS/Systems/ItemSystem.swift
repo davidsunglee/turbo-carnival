@@ -52,7 +52,12 @@ public final class ItemSystem {
             }
 
             if item.isWeaponModule {
-                render.color = GameConfig.Palette.weaponModule
+                switch item.displayedWeapon {
+                case .doubleCannon: render.color = GameConfig.Palette.weaponDoubleCannon
+                case .triSpread: render.color = GameConfig.Palette.weaponTriSpread
+                case .vulcanAutoGun: render.color = GameConfig.Palette.weaponVulcan
+                case .phaseLaser: render.color = GameConfig.Palette.weaponPhaseLaser
+                }
             } else {
                 switch item.utilityItemType {
                 case .energyCell:

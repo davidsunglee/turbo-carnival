@@ -1,6 +1,41 @@
 import AVFoundation
 import Synchronization
 
+/// Thread-safe shared state for the Phase Laser, accessible from both main and audio threads.
+final class LaserState: Sendable {
+    let frequency = Mutex<Float>(120.0)
+    let amplitude = Mutex<Float>(0.0)
+    let phase = Mutex<Float>(0)
+
+    /// Creates an AVAudioSourceNode with a render closure that runs on the audio thread.
+    /// Must be defined here (outside @MainActor) so the closure doesn't inherit main-actor isolation.
+    func makeSourceNode(format: AVAudioFormat, sampleRate: Float) -> AVAudioSourceNode {
+        let state = self
+        return AVAudioSourceNode(format: format) { _, _, frameCount, bufferList -> OSStatus in
+            let ablPointer = UnsafeMutableAudioBufferListPointer(bufferList)
+            let buffer = ablPointer[0]
+            let samples = buffer.mData!.assumingMemoryBound(to: Float.self)
+
+            let freq = state.frequency.withLock { $0 }
+            let amp = state.amplitude.withLock { $0 }
+
+            state.phase.withLock { phase in
+                for i in 0..<Int(frameCount) {
+                    let t = phase / sampleRate
+                    let lfo = sin(2.0 * .pi * 3.0 * t) * 8.0
+                    let currentFreq = freq + lfo
+                    let saw = 2.0 * ((currentFreq * t).truncatingRemainder(dividingBy: 1.0)) - 1.0
+                    let sine = sin(2.0 * .pi * currentFreq * t)
+                    samples[i] = (saw * 0.6 + sine * 0.4) * amp
+                    phase += 1
+                }
+            }
+
+            return noErr
+        }
+    }
+}
+
 @MainActor
 public final class SynthAudioEngine {
     private let audioEngine = AVAudioEngine()
@@ -17,9 +52,7 @@ public final class SynthAudioEngine {
 
     // Phase Laser real-time synthesis
     private var laserNode: AVAudioSourceNode?
-    private let laserFrequency = Mutex<Float>(120.0)
-    private let laserAmplitude = Mutex<Float>(0.0)
-    private var laserPhase: Float = 0
+    private let laser = LaserState()
     private var isLaserActive = false
 
     public var volume: Float = 0.8 {
@@ -175,34 +208,11 @@ public final class SynthAudioEngine {
         guard !isLaserActive else { return }
         isLaserActive = true
 
-        laserFrequency.withLock { $0 = 120.0 }
-        laserAmplitude.withLock { $0 = 0.3 }
-        laserPhase = 0
+        laser.frequency.withLock { $0 = 120.0 }
+        laser.amplitude.withLock { $0 = 0.3 }
+        laser.phase.withLock { $0 = 0 }
 
-        let sRate = Float(sampleRate)
-
-        let node = AVAudioSourceNode(format: format) { [weak self] _, _, frameCount, bufferList -> OSStatus in
-            guard let self else { return noErr }
-            let ablPointer = UnsafeMutableAudioBufferListPointer(bufferList)
-            let buffer = ablPointer[0]
-            let samples = buffer.mData!.assumingMemoryBound(to: Float.self)
-
-            let freq = self.laserFrequency.withLock { $0 }
-            let amp = self.laserAmplitude.withLock { $0 }
-
-            for i in 0..<Int(frameCount) {
-                let t = self.laserPhase / sRate
-                // Sawtooth + sine blend with slow LFO wobble
-                let lfo = sin(2.0 * .pi * 3.0 * t) * 8.0 // 3Hz wobble, ±8Hz
-                let currentFreq = freq + lfo
-                let saw = 2.0 * ((currentFreq * t).truncatingRemainder(dividingBy: 1.0)) - 1.0
-                let sine = sin(2.0 * .pi * currentFreq * t)
-                samples[i] = (saw * 0.6 + sine * 0.4) * amp
-                self.laserPhase += 1
-            }
-
-            return noErr
-        }
+        let node = laser.makeSourceNode(format: format, sampleRate: Float(sampleRate))
 
         audioEngine.attach(node)
         audioEngine.connect(node, to: audioEngine.mainMixerNode, format: format)
@@ -213,20 +223,20 @@ public final class SynthAudioEngine {
         guard isLaserActive else { return }
         isLaserActive = false
 
-        laserAmplitude.withLock { $0 = 0 }
+        laser.amplitude.withLock { $0 = 0 }
 
         if let node = laserNode {
             audioEngine.detach(node)
             laserNode = nil
         }
-        laserPhase = 0
+        laser.phase.withLock { $0 = 0 }
     }
 
     public func setLaserHeat(_ heat: Float) {
         let clamped = max(0, min(1, heat))
         // Map heat 0→1 to frequency 120Hz→180Hz
-        laserFrequency.withLock { $0 = 120.0 + clamped * 60.0 }
+        laser.frequency.withLock { $0 = 120.0 + clamped * 60.0 }
         // Map heat 0→1 to amplitude 0.3→0.5
-        laserAmplitude.withLock { $0 = 0.3 + clamped * 0.2 }
+        laser.amplitude.withLock { $0 = 0.3 + clamped * 0.2 }
     }
 }
