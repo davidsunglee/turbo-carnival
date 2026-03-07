@@ -861,6 +861,21 @@ public final class Galaxy1Scene: GameScene {
                 }
             }
         }
+
+        // Laser also cycles items
+        for item in items {
+            guard let transform = item.component(ofType: TransformComponent.self) else { continue }
+            let size = item.component(ofType: RenderComponent.self)?.size ?? .zero
+            let itemMinX = transform.position.x - size.x / 2
+            let itemMaxX = transform.position.x + size.x / 2
+            let itemMinY = transform.position.y - size.y / 2
+            let itemMaxY = transform.position.y + size.y / 2
+
+            if laserMaxX >= itemMinX && laserMinX <= itemMaxX &&
+               laserMaxY >= itemMinY && laserMinY <= itemMaxY {
+                itemSystem.handleProjectileHit(on: item)
+            }
+        }
     }
 
     // MARK: - Collisions
