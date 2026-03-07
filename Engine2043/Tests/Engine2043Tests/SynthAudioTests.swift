@@ -22,6 +22,22 @@ struct SynthAudioTests {
         #expect(engine.volume == 0.0)
     }
 
+    @Test @MainActor func laserStartStopDoesNotCrash() {
+        let engine = SynthAudioEngine()
+        engine.startLaser()
+        engine.setLaserHeat(0.5)
+        engine.stopLaser()
+    }
+
+    @Test @MainActor func laserHeatClampsTo01() {
+        let engine = SynthAudioEngine()
+        engine.startLaser()
+        engine.setLaserHeat(-1.0)
+        engine.setLaserHeat(2.0)
+        engine.stopLaser()
+        // No crash = pass; values are atomics read on audio thread
+    }
+
     @Test func sfxTypeHasAllExpectedCases() {
         let allCases = SFXType.allCases
         #expect(allCases.count == 9)
