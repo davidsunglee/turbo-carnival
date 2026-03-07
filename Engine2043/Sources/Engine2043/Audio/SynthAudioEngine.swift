@@ -47,7 +47,8 @@ public final class SynthAudioEngine {
     // Rate limiting: last play time per SFX type
     private var lastPlayTime: [SFXType: CFTimeInterval] = [:]
     private var cooldowns: [SFXType: CFTimeInterval] = [
-        .vulcanFire: 0.06
+        .vulcanFire: 0.06,
+        .bossShieldDeflect: 0.08
     ]
 
     // Phase Laser real-time synthesis
