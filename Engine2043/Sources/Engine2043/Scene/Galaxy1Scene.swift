@@ -693,6 +693,7 @@ public final class Galaxy1Scene: GameScene {
 
         registerEntity(entity)
         items.append(entity)
+        sfx?.play(.itemSpawn)
     }
 
     private func spawnWeaponModuleItem(at position: SIMD2<Float>) {
@@ -727,6 +728,7 @@ public final class Galaxy1Scene: GameScene {
 
         registerEntity(entity)
         items.append(entity)
+        sfx?.play(.itemSpawn)
     }
 
     // MARK: - Updates
@@ -900,6 +902,7 @@ public final class Galaxy1Scene: GameScene {
             if laserMaxX >= itemMinX && laserMinX <= itemMaxX &&
                laserMaxY >= itemMinY && laserMinY <= itemMaxY {
                 itemSystem.handleProjectileHit(on: item)
+                sfx?.play(.itemCycle)
             }
         }
     }
@@ -921,9 +924,11 @@ public final class Galaxy1Scene: GameScene {
                 pendingRemovals.append(entityB)
             } else if layerA.contains(.playerProjectile) && layerB.contains(.item) {
                 itemSystem.handleProjectileHit(on: entityB)
+                sfx?.play(.itemCycle)
                 pendingRemovals.append(entityA)
             } else if layerB.contains(.playerProjectile) && layerA.contains(.item) {
                 itemSystem.handleProjectileHit(on: entityA)
+                sfx?.play(.itemCycle)
                 pendingRemovals.append(entityB)
             } else if layerA.contains(.player) && layerB.contains(.enemy) {
                 handlePlayerEnemyCollision(enemy: entityB)
@@ -979,6 +984,7 @@ public final class Galaxy1Scene: GameScene {
     }
 
     private func handlePlayerCollectsItem(item: GKEntity) {
+        sfx?.play(.itemPickup)
         guard let itemComp = item.component(ofType: ItemComponent.self) else { return }
 
         if itemComp.isWeaponModule {
