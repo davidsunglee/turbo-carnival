@@ -77,6 +77,18 @@ struct ECSTests {
         #expect(sprites[0].position.y == 20)
     }
 
+    @Test @MainActor func renderSystemUsesDefaultUvRectWithoutSpriteId() {
+        let system = RenderSystem()
+        let entity = GKEntity()
+        entity.addComponent(TransformComponent(position: .zero))
+        entity.addComponent(RenderComponent(size: SIMD2(32, 32), color: SIMD4(1, 1, 1, 1)))
+        system.register(entity)
+
+        let sprites = system.collectSprites(atlas: nil)
+        #expect(sprites.count == 1)
+        #expect(sprites[0].uvRect == SIMD4<Float>(0, 0, 1, 1))
+    }
+
     @Test @MainActor func physicsSystemUnregister() {
         let entity = GKEntity()
         entity.addComponent(TransformComponent(position: .zero))
