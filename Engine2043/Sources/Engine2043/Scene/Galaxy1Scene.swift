@@ -332,6 +332,18 @@ public final class Galaxy1Scene: GameScene {
         if let weapon = player.component(ofType: WeaponComponent.self) {
             weapon.isFiring = input.primaryFire
 
+            // Phase Laser audio
+            if weapon.weaponType == .phaseLaser {
+                if input.primaryFire && !weapon.isLaserOverheated {
+                    sfx?.startLaser()
+                    sfx?.setLaserHeat(Float(weapon.laserHeat / GameConfig.Weapon.laserMaxHeat))
+                } else {
+                    sfx?.stopLaser()
+                }
+            } else {
+                sfx?.stopLaser()
+            }
+
             // Map secondary fire buttons — first pressed wins
             if input.secondaryFire1 {
                 weapon.secondaryFiring = .gravBomb
@@ -600,6 +612,16 @@ public final class Galaxy1Scene: GameScene {
 
         registerEntity(entity)
         projectiles.append(entity)
+
+        // Play weapon fire SFX
+        if let weaponType = player.component(ofType: WeaponComponent.self)?.weaponType {
+            switch weaponType {
+            case .doubleCannon: sfx?.play(.doubleCannonFire)
+            case .triSpread: sfx?.play(.triSpreadFire)
+            case .vulcanAutoGun: sfx?.play(.vulcanFire)
+            case .phaseLaser: break // handled by real-time laser node
+            }
+        }
     }
 
     private func spawnEnemyProjectile(position: SIMD2<Float>, velocity: SIMD2<Float>, damage: Float) {
