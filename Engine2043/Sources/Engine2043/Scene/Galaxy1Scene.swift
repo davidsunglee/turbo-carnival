@@ -897,13 +897,7 @@ public final class Galaxy1Scene: GameScene {
         sfx?.play(.gravBombLaunch)
     }
 
-    private func spawnItem(at position: SIMD2<Float>) {
-        // 20% chance to spawn weapon module instead of utility item
-        if Float.random(in: 0..<1) < 0.2 {
-            spawnWeaponModuleItem(at: position)
-            return
-        }
-
+    private func spawnUtilityItem(at position: SIMD2<Float>) {
         let entity = GKEntity()
         entity.addComponent(TransformComponent(position: position))
 
@@ -918,7 +912,9 @@ public final class Galaxy1Scene: GameScene {
         render.spriteId = "energyDrop"
         entity.addComponent(render)
 
-        entity.addComponent(ItemComponent())
+        let itemComp = ItemComponent()
+        itemComp.currentCycleIndex = Int.random(in: 0..<UtilityItemType.allCases.count)
+        entity.addComponent(itemComp)
 
         registerEntity(entity)
         items.append(entity)
@@ -1270,12 +1266,9 @@ public final class Galaxy1Scene: GameScene {
                 }
                 if alive.isEmpty {
                     if let transform = enemy.component(ofType: TransformComponent.self) {
-                        // Capital ship turrets always drop weapon module
-                        let isTurretFormation = members.first?.component(ofType: TurretComponent.self)?.parentEntity != nil
-                        if isTurretFormation {
-                            spawnWeaponModuleItem(at: transform.position)
-                        } else {
-                            spawnItem(at: transform.position)
+                        // 45% chance to drop a utility item (weapon drops are now scripted)
+                        if Float.random(in: 0..<1) < 0.45 {
+                            spawnUtilityItem(at: transform.position)
                         }
                     }
                     formationEnemies.removeValue(forKey: id)
