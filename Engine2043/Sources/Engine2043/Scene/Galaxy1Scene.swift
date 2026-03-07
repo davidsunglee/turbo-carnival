@@ -306,19 +306,6 @@ public final class Galaxy1Scene: GameScene {
             ))
         }
 
-        // Overcharge visual
-        if let weapon = player.component(ofType: WeaponComponent.self),
-           weapon.overchargeActive,
-           let transform = player.component(ofType: TransformComponent.self) {
-            sprites.append(SpriteInstance(
-                position: transform.position,
-                size: GameConfig.Player.size * 1.5,
-                color: GameConfig.Palette.overchargeGlow
-            ))
-        }
-
-        appendHUD(to: &sprites)
-
         if gameState == .gameOver {
             appendGameOverOverlay(to: &sprites)
         } else if gameState == .victory {
@@ -326,6 +313,159 @@ public final class Galaxy1Scene: GameScene {
         }
 
         return sprites
+    }
+
+    public func collectEffectSprites(effectSheet: EffectTextureSheet?) -> [SpriteInstance] {
+        var sprites: [SpriteInstance] = []
+
+        // Overcharge visual
+        if let weapon = player.component(ofType: WeaponComponent.self),
+           weapon.overchargeActive,
+           let transform = player.component(ofType: TransformComponent.self),
+           let uv = effectSheet?.uvRect(for: "overchargeGlow") {
+            sprites.append(SpriteInstance(
+                position: transform.position,
+                size: GameConfig.Player.size * 1.5,
+                color: SIMD4(1, 1, 1, 0.8),
+                uvRect: uv
+            ))
+        }
+
+        // Blast effects (grav bomb blast, EMP flash)
+        for (entity, _) in blastEffects {
+            guard let transform = entity.component(ofType: TransformComponent.self),
+                  let render = entity.component(ofType: RenderComponent.self) else { continue }
+
+            let isEmp = render.size.x >= GameConfig.designWidth * 0.9
+            let spriteId = isEmp ? "empFlash" : "gravBombBlast"
+
+            if let uv = effectSheet?.uvRect(for: spriteId) {
+                sprites.append(SpriteInstance(
+                    position: transform.position,
+                    size: render.size,
+                    color: SIMD4(1, 1, 1, render.color.w),
+                    uvRect: uv
+                ))
+            }
+        }
+
+        appendEffectHUD(to: &sprites, effectSheet: effectSheet)
+
+        return sprites
+    }
+
+    private func appendEffectHUD(to sprites: inout [SpriteInstance], effectSheet: EffectTextureSheet?) {
+        guard let effectSheet else { return }
+        let topY: Float = GameConfig.designHeight / 2 - 20
+
+        // Energy bar frame
+        if let uv = effectSheet.uvRect(for: "hudBarFrame") {
+            sprites.append(SpriteInstance(
+                position: SIMD2(-45, topY),
+                size: SIMD2(120, 12),
+                color: SIMD4(1, 1, 1, 1),
+                uvRect: uv
+            ))
+        }
+
+        // Energy bar fill
+        let health = player.component(ofType: HealthComponent.self)
+        let fraction = (health?.currentHealth ?? 0) / (health?.maxHealth ?? 100)
+        let barWidth: Float = 116 * fraction
+        let barOffset = (barWidth - 116) / 2
+        if let uv = effectSheet.uvRect(for: "hudBarFill") {
+            sprites.append(SpriteInstance(
+                position: SIMD2(-45 + barOffset, topY),
+                size: SIMD2(max(barWidth, 0), 8),
+                color: GameConfig.Palette.player,
+                uvRect: uv
+            ))
+        }
+
+        // Score bar (white quad via effect sheet white pixel)
+        sprites.append(SpriteInstance(
+            position: SIMD2(100, topY),
+            size: SIMD2(max(min(Float(scoreSystem.currentScore) / 10.0, 100.0), 0), 8),
+            color: SIMD4(1, 1, 1, 0.8),
+            uvRect: effectSheet.whitePixelUV
+        ))
+
+        // Secondary charges
+        let weapon = player.component(ofType: WeaponComponent.self)
+        let charges = weapon?.secondaryCharges ?? 0
+        if let uv = effectSheet.uvRect(for: "hudChargePip") {
+            for i in 0..<charges {
+                sprites.append(SpriteInstance(
+                    position: SIMD2(140 - Float(i) * 14, -GameConfig.designHeight / 2 + 20),
+                    size: SIMD2(12, 12),
+                    color: SIMD4(1, 1, 1, 1),
+                    uvRect: uv
+                ))
+            }
+        }
+
+        // Weapon indicator
+        let weaponType = weapon?.weaponType ?? .doubleCannon
+        let weaponColor: SIMD4<Float>
+        switch weaponType {
+        case .doubleCannon: weaponColor = SIMD4(1, 1, 1, 0.5)
+        case .triSpread:    weaponColor = GameConfig.Palette.weaponModule
+        case .vulcanAutoGun: weaponColor = SIMD4(1, 0.3, 0.3, 0.8)
+        case .phaseLaser:   weaponColor = GameConfig.Palette.laserBeam
+        }
+        if let uv = effectSheet.uvRect(for: "hudWeaponIcon") {
+            sprites.append(SpriteInstance(
+                position: SIMD2(0, -GameConfig.designHeight / 2 + 20),
+                size: SIMD2(20, 8),
+                color: weaponColor,
+                uvRect: uv
+            ))
+        }
+
+        // Phase Laser heat gauge
+        if weaponType == .phaseLaser, let w = weapon {
+            if let frameUV = effectSheet.uvRect(for: "hudHeatFrame") {
+                sprites.append(SpriteInstance(
+                    position: SIMD2(0, -GameConfig.designHeight / 2 + 30),
+                    size: SIMD2(20, 3),
+                    color: SIMD4(1, 1, 1, 1),
+                    uvRect: frameUV
+                ))
+            }
+
+            let heatFrac = Float(w.laserHeat / GameConfig.Weapon.laserMaxHeat)
+            if let fillUV = effectSheet.uvRect(for: "hudHeatFill") {
+                if w.isLaserOverheated {
+                    let cooldownFrac = Float(w.laserOverheatTimer / GameConfig.Weapon.laserOverheatCooldown)
+                    sprites.append(SpriteInstance(
+                        position: SIMD2(0, -GameConfig.designHeight / 2 + 30),
+                        size: SIMD2(20 * cooldownFrac, 2),
+                        color: SIMD4(1, 0.2, 0.2, 0.8),
+                        uvRect: fillUV
+                    ))
+                } else if heatFrac > 0 {
+                    let color = SIMD4<Float>(heatFrac, 1.0 - heatFrac * 0.6, 0.2, 0.8)
+                    sprites.append(SpriteInstance(
+                        position: SIMD2(0, -GameConfig.designHeight / 2 + 30),
+                        size: SIMD2(20 * heatFrac, 2),
+                        color: color,
+                        uvRect: fillUV
+                    ))
+                }
+            }
+        }
+
+        // Overcharge active indicator
+        if weapon?.overchargeActive == true {
+            if let uv = effectSheet.uvRect(for: "hudBarFill") {
+                sprites.append(SpriteInstance(
+                    position: SIMD2(0, -GameConfig.designHeight / 2 + 38),
+                    size: SIMD2(20, 3),
+                    color: GameConfig.Palette.overchargeGlow,
+                    uvRect: uv
+                ))
+            }
+        }
     }
 
     // MARK: - Input
@@ -842,10 +982,12 @@ public final class Galaxy1Scene: GameScene {
         // Visual blast ring — visible for a short duration
         let blast = GKEntity()
         blast.addComponent(TransformComponent(position: center))
-        blast.addComponent(RenderComponent(
+        let blastRender = RenderComponent(
             size: SIMD2(radius * 2, radius * 2),
             color: GameConfig.Palette.gravBombBlast
-        ))
+        )
+        blastRender.isVisible = false  // Rendered via effect pass instead
+        blast.addComponent(blastRender)
         let blastPhysics = PhysicsComponent(collisionSize: .zero, layer: [], mask: [])
         blast.addComponent(blastPhysics)
         registerEntity(blast)
@@ -862,10 +1004,12 @@ public final class Galaxy1Scene: GameScene {
         // Visual flash
         let flash = GKEntity()
         flash.addComponent(TransformComponent(position: .zero))
-        flash.addComponent(RenderComponent(
+        let flashRender = RenderComponent(
             size: SIMD2(GameConfig.designWidth, GameConfig.designHeight),
             color: GameConfig.Palette.empFlash
-        ))
+        )
+        flashRender.isVisible = false  // Rendered via effect pass instead
+        flash.addComponent(flashRender)
         let flashPhysics = PhysicsComponent(collisionSize: .zero, layer: [], mask: [])
         flash.addComponent(flashPhysics)
         registerEntity(flash)
@@ -1099,97 +1243,6 @@ public final class Galaxy1Scene: GameScene {
     }
 
     // MARK: - HUD
-
-    private func appendHUD(to sprites: inout [SpriteInstance]) {
-        let topY: Float = GameConfig.designHeight / 2 - 20
-
-        // Energy bar background
-        sprites.append(SpriteInstance(
-            position: SIMD2(-45, topY),
-            size: SIMD2(120, 12),
-            color: SIMD4(0.2, 0.2, 0.2, 0.8)
-        ))
-
-        // Energy bar fill
-        let health = player.component(ofType: HealthComponent.self)
-        let fraction = (health?.currentHealth ?? 0) / (health?.maxHealth ?? 100)
-        let barWidth: Float = 116 * fraction
-        let barOffset = (barWidth - 116) / 2
-        sprites.append(SpriteInstance(
-            position: SIMD2(-45 + barOffset, topY),
-            size: SIMD2(max(barWidth, 0), 8),
-            color: GameConfig.Palette.player
-        ))
-
-        // Score bar (visual indicator proportional to score)
-        let scoreWidth = min(Float(scoreSystem.currentScore) / 10.0, 100.0)
-        sprites.append(SpriteInstance(
-            position: SIMD2(100, topY),
-            size: SIMD2(max(scoreWidth, 0), 8),
-            color: SIMD4(1, 1, 1, 0.8)
-        ))
-
-        // Secondary charges (bottom-right)
-        let weapon = player.component(ofType: WeaponComponent.self)
-        let charges = weapon?.secondaryCharges ?? 0
-        for i in 0..<charges {
-            sprites.append(SpriteInstance(
-                position: SIMD2(140 - Float(i) * 14, -GameConfig.designHeight / 2 + 20),
-                size: SIMD2(10, 10),
-                color: GameConfig.Palette.gravBomb
-            ))
-        }
-
-        // Weapon indicator (bottom-center) — color per weapon type
-        let weaponType = weapon?.weaponType ?? .doubleCannon
-        let weaponColor: SIMD4<Float>
-        switch weaponType {
-        case .doubleCannon:
-            weaponColor = SIMD4(1, 1, 1, 0.5)
-        case .triSpread:
-            weaponColor = GameConfig.Palette.weaponModule
-        case .vulcanAutoGun:
-            weaponColor = SIMD4(1, 0.3, 0.3, 0.8)
-        case .phaseLaser:
-            weaponColor = GameConfig.Palette.laserBeam
-        }
-        sprites.append(SpriteInstance(
-            position: SIMD2(0, -GameConfig.designHeight / 2 + 20),
-            size: SIMD2(20, 6),
-            color: weaponColor
-        ))
-
-        // Phase Laser heat gauge
-        if weaponType == .phaseLaser, let w = weapon {
-            let heatFrac = Float(w.laserHeat / GameConfig.Weapon.laserMaxHeat)
-            if w.isLaserOverheated {
-                // Overheated — show red bar shrinking during cooldown
-                let cooldownFrac = Float(w.laserOverheatTimer / GameConfig.Weapon.laserOverheatCooldown)
-                sprites.append(SpriteInstance(
-                    position: SIMD2(0, -GameConfig.designHeight / 2 + 30),
-                    size: SIMD2(20 * cooldownFrac, 3),
-                    color: SIMD4(1, 0.2, 0.2, 0.8)
-                ))
-            } else if heatFrac > 0 {
-                // Heat building — green shifting to red
-                let color = SIMD4<Float>(heatFrac, 1.0 - heatFrac * 0.6, 0.2, 0.8)
-                sprites.append(SpriteInstance(
-                    position: SIMD2(0, -GameConfig.designHeight / 2 + 30),
-                    size: SIMD2(20 * heatFrac, 3),
-                    color: color
-                ))
-            }
-        }
-
-        // Overcharge active indicator
-        if weapon?.overchargeActive == true {
-            sprites.append(SpriteInstance(
-                position: SIMD2(0, -GameConfig.designHeight / 2 + 38),
-                size: SIMD2(20, 3),
-                color: GameConfig.Palette.overchargeGlow
-            ))
-        }
-    }
 
     private func appendGameOverOverlay(to sprites: inout [SpriteInstance]) {
         sprites.append(SpriteInstance(
