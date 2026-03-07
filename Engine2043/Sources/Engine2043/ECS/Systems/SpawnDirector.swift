@@ -25,6 +25,15 @@ public struct WaveDefinition: Sendable {
     }
 }
 
+public struct ScriptedDrop: Sendable {
+    public let triggerDistance: Float
+    public let type: ScriptedDropType
+
+    public enum ScriptedDropType: Sendable {
+        case weaponModule
+    }
+}
+
 @MainActor
 public final class SpawnDirector {
     private let waves: [WaveDefinition]
@@ -32,12 +41,18 @@ public final class SpawnDirector {
     public private(set) var pendingWaves: [WaveDefinition] = []
     public private(set) var shouldLockScroll: Bool = false
 
+    private var scriptedDrops: [ScriptedDrop]
+    private var nextDropIndex: Int = 0
+    public private(set) var pendingDrops: [ScriptedDrop] = []
+
     public init() {
         waves = Self.galaxy1Waves()
+        scriptedDrops = Self.galaxy1ScriptedDrops()
     }
 
     public func update(scrollDistance: Float) {
         pendingWaves.removeAll(keepingCapacity: true)
+        pendingDrops.removeAll(keepingCapacity: true)
 
         while nextWaveIndex < waves.count {
             let wave = waves[nextWaveIndex]
@@ -51,10 +66,23 @@ public final class SpawnDirector {
                 break
             }
         }
+
+        while nextDropIndex < scriptedDrops.count,
+              scrollDistance >= scriptedDrops[nextDropIndex].triggerDistance {
+            pendingDrops.append(scriptedDrops[nextDropIndex])
+            nextDropIndex += 1
+        }
     }
 
     public func unlockScroll() {
         shouldLockScroll = false
+    }
+
+    private static func galaxy1ScriptedDrops() -> [ScriptedDrop] {
+        return [
+            ScriptedDrop(triggerDistance: 715, type: .weaponModule),
+            ScriptedDrop(triggerDistance: 1430, type: .weaponModule),
+        ]
     }
 
     private static func galaxy1Waves() -> [WaveDefinition] {

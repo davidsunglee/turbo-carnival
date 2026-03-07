@@ -164,6 +164,15 @@ public final class Galaxy1Scene: GameScene {
         spawnDirector.update(scrollDistance: backgroundSystem.scrollDistance)
         processSpawnDirectorWaves()
 
+        // Scripted drops
+        for drop in spawnDirector.pendingDrops {
+            switch drop.type {
+            case .weaponModule:
+                let x = Float.random(in: -40...40)
+                spawnWeaponModuleItem(at: SIMD2(x, 300))
+            }
+        }
+
         // Behavior systems
         let playerPos = player.component(ofType: TransformComponent.self)?.position ?? .zero
         steeringSystem.playerPosition = playerPos
