@@ -10,7 +10,7 @@ public final class TextureAtlas {
 
     public nonisolated(unsafe) static let spriteNames: Set<String> = [
         "player", "swarmer", "bruiser", "capitalHull", "turret", "bossCore", "bossShield",
-        "playerBullet", "triSpreadBullet", "vulcanBullet", "enemyBullet", "gravBombSprite",
+        "playerBullet", "triSpreadBullet", "lightningArcIcon", "enemyBullet", "gravBombSprite",
         "energyDrop", "chargeCell", "weaponModule"
     ]
 
@@ -33,7 +33,7 @@ public final class TextureAtlas {
         // Row 172: Projectiles
         SpriteEntry(name: "playerBullet",    x: 0,   y: 172, width: 6,  height: 12),
         SpriteEntry(name: "triSpreadBullet", x: 6,   y: 172, width: 8,  height: 8),
-        SpriteEntry(name: "vulcanBullet",    x: 14,  y: 172, width: 4,  height: 8),
+        SpriteEntry(name: "lightningArcIcon", x: 14, y: 172, width: 8, height: 8),
         SpriteEntry(name: "enemyBullet",     x: 18,  y: 172, width: 8,  height: 8),
         SpriteEntry(name: "gravBombSprite",  x: 26,  y: 172, width: 16, height: 16),
         // Row 188: Pickups
@@ -82,7 +82,7 @@ public final class TextureAtlas {
             ("bossShield",  SpriteFactory.makeBossShield),
             ("playerBullet",    SpriteFactory.makePlayerBullet),
             ("triSpreadBullet", SpriteFactory.makeTriSpreadBullet),
-            ("vulcanBullet",    SpriteFactory.makeVulcanBullet),
+            ("lightningArcIcon", SpriteFactory.makeLightningArcIcon),
             ("enemyBullet",     SpriteFactory.makeEnemyBullet),
             ("gravBombSprite",  SpriteFactory.makeGravBombSprite),
             ("energyDrop",      SpriteFactory.makeEnergyDrop),

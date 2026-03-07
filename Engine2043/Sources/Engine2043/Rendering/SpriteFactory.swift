@@ -479,41 +479,34 @@ public enum SpriteFactory {
         return (extractPixels(from: ctx, width: w, height: h), w, h)
     }
 
-    // MARK: - Vulcan Bullet (4x8)
-    // Narrow dart, red (#ff3333) outline, white tip.
+    // MARK: - Lightning Arc Icon (8x8)
+    // Electric bolt icon for weapon module display.
 
-    public static func makeVulcanBullet() -> (pixels: [UInt8], width: Int, height: Int) {
-        let w = 4, h = 8
+    public static func makeLightningArcIcon() -> (pixels: [UInt8], width: Int, height: Int) {
+        let w = 8, h = 8
         guard let ctx = makeContext(width: w, height: h) else {
             return (Array(repeating: 0, count: w * h * 4), w, h)
         }
 
-        let cx = CGFloat(w) / 2
-
-        // Dark red fill
-        ctx.setFillColor(cgColor(80, 15, 15))
+        // Cyan-white lightning bolt shape
+        ctx.setStrokeColor(cgColor(100, 180, 255))
+        ctx.setLineWidth(2)
         ctx.beginPath()
-        ctx.move(to: CGPoint(x: cx, y: CGFloat(h) - 1))
-        ctx.addLine(to: CGPoint(x: 0, y: 2))
-        ctx.addLine(to: CGPoint(x: cx, y: 0))
-        ctx.addLine(to: CGPoint(x: CGFloat(w), y: 2))
-        ctx.closePath()
-        ctx.fillPath()
-
-        // Red outline
-        ctx.setStrokeColor(cgColor(255, 51, 51))
-        ctx.setLineWidth(1)
-        ctx.beginPath()
-        ctx.move(to: CGPoint(x: cx, y: CGFloat(h) - 1))
-        ctx.addLine(to: CGPoint(x: 0, y: 2))
-        ctx.addLine(to: CGPoint(x: cx, y: 0))
-        ctx.addLine(to: CGPoint(x: CGFloat(w), y: 2))
-        ctx.closePath()
+        ctx.move(to: CGPoint(x: 5, y: 0))
+        ctx.addLine(to: CGPoint(x: 3, y: 3))
+        ctx.addLine(to: CGPoint(x: 5, y: 3))
+        ctx.addLine(to: CGPoint(x: 3, y: 7))
         ctx.strokePath()
 
-        // White tip
-        ctx.setFillColor(cgColor(255, 255, 255))
-        ctx.fillEllipse(in: CGRect(x: cx - 1, y: CGFloat(h) - 3, width: 2, height: 2))
+        // Bright white core
+        ctx.setStrokeColor(cgColor(220, 240, 255))
+        ctx.setLineWidth(1)
+        ctx.beginPath()
+        ctx.move(to: CGPoint(x: 5, y: 0))
+        ctx.addLine(to: CGPoint(x: 3, y: 3))
+        ctx.addLine(to: CGPoint(x: 5, y: 3))
+        ctx.addLine(to: CGPoint(x: 3, y: 7))
+        ctx.strokePath()
 
         return (extractPixels(from: ctx, width: w, height: h), w, h)
     }
