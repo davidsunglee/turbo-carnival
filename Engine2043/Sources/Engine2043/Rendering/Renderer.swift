@@ -8,8 +8,10 @@ public final class Renderer {
     public let device: MTLDevice
     private let commandQueue: MTLCommandQueue
     private let spriteBatcher: SpriteBatcher
+    private let effectBatcher: SpriteBatcher
     private let renderPassPipeline: RenderPassPipeline
     public let textureAtlas: TextureAtlas
+    public let effectSheet: EffectTextureSheet
     private let bloomBlurKernel: MPSImageGaussianBlur
 
     public init(device: MTLDevice) throws {
@@ -23,17 +25,20 @@ public final class Renderer {
         let library = try device.makeDefaultLibrary(bundle: Bundle.module)
         self.renderPassPipeline = try RenderPassPipeline(device: device, library: library)
         self.spriteBatcher = try SpriteBatcher(device: device)
+        self.effectBatcher = try SpriteBatcher(device: device)
         self.textureAtlas = try TextureAtlas(device: device)
+        self.effectSheet = try EffectTextureSheet(device: device)
         self.bloomBlurKernel = MPSImageGaussianBlur(device: device, sigma: 6.0)
     }
 
-    public func render(to drawable: CAMetalDrawable, sprites: [SpriteInstance], totalTime: Float) {
+    public func render(to drawable: CAMetalDrawable, sprites: [SpriteInstance], effectSprites: [SpriteInstance], totalTime: Float) {
         let width = drawable.texture.width
         let height = drawable.texture.height
         guard width > 0, height > 0 else { return }
 
         renderPassPipeline.ensureOffscreenTexture(width: width, height: height)
         spriteBatcher.update(instances: sprites)
+        effectBatcher.update(instances: effectSprites)
 
         guard let commandBuffer = commandQueue.makeCommandBuffer() else { return }
 
@@ -46,6 +51,16 @@ public final class Renderer {
             uniforms: &uniforms,
             texture: textureAtlas.defaultTexture
         )
+
+        // Pass 1b: Effect sprites (same offscreen, load existing content)
+        if effectBatcher.instanceCount > 0 {
+            renderPassPipeline.encodeEffectPass(
+                commandBuffer: commandBuffer,
+                batcher: effectBatcher,
+                uniforms: &uniforms,
+                texture: effectSheet.texture
+            )
+        }
 
         // Pass 2: Bloom extract (offscreen -> bloom extract texture)
         renderPassPipeline.encodeBloomExtractPass(commandBuffer: commandBuffer)
