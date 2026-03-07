@@ -9,7 +9,9 @@ public final class TextureAtlas {
     public static let atlasSize = 512
 
     public nonisolated(unsafe) static let spriteNames: Set<String> = [
-        "player", "swarmer", "bruiser", "capitalHull", "turret", "bossCore", "bossShield"
+        "player", "swarmer", "bruiser", "capitalHull", "turret", "bossCore", "bossShield",
+        "playerBullet", "triSpreadBullet", "vulcanBullet", "enemyBullet", "gravBombSprite",
+        "energyDrop", "chargeCell", "weaponModule"
     ]
 
     struct SpriteEntry {
@@ -28,6 +30,16 @@ public final class TextureAtlas {
         SpriteEntry(name: "turret",      x: 140, y: 48,  width: 24,  height: 24),
         SpriteEntry(name: "bossCore",    x: 0,   y: 108, width: 64,  height: 64),
         SpriteEntry(name: "bossShield",  x: 64,  y: 108, width: 40,  height: 12),
+        // Row 172: Projectiles
+        SpriteEntry(name: "playerBullet",    x: 0,   y: 172, width: 6,  height: 12),
+        SpriteEntry(name: "triSpreadBullet", x: 6,   y: 172, width: 8,  height: 8),
+        SpriteEntry(name: "vulcanBullet",    x: 14,  y: 172, width: 4,  height: 8),
+        SpriteEntry(name: "enemyBullet",     x: 18,  y: 172, width: 8,  height: 8),
+        SpriteEntry(name: "gravBombSprite",  x: 26,  y: 172, width: 16, height: 16),
+        // Row 188: Pickups
+        SpriteEntry(name: "energyDrop",      x: 0,   y: 188, width: 16, height: 16),
+        SpriteEntry(name: "chargeCell",      x: 16,  y: 188, width: 16, height: 16),
+        SpriteEntry(name: "weaponModule",    x: 32,  y: 188, width: 20, height: 20),
     ]
 
     public var defaultTexture: MTLTexture { texture }
@@ -68,6 +80,14 @@ public final class TextureAtlas {
             ("turret",      SpriteFactory.makeTurret),
             ("bossCore",    SpriteFactory.makeBossCore),
             ("bossShield",  SpriteFactory.makeBossShield),
+            ("playerBullet",    SpriteFactory.makePlayerBullet),
+            ("triSpreadBullet", SpriteFactory.makeTriSpreadBullet),
+            ("vulcanBullet",    SpriteFactory.makeVulcanBullet),
+            ("enemyBullet",     SpriteFactory.makeEnemyBullet),
+            ("gravBombSprite",  SpriteFactory.makeGravBombSprite),
+            ("energyDrop",      SpriteFactory.makeEnergyDrop),
+            ("chargeCell",      SpriteFactory.makeChargeCell),
+            ("weaponModule",    SpriteFactory.makeWeaponModuleSprite),
         ]
 
         for entry in Self.layout {

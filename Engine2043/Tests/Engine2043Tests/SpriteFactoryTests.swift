@@ -177,4 +177,16 @@ struct SpriteFactoryTests {
         #expect(names.contains("bossCore"))
         #expect(names.contains("bossShield"))
     }
+
+    @Test func textureAtlasIncludesProjectileAndPickupSprites() {
+        let names = TextureAtlas.spriteNames
+        #expect(names.contains("playerBullet"))
+        #expect(names.contains("triSpreadBullet"))
+        #expect(names.contains("vulcanBullet"))
+        #expect(names.contains("enemyBullet"))
+        #expect(names.contains("gravBombSprite"))
+        #expect(names.contains("energyDrop"))
+        #expect(names.contains("chargeCell"))
+        #expect(names.contains("weaponModule"))
+    }
 }
