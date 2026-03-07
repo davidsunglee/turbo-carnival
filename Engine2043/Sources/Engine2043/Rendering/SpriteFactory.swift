@@ -87,4 +87,43 @@ public enum SpriteFactory {
 
         return (extractPixels(from: ctx, width: w, height: h), w, h)
     }
+
+    // MARK: - Tier 1 Swarmer (32x32)
+    // Downward-pointing dart. Pink/magenta (#f7768e) outline, dark fill, bright core.
+
+    public static func makeSwarmer() -> (pixels: [UInt8], width: Int, height: Int) {
+        let w = 32, h = 32
+        guard let ctx = makeContext(width: w, height: h) else {
+            return (Array(repeating: 0, count: w * h * 4), w, h)
+        }
+
+        let cx = CGFloat(w) / 2
+
+        // Dark magenta fill
+        ctx.setFillColor(cgColor(100, 30, 50))
+        ctx.beginPath()
+        ctx.move(to: CGPoint(x: cx, y: 4))
+        ctx.addLine(to: CGPoint(x: 4, y: CGFloat(h) - 4))
+        ctx.addLine(to: CGPoint(x: cx, y: CGFloat(h) - 10))
+        ctx.addLine(to: CGPoint(x: CGFloat(w) - 4, y: CGFloat(h) - 4))
+        ctx.closePath()
+        ctx.fillPath()
+
+        // Pink outline
+        ctx.setStrokeColor(cgColor(247, 118, 142))
+        ctx.setLineWidth(2)
+        ctx.beginPath()
+        ctx.move(to: CGPoint(x: cx, y: 4))
+        ctx.addLine(to: CGPoint(x: 4, y: CGFloat(h) - 4))
+        ctx.addLine(to: CGPoint(x: cx, y: CGFloat(h) - 10))
+        ctx.addLine(to: CGPoint(x: CGFloat(w) - 4, y: CGFloat(h) - 4))
+        ctx.closePath()
+        ctx.strokePath()
+
+        // Energy core
+        ctx.setFillColor(cgColor(255, 200, 210))
+        ctx.fillEllipse(in: CGRect(x: cx - 2, y: 14, width: 4, height: 4))
+
+        return (extractPixels(from: ctx, width: w, height: h), w, h)
+    }
 }
