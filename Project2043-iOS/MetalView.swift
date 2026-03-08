@@ -232,6 +232,10 @@ final class MetalView: UIView {
 
         // Check for scene restart
         if scene.shouldRestart {
+            // Shut down old audio engines before creating new ones
+            (scene.audioProvider as? AVAudioManager)?.shutdown()
+            scene.sfx?.shutdown()
+
             scene = Galaxy1Scene()
             scene.inputProvider = touchInput
             let audio = AVAudioManager()

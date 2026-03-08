@@ -64,6 +64,11 @@ public final class AVAudioManager: AudioProvider {
         }
     }
 
+    public func shutdown() {
+        stopAll()
+        engine.stop()
+    }
+
     private func loadBuffer(named name: String) -> AVAudioPCMBuffer? {
         if let cached = bufferCache[name] { return cached }
 

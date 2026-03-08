@@ -78,6 +78,10 @@ class MetalView: NSView {
 
         // Check for scene restart
         if scene.shouldRestart {
+            // Shut down old audio engines before creating new ones
+            (scene.audioProvider as? AVAudioManager)?.shutdown()
+            scene.sfx?.shutdown()
+
             scene = Galaxy1Scene()
             scene.inputProvider = inputProvider
             let audio = AVAudioManager()

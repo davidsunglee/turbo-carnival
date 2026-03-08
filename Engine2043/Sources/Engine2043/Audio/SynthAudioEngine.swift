@@ -98,6 +98,15 @@ public final class SynthAudioEngine {
         synthesizeAllBuffers()
     }
 
+    public func shutdown() {
+        stopLaser()
+        stopMusic()
+        for node in playerNodes {
+            node.stop()
+        }
+        audioEngine.stop()
+    }
+
     public func play(_ effect: SFXType) {
         // Rate limiting
         let now = CACurrentMediaTime()
