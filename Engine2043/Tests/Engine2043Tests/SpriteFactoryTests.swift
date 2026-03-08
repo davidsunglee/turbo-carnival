@@ -178,19 +178,6 @@ struct SpriteFactoryTests {
         #expect(hasVisiblePixels)
     }
 
-    @Test func makeWeaponModuleSpriteReturnsCorrectSize() {
-        let (pixels, width, height) = SpriteFactory.makeWeaponModuleSprite()
-        #expect(width == 20)
-        #expect(height == 20)
-        #expect(pixels.count == 20 * 20 * 4)
-    }
-
-    @Test func makeWeaponModuleSpriteHasNonTransparentPixels() {
-        let (pixels, _, _) = SpriteFactory.makeWeaponModuleSprite()
-        let hasVisiblePixels = stride(from: 3, to: pixels.count, by: 4).contains { pixels[$0] > 0 }
-        #expect(hasVisiblePixels)
-    }
-
     // MARK: - Effect Sprites
 
     @Test func makeGravBombBlastReturnsCorrectSize() {
@@ -347,8 +334,48 @@ struct SpriteFactoryTests {
         #expect(names.contains("gravBombSprite"))
         #expect(names.contains("energyDrop"))
         #expect(names.contains("chargeCell"))
-        #expect(names.contains("weaponModule"))
+        #expect(names.contains("weaponDoubleCannon"))
+        #expect(names.contains("weaponTriSpread"))
+        #expect(names.contains("weaponLightningArc"))
+        #expect(names.contains("weaponPhaseLaser"))
         #expect(names.contains("shieldDrop"))
         #expect(names.contains("shieldDrone"))
+    }
+
+    @Test func doubleCannonDropSpriteHasCorrectDimensions() {
+        let (pixels, w, h) = SpriteFactory.makeDoubleCannonDrop()
+        #expect(w == 24)
+        #expect(h == 24)
+        #expect(pixels.count == 24 * 24 * 4)
+        // Verify not blank — at least one non-zero alpha pixel
+        let hasContent = stride(from: 3, to: pixels.count, by: 4).contains { pixels[$0] > 0 }
+        #expect(hasContent)
+    }
+
+    @Test func triSpreadDropSpriteHasCorrectDimensions() {
+        let (pixels, w, h) = SpriteFactory.makeTriSpreadDrop()
+        #expect(w == 24)
+        #expect(h == 24)
+        #expect(pixels.count == 24 * 24 * 4)
+        let hasContent = stride(from: 3, to: pixels.count, by: 4).contains { pixels[$0] > 0 }
+        #expect(hasContent)
+    }
+
+    @Test func lightningArcDropSpriteHasCorrectDimensions() {
+        let (pixels, w, h) = SpriteFactory.makeLightningArcDrop()
+        #expect(w == 24)
+        #expect(h == 24)
+        #expect(pixels.count == 24 * 24 * 4)
+        let hasContent = stride(from: 3, to: pixels.count, by: 4).contains { pixels[$0] > 0 }
+        #expect(hasContent)
+    }
+
+    @Test func phaseLaserDropSpriteHasCorrectDimensions() {
+        let (pixels, w, h) = SpriteFactory.makePhaseLaserDrop()
+        #expect(w == 24)
+        #expect(h == 24)
+        #expect(pixels.count == 24 * 24 * 4)
+        let hasContent = stride(from: 3, to: pixels.count, by: 4).contains { pixels[$0] > 0 }
+        #expect(hasContent)
     }
 }

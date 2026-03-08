@@ -11,7 +11,8 @@ public final class TextureAtlas {
     public nonisolated(unsafe) static let spriteNames: Set<String> = [
         "player", "swarmer", "bruiser", "capitalHull", "turret", "bossCore", "bossShield",
         "playerBullet", "triSpreadBullet", "lightningArcIcon", "enemyBullet", "gravBombSprite",
-        "energyDrop", "chargeCell", "weaponModule", "shieldDrop", "shieldDrone"
+        "energyDrop", "chargeCell", "shieldDrop", "shieldDrone",
+        "weaponDoubleCannon", "weaponTriSpread", "weaponLightningArc", "weaponPhaseLaser"
     ]
 
     struct SpriteEntry {
@@ -37,11 +38,14 @@ public final class TextureAtlas {
         SpriteEntry(name: "enemyBullet",     x: 18,  y: 172, width: 8,  height: 8),
         SpriteEntry(name: "gravBombSprite",  x: 26,  y: 172, width: 16, height: 16),
         // Row 188: Pickups
-        SpriteEntry(name: "energyDrop",      x: 0,   y: 188, width: 24, height: 24),
-        SpriteEntry(name: "chargeCell",      x: 24,  y: 188, width: 24, height: 24),
-        SpriteEntry(name: "weaponModule",    x: 48,  y: 188, width: 20, height: 20),
-        SpriteEntry(name: "shieldDrop",      x: 68,  y: 188, width: 24, height: 24),
-        SpriteEntry(name: "shieldDrone",     x: 92,  y: 188, width: 10, height: 10),
+        SpriteEntry(name: "energyDrop",          x: 0,   y: 188, width: 24, height: 24),
+        SpriteEntry(name: "chargeCell",          x: 24,  y: 188, width: 24, height: 24),
+        SpriteEntry(name: "weaponDoubleCannon",  x: 48,  y: 188, width: 24, height: 24),
+        SpriteEntry(name: "weaponTriSpread",     x: 72,  y: 188, width: 24, height: 24),
+        SpriteEntry(name: "weaponLightningArc",  x: 96,  y: 188, width: 24, height: 24),
+        SpriteEntry(name: "weaponPhaseLaser",    x: 120, y: 188, width: 24, height: 24),
+        SpriteEntry(name: "shieldDrop",          x: 144, y: 188, width: 24, height: 24),
+        SpriteEntry(name: "shieldDrone",         x: 168, y: 188, width: 10, height: 10),
     ]
 
     public var defaultTexture: MTLTexture { texture }
@@ -89,7 +93,10 @@ public final class TextureAtlas {
             ("gravBombSprite",  SpriteFactory.makeGravBombSprite),
             ("energyDrop",      SpriteFactory.makeEnergyDrop),
             ("chargeCell",      SpriteFactory.makeChargeCell),
-            ("weaponModule",    SpriteFactory.makeWeaponModuleSprite),
+            ("weaponDoubleCannon",  SpriteFactory.makeDoubleCannonDrop),
+            ("weaponTriSpread",     SpriteFactory.makeTriSpreadDrop),
+            ("weaponLightningArc",  SpriteFactory.makeLightningArcDrop),
+            ("weaponPhaseLaser",    SpriteFactory.makePhaseLaserDrop),
             ("shieldDrop",      SpriteFactory.makeShieldDrop),
             ("shieldDrone",     SpriteFactory.makeShieldDrone),
         ]
