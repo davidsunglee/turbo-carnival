@@ -22,12 +22,12 @@
 		291E2D6993FA88EA4251C8AF /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		3C1193DBA9A9FFC7DC44A7E0 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		3D13BD42707ADB1B2C5B0AE4 /* MetalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetalView.swift; sourceTree = "<group>"; };
-		513C293C19F1C5B766786E41 /* Project2043-macOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Project2043-macOS.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		513C293C19F1C5B766786E41 /* Project2043-macOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; name = "Project2043-macOS.app"; path = "Project 2043.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		5250E5D30DACDDF487B288D3 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
-		5A918567041D9CA523D94314 /* Project2043-iOS.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = "Project2043-iOS.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		5A918567041D9CA523D94314 /* Project 2043.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Project 2043.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		88EF5A2EDCF5A0D25EE663A8 /* MetalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetalView.swift; sourceTree = "<group>"; };
 		8BC0E883CF1E67578B7FB1BA /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		997B9A486B09DA5E9C962D0D /* Engine2043 */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Engine2043; path = Engine2043; sourceTree = SOURCE_ROOT; };
+		997B9A486B09DA5E9C962D0D /* Engine2043 */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Engine2043; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -88,7 +88,7 @@
 		A651DDB87208F4671AA4D954 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				5A918567041D9CA523D94314 /* Project2043-iOS.app */,
+				5A918567041D9CA523D94314 /* Project 2043.app */,
 				513C293C19F1C5B766786E41 /* Project2043-macOS.app */,
 			);
 			name = Products;
@@ -125,7 +125,7 @@
 				4A633F98269F2DC093242746 /* Engine2043 */,
 			);
 			productName = "Project2043-iOS";
-			productReference = 5A918567041D9CA523D94314 /* Project2043-iOS.app */;
+			productReference = 5A918567041D9CA523D94314 /* Project 2043.app */;
 			productType = "com.apple.product-type.application";
 		};
 		94603ED9E81B2D11B7C038C6 /* Project2043-macOS */ = {
@@ -156,8 +156,6 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
 				LastUpgradeCheck = 1430;
-				TargetAttributes = {
-				};
 			};
 			buildConfigurationList = E35B3DBF9995713F6F0E388B /* Build configuration list for PBXProject "Project2043" */;
 			developmentRegion = en;
@@ -288,8 +286,8 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -323,6 +321,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
+				DEVELOPMENT_TEAM = 8GP2225C88;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -388,8 +387,8 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -405,6 +404,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
+				DEVELOPMENT_TEAM = 8GP2225C88;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				LD_RUNPATH_SEARCH_PATHS = (
