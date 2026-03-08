@@ -3,7 +3,6 @@ import GameplayKit
 public enum UtilityItemType: Int, CaseIterable, Sendable {
     case energyCell = 0
     case chargeCell = 1
-    case scoreBonus = 2
 }
 
 public final class ItemComponent: GKComponent {
