@@ -144,6 +144,101 @@ struct WeaponSystemTests {
         #expect(system.pendingSpawns.count == 3, "Tri-spread should fire 3 projectiles after 0.333s")
     }
 
+    @Test @MainActor func lightningArcRampStartsAtMinMultiplier() {
+        let player = GKEntity()
+        player.addComponent(TransformComponent(position: SIMD2(0, 0)))
+        let weapon = WeaponComponent(fireRate: 4, damage: 1, projectileSpeed: 500)
+        weapon.weaponType = .lightningArc
+        weapon.isFiring = true
+        player.addComponent(weapon)
+
+        let enemy = GKEntity()
+        enemy.addComponent(TransformComponent(position: SIMD2(0, 100)))
+        enemy.addComponent(HealthComponent(health: 20))
+
+        let system = LightningArcSystem(player: player)
+        system.registerEnemy(enemy)
+
+        // Single tick at tick rate interval
+        let tickInterval = 1.0 / GameConfig.Weapon.lightningArcTickRate
+        system.update(deltaTime: tickInterval)
+
+        #expect(!system.pendingDamage.isEmpty)
+        let damage = system.pendingDamage[0].damage
+        let expectedMinDamage = GameConfig.Weapon.lightningArcDamagePerTick * GameConfig.Weapon.lightningArcMinRampMultiplier
+        #expect(abs(damage - expectedMinDamage) < 0.01, "Initial damage should be base * minRampMultiplier (0.6 * 0.25 = 0.15)")
+    }
+
+    @Test @MainActor func lightningArcRampReachesFullDamageAfterDuration() {
+        let player = GKEntity()
+        player.addComponent(TransformComponent(position: SIMD2(0, 0)))
+        let weapon = WeaponComponent(fireRate: 4, damage: 1, projectileSpeed: 500)
+        weapon.weaponType = .lightningArc
+        weapon.isFiring = true
+        player.addComponent(weapon)
+
+        let enemy = GKEntity()
+        enemy.addComponent(TransformComponent(position: SIMD2(0, 100)))
+        enemy.addComponent(HealthComponent(health: 100))
+
+        let system = LightningArcSystem(player: player)
+        system.registerEnemy(enemy)
+
+        // Run for full ramp duration + a bit extra, collecting all damage values
+        let totalTime = GameConfig.Weapon.lightningArcRampDuration + 0.1
+        let steps = Int(totalTime / (1.0 / 60.0))
+        var allDamage: [Float] = []
+        for _ in 0..<steps {
+            system.update(deltaTime: 1.0 / 60.0)
+            allDamage.append(contentsOf: system.pendingDamage.map { $0.damage })
+        }
+
+        let lastDamage = allDamage.last!
+        let baseDamage = GameConfig.Weapon.lightningArcDamagePerTick
+        #expect(abs(lastDamage - baseDamage) < 0.01, "After ramp duration, damage should be full base damage (0.6)")
+    }
+
+    @Test @MainActor func lightningArcRampResetsOnTargetChange() {
+        let player = GKEntity()
+        player.addComponent(TransformComponent(position: SIMD2(0, 0)))
+        let weapon = WeaponComponent(fireRate: 4, damage: 1, projectileSpeed: 500)
+        weapon.weaponType = .lightningArc
+        weapon.isFiring = true
+        player.addComponent(weapon)
+
+        let enemy1 = GKEntity()
+        enemy1.addComponent(TransformComponent(position: SIMD2(0, 100)))
+        enemy1.addComponent(HealthComponent(health: 100))
+
+        let enemy2 = GKEntity()
+        enemy2.addComponent(TransformComponent(position: SIMD2(0, 200)))
+        enemy2.addComponent(HealthComponent(health: 100))
+
+        let system = LightningArcSystem(player: player)
+        system.registerEnemy(enemy1)
+        system.registerEnemy(enemy2)
+
+        // Ramp on enemy1 for 0.3s
+        let steps = Int(0.3 / (1.0 / 60.0))
+        for _ in 0..<steps {
+            system.update(deltaTime: 1.0 / 60.0)
+        }
+
+        // Now move enemy2 closer so it becomes the primary target
+        enemy2.component(ofType: TransformComponent.self)!.position = SIMD2(0, 50)
+        enemy1.component(ofType: TransformComponent.self)!.position = SIMD2(0, 200)
+
+        // Next tick should reset ramp — damage on primary should be back to min
+        let tickInterval = 1.0 / GameConfig.Weapon.lightningArcTickRate
+        system.update(deltaTime: tickInterval)
+
+        // Find damage applied to enemy2 (the new primary)
+        let enemy2Damage = system.pendingDamage.filter { $0.entity === enemy2 }
+        #expect(!enemy2Damage.isEmpty)
+        let expectedMinDamage = GameConfig.Weapon.lightningArcDamagePerTick * GameConfig.Weapon.lightningArcMinRampMultiplier
+        #expect(abs(enemy2Damage[0].damage - expectedMinDamage) < 0.01, "Ramp should reset when primary target changes")
+    }
+
     @Test @MainActor func weaponSystemEnemyFiresDownward() {
         let system = WeaponSystem()
 
