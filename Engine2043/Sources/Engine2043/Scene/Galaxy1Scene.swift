@@ -54,6 +54,9 @@ public final class Galaxy1Scene: GameScene {
     private var slowMoTimer: Double = 0
     private var isSlowMo: Bool = false
     public var hudInsets: (top: Float, bottom: Float) = (0, 0)
+    private var lastWeaponType: WeaponType?
+    private var weaponNameTimer: Double = 0
+    private static let weaponNameDuration: Double = 2.0
     private var musicStarted = false
 
     // MARK: - World
@@ -166,6 +169,19 @@ public final class Galaxy1Scene: GameScene {
         }
 
         handleInput()
+
+        // Track weapon type changes for HUD flash
+        if let weapon = player.component(ofType: WeaponComponent.self) {
+            if lastWeaponType == nil {
+                lastWeaponType = weapon.weaponType
+            } else if weapon.weaponType != lastWeaponType {
+                lastWeaponType = weapon.weaponType
+                weaponNameTimer = Self.weaponNameDuration
+            }
+        }
+        if weaponNameTimer > 0 {
+            weaponNameTimer -= time.fixedDeltaTime
+        }
 
         // Background and spawn director
         backgroundSystem.update(deltaTime: time.fixedDeltaTime)
@@ -518,6 +534,19 @@ public final class Galaxy1Scene: GameScene {
             ))
         }
 
+        // Weapon name flash
+        if weaponNameTimer > 0 {
+            let fadeAlpha = Float(min(weaponNameTimer / 0.3, 1.0))
+            let name = weaponDisplayName(weaponType)
+            sprites.append(contentsOf: makeTextSprites(
+                name,
+                at: SIMD2(0, bottomY + 12),
+                color: SIMD4(weaponColor.x, weaponColor.y, weaponColor.z, fadeAlpha),
+                scale: 1.0,
+                effectSheet: effectSheet
+            ))
+        }
+
         // Phase Laser heat gauge
         if weaponType == .phaseLaser, let w = weapon {
             if let frameUV = effectSheet.uvRect(for: "hudHeatFrame") {
@@ -561,6 +590,15 @@ public final class Galaxy1Scene: GameScene {
                     uvRect: uv
                 ))
             }
+        }
+    }
+
+    private func weaponDisplayName(_ type: WeaponType) -> String {
+        switch type {
+        case .doubleCannon: return "DOUBLE CANNON"
+        case .triSpread:    return "TRI-SPREAD"
+        case .lightningArc: return "LIGHTNING ARC"
+        case .phaseLaser:   return "PHASE LASER"
         }
     }
 
