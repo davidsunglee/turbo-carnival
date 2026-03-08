@@ -42,8 +42,10 @@ public enum GameConfig {
     }
 
     public enum Weapon {
-        public static let triSpreadAngle: Float = .pi / 12
+        public static let triSpreadAngle: Float = .pi / 9
+        public static let triSpreadFireRate: Double = 3.0
         public static let triSpreadDamage: Float = 0.7
+
         public static let gravBombMaxCharges = 3
         public static let gravBombStartCharges = 1
         public static let gravBombDetonateTime: Double = 0.4
@@ -52,11 +54,13 @@ public enum GameConfig {
 
         // Lightning Arc
         public static let lightningArcRange: Float = 200
-        public static let lightningArcDamagePerTick: Float = 0.8
+        public static let lightningArcDamagePerTick: Float = 0.6
         public static let lightningArcTickRate: Double = 10.0
         public static let lightningArcChainTargets: Int = 2
         public static let lightningArcChainDamageFalloff: Float = 0.5
         public static let lightningArcChainRange: Float = 80
+        public static let lightningArcRampDuration: Double = 0.5
+        public static let lightningArcMinRampMultiplier: Float = 0.25
 
         // Phase Laser
         public static let laserTickInterval: Double = 0.1
@@ -66,12 +70,13 @@ public enum GameConfig {
         public static let laserCoolPerSecond: Double = 2.0
         public static let laserMaxHeat: Double = 1.0
         public static let laserOverheatCooldown: Double = 1.0
+        public static let laserMaxHeatDamageMultiplier: Float = 1.6
 
         // EMP Sweep
-        public static let empSlowMoDuration: Double = 0.3
+        public static let empSlowMoDuration: Double = 0.8
 
         // Overcharge Protocol
-        public static let overchargeDuration: Double = 5.0
+        public static let overchargeDuration: Double = 4.0
         public static let overchargeFireRateMultiplier: Double = 2.0
         public static let overchargeHitboxScale: Float = 1.5
     }
