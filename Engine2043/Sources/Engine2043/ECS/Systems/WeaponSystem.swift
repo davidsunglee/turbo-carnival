@@ -79,10 +79,12 @@ public final class WeaponSystem {
                     let tickInterval = GameConfig.Weapon.laserTickInterval
                     if weapon.timeSinceLastShot >= tickInterval {
                         weapon.timeSinceLastShot -= tickInterval
+                        let heatRatio = Float(weapon.laserHeat / GameConfig.Weapon.laserMaxHeat)
+                        let heatMultiplier = 1.0 + heatRatio * (GameConfig.Weapon.laserMaxHeatDamageMultiplier - 1.0)
                         pendingLaserHitscans.append(LaserHitscanRequest(
                             position: transform.position,
                             width: GameConfig.Weapon.laserWidth,
-                            damagePerTick: GameConfig.Weapon.laserDamagePerTick
+                            damagePerTick: GameConfig.Weapon.laserDamagePerTick * heatMultiplier
                         ))
                     }
 

@@ -239,6 +239,71 @@ struct WeaponSystemTests {
         #expect(abs(enemy2Damage[0].damage - expectedMinDamage) < 0.01, "Ramp should reset when primary target changes")
     }
 
+    @Test @MainActor func phaseLaserDamageScalesWithHeat() {
+        let system = WeaponSystem()
+
+        let entity = GKEntity()
+        entity.addComponent(TransformComponent(position: SIMD2(0, 0)))
+        let weapon = WeaponComponent(fireRate: 4, damage: 1, projectileSpeed: 500)
+        weapon.weaponType = .phaseLaser
+        weapon.isFiring = true
+        entity.addComponent(weapon)
+
+        system.register(entity)
+
+        // Run for 0.5s (half heat buildup). Heat = 0.5, maxHeat = 1.0.
+        // Expected multiplier at heat=0.5: 1.0 + (0.5/1.0) * (1.6 - 1.0) = 1.3
+        // Expected damagePerTick: 1.0 * 1.3 = 1.3
+        let steps = Int(0.5 / GameConfig.fixedTimeStep)
+        var allHitscans: [LaserHitscanRequest] = []
+        for _ in 0..<steps {
+            var time = GameTime()
+            time.advance(by: GameConfig.fixedTimeStep)
+            _ = time.shouldPerformFixedUpdate()
+            system.update(time: time)
+            allHitscans.append(contentsOf: system.pendingLaserHitscans)
+        }
+
+        // Get the last hitscan request — it should have scaled damage
+        let lastHitscan = allHitscans.last!
+        // At heat ~0.5, damage should be ~1.3 (between 1.0 and 1.6)
+        #expect(lastHitscan.damagePerTick > 1.1, "Laser damage should scale up with heat")
+        #expect(lastHitscan.damagePerTick < 1.5, "Laser damage should not exceed expected mid-heat value")
+    }
+
+    @Test @MainActor func phaseLaserDamageStartsAtBase() {
+        let system = WeaponSystem()
+
+        let entity = GKEntity()
+        entity.addComponent(TransformComponent(position: SIMD2(0, 0)))
+        let weapon = WeaponComponent(fireRate: 4, damage: 1, projectileSpeed: 500)
+        weapon.weaponType = .phaseLaser
+        weapon.isFiring = true
+        entity.addComponent(weapon)
+
+        system.register(entity)
+
+        // Run enough frames to produce a laser hitscan (tick interval = 0.1s)
+        // +1 to handle floating-point accumulation not reaching exact threshold
+        let steps = Int(ceil(GameConfig.Weapon.laserTickInterval / GameConfig.fixedTimeStep)) + 1
+        var allHitscans: [LaserHitscanRequest] = []
+        for _ in 0..<steps {
+            var time = GameTime()
+            time.advance(by: GameConfig.fixedTimeStep)
+            _ = time.shouldPerformFixedUpdate()
+            system.update(time: time)
+            allHitscans.append(contentsOf: system.pendingLaserHitscans)
+        }
+
+        // First hitscan should be very close to base damage
+        guard let firstHitscan = allHitscans.first else {
+            #expect(Bool(false), "Should have a laser hitscan")
+            return
+        }
+        #expect(firstHitscan.damagePerTick >= 1.0, "Initial damage should be at least base")
+        #expect(firstHitscan.damagePerTick < 1.15, "Initial damage should be near base (low heat)")
+    }
+
     @Test @MainActor func weaponSystemEnemyFiresDownward() {
         let system = WeaponSystem()
 
