@@ -746,11 +746,101 @@ public enum SpriteFactory {
         return (extractPixels(from: ctx, width: w, height: h), w, h)
     }
 
-    // MARK: - Weapon Module (20x20)
-    // Diamond frame with crosshair/plus inside, blue (#4d80ff) outline, darker fill.
+    // MARK: - Double Cannon Drop (24x24)
+    // Two parallel vertical barrels with bright muzzle dots at top.
 
-    public static func makeWeaponModuleSprite() -> (pixels: [UInt8], width: Int, height: Int) {
-        let w = 20, h = 20
+    public static func makeDoubleCannonDrop() -> (pixels: [UInt8], width: Int, height: Int) {
+        let w = 24, h = 24
+        guard let ctx = makeContext(width: w, height: h) else {
+            return (Array(repeating: 0, count: w * h * 4), w, h)
+        }
+
+        // Outer glow
+        ctx.setFillColor(cgColor(0, 128, 255, 40))
+        ctx.fillEllipse(in: CGRect(x: 2, y: 2, width: 20, height: 20))
+
+        // Left barrel
+        ctx.setFillColor(cgColor(0, 128, 255))
+        ctx.fill(CGRect(x: 6, y: 5, width: 4, height: 14))
+        // Right barrel
+        ctx.fill(CGRect(x: 14, y: 5, width: 4, height: 14))
+
+        // Barrel highlights
+        ctx.setStrokeColor(cgColor(255, 255, 255, 200))
+        ctx.setLineWidth(1)
+        ctx.beginPath()
+        ctx.move(to: CGPoint(x: 8, y: 6))
+        ctx.addLine(to: CGPoint(x: 8, y: 18))
+        ctx.move(to: CGPoint(x: 16, y: 6))
+        ctx.addLine(to: CGPoint(x: 16, y: 18))
+        ctx.strokePath()
+
+        // Muzzle flash dots
+        ctx.setFillColor(cgColor(200, 230, 255))
+        ctx.fillEllipse(in: CGRect(x: 6.5, y: 3, width: 3, height: 3))
+        ctx.fillEllipse(in: CGRect(x: 14.5, y: 3, width: 3, height: 3))
+
+        // Base connecting piece
+        ctx.setFillColor(cgColor(0, 100, 200))
+        ctx.fill(CGRect(x: 8, y: 17, width: 8, height: 3))
+
+        return (extractPixels(from: ctx, width: w, height: h), w, h)
+    }
+
+    // MARK: - Tri-Spread Drop (24x24)
+    // Three lines fanning upward from a common base — trident/spread shape.
+
+    public static func makeTriSpreadDrop() -> (pixels: [UInt8], width: Int, height: Int) {
+        let w = 24, h = 24
+        guard let ctx = makeContext(width: w, height: h) else {
+            return (Array(repeating: 0, count: w * h * 4), w, h)
+        }
+
+        // Outer glow
+        ctx.setFillColor(cgColor(255, 0, 51, 40))
+        ctx.fillEllipse(in: CGRect(x: 2, y: 2, width: 20, height: 20))
+
+        let baseX: CGFloat = 12
+        let baseY: CGFloat = 20
+
+        // Three spread lines (thick, filled)
+        ctx.setStrokeColor(cgColor(255, 0, 51))
+        ctx.setLineWidth(3)
+        ctx.setLineCap(.round)
+        ctx.beginPath()
+        // Center prong
+        ctx.move(to: CGPoint(x: baseX, y: baseY))
+        ctx.addLine(to: CGPoint(x: baseX, y: 4))
+        // Left prong
+        ctx.move(to: CGPoint(x: baseX, y: baseY))
+        ctx.addLine(to: CGPoint(x: 4, y: 6))
+        // Right prong
+        ctx.move(to: CGPoint(x: baseX, y: baseY))
+        ctx.addLine(to: CGPoint(x: 20, y: 6))
+        ctx.strokePath()
+
+        // White highlight on center prong
+        ctx.setStrokeColor(cgColor(255, 255, 255, 200))
+        ctx.setLineWidth(1)
+        ctx.beginPath()
+        ctx.move(to: CGPoint(x: baseX, y: baseY - 1))
+        ctx.addLine(to: CGPoint(x: baseX, y: 5))
+        ctx.strokePath()
+
+        // Bright tips
+        ctx.setFillColor(cgColor(255, 200, 210))
+        ctx.fillEllipse(in: CGRect(x: baseX - 1.5, y: 3, width: 3, height: 3))
+        ctx.fillEllipse(in: CGRect(x: 3, y: 5, width: 3, height: 3))
+        ctx.fillEllipse(in: CGRect(x: 19, y: 5, width: 3, height: 3))
+
+        return (extractPixels(from: ctx, width: w, height: h), w, h)
+    }
+
+    // MARK: - Lightning Arc Drop (24x24)
+    // Plasma ring — circle with 3-4 jagged sparks radiating outward.
+
+    public static func makeLightningArcDrop() -> (pixels: [UInt8], width: Int, height: Int) {
+        let w = 24, h = 24
         guard let ctx = makeContext(width: w, height: h) else {
             return (Array(repeating: 0, count: w * h * 4), w, h)
         }
@@ -758,36 +848,108 @@ public enum SpriteFactory {
         let cx = CGFloat(w) / 2
         let cy = CGFloat(h) / 2
 
-        // Dark fill diamond
-        ctx.setFillColor(cgColor(15, 25, 60))
-        ctx.beginPath()
-        ctx.move(to: CGPoint(x: cx, y: CGFloat(h) - 2))
-        ctx.addLine(to: CGPoint(x: 2, y: cy))
-        ctx.addLine(to: CGPoint(x: cx, y: 2))
-        ctx.addLine(to: CGPoint(x: CGFloat(w) - 2, y: cy))
-        ctx.closePath()
-        ctx.fillPath()
+        // Outer glow
+        ctx.setFillColor(cgColor(255, 255, 0, 40))
+        ctx.fillEllipse(in: CGRect(x: 2, y: 2, width: 20, height: 20))
 
-        // Blue outline diamond
-        ctx.setStrokeColor(cgColor(77, 128, 255))
-        ctx.setLineWidth(2)
+        // Main plasma ring
+        ctx.setStrokeColor(cgColor(255, 255, 0))
+        ctx.setLineWidth(2.5)
+        ctx.strokeEllipse(in: CGRect(x: 6, y: 6, width: 12, height: 12))
+
+        // Bright inner ring
+        ctx.setFillColor(cgColor(255, 255, 200))
+        ctx.fillEllipse(in: CGRect(x: cx - 2, y: cy - 2, width: 4, height: 4))
+
+        // 4 jagged sparks radiating outward
+        ctx.setStrokeColor(cgColor(255, 255, 100))
+        ctx.setLineWidth(1.5)
+        ctx.setLineCap(.round)
         ctx.beginPath()
-        ctx.move(to: CGPoint(x: cx, y: CGFloat(h) - 2))
-        ctx.addLine(to: CGPoint(x: 2, y: cy))
-        ctx.addLine(to: CGPoint(x: cx, y: 2))
-        ctx.addLine(to: CGPoint(x: CGFloat(w) - 2, y: cy))
-        ctx.closePath()
+        // Top spark
+        ctx.move(to: CGPoint(x: cx, y: 6))
+        ctx.addLine(to: CGPoint(x: cx - 1, y: 3))
+        ctx.addLine(to: CGPoint(x: cx + 1, y: 1))
+        // Right spark
+        ctx.move(to: CGPoint(x: 18, y: cy))
+        ctx.addLine(to: CGPoint(x: 21, y: cy - 1))
+        ctx.addLine(to: CGPoint(x: 23, y: cy + 1))
+        // Bottom spark
+        ctx.move(to: CGPoint(x: cx, y: 18))
+        ctx.addLine(to: CGPoint(x: cx + 1, y: 21))
+        ctx.addLine(to: CGPoint(x: cx - 1, y: 23))
+        // Left spark
+        ctx.move(to: CGPoint(x: 6, y: cy))
+        ctx.addLine(to: CGPoint(x: 3, y: cy + 1))
+        ctx.addLine(to: CGPoint(x: 1, y: cy - 1))
         ctx.strokePath()
 
-        // Crosshair/plus inside
-        ctx.setStrokeColor(cgColor(120, 160, 255))
+        // White highlight on ring top
+        ctx.setStrokeColor(cgColor(255, 255, 255, 200))
         ctx.setLineWidth(1)
         ctx.beginPath()
-        ctx.move(to: CGPoint(x: cx, y: cy - 4))
-        ctx.addLine(to: CGPoint(x: cx, y: cy + 4))
-        ctx.move(to: CGPoint(x: cx - 4, y: cy))
-        ctx.addLine(to: CGPoint(x: cx + 4, y: cy))
+        ctx.addArc(center: CGPoint(x: cx, y: cy), radius: 6, startAngle: -.pi * 0.7, endAngle: -.pi * 0.3, clockwise: false)
         ctx.strokePath()
+
+        return (extractPixels(from: ctx, width: w, height: h), w, h)
+    }
+
+    // MARK: - Phase Laser Drop (24x24)
+    // Focused beam line with lens circle at base, radiating lines at tip.
+
+    public static func makePhaseLaserDrop() -> (pixels: [UInt8], width: Int, height: Int) {
+        let w = 24, h = 24
+        guard let ctx = makeContext(width: w, height: h) else {
+            return (Array(repeating: 0, count: w * h * 4), w, h)
+        }
+
+        let cx = CGFloat(w) / 2
+
+        // Outer glow
+        ctx.setFillColor(cgColor(0, 255, 51, 40))
+        ctx.fillEllipse(in: CGRect(x: 2, y: 2, width: 20, height: 20))
+
+        // Beam line (thick)
+        ctx.setStrokeColor(cgColor(0, 255, 51))
+        ctx.setLineWidth(3)
+        ctx.setLineCap(.round)
+        ctx.beginPath()
+        ctx.move(to: CGPoint(x: cx, y: 18))
+        ctx.addLine(to: CGPoint(x: cx, y: 5))
+        ctx.strokePath()
+
+        // Lens circle at base
+        ctx.setStrokeColor(cgColor(0, 200, 40))
+        ctx.setLineWidth(2)
+        ctx.strokeEllipse(in: CGRect(x: cx - 4, y: 16, width: 8, height: 6))
+
+        // Radiating lines at tip
+        ctx.setStrokeColor(cgColor(0, 255, 51))
+        ctx.setLineWidth(1.5)
+        ctx.setLineCap(.round)
+        ctx.beginPath()
+        // Center tip
+        ctx.move(to: CGPoint(x: cx, y: 5))
+        ctx.addLine(to: CGPoint(x: cx, y: 2))
+        // Left ray
+        ctx.move(to: CGPoint(x: cx, y: 5))
+        ctx.addLine(to: CGPoint(x: cx - 4, y: 2))
+        // Right ray
+        ctx.move(to: CGPoint(x: cx, y: 5))
+        ctx.addLine(to: CGPoint(x: cx + 4, y: 2))
+        ctx.strokePath()
+
+        // White highlight down beam center
+        ctx.setStrokeColor(cgColor(255, 255, 255, 200))
+        ctx.setLineWidth(1)
+        ctx.beginPath()
+        ctx.move(to: CGPoint(x: cx, y: 17))
+        ctx.addLine(to: CGPoint(x: cx, y: 6))
+        ctx.strokePath()
+
+        // Bright tip dot
+        ctx.setFillColor(cgColor(200, 255, 220))
+        ctx.fillEllipse(in: CGRect(x: cx - 1.5, y: 2, width: 3, height: 3))
 
         return (extractPixels(from: ctx, width: w, height: h), w, h)
     }
