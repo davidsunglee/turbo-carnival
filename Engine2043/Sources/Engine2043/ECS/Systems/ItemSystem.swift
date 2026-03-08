@@ -53,10 +53,18 @@ public final class ItemSystem {
 
             if item.isWeaponModule {
                 switch item.displayedWeapon {
-                case .doubleCannon: render.color = GameConfig.Palette.weaponDoubleCannon
-                case .triSpread: render.color = GameConfig.Palette.weaponTriSpread
-                case .lightningArc: render.color = GameConfig.Palette.weaponLightningArc
-                case .phaseLaser: render.color = GameConfig.Palette.weaponPhaseLaser
+                case .doubleCannon:
+                    render.color = GameConfig.Palette.weaponDoubleCannon
+                    render.spriteId = "weaponDoubleCannon"
+                case .triSpread:
+                    render.color = GameConfig.Palette.weaponTriSpread
+                    render.spriteId = "weaponTriSpread"
+                case .lightningArc:
+                    render.color = GameConfig.Palette.weaponLightningArc
+                    render.spriteId = "weaponLightningArc"
+                case .phaseLaser:
+                    render.color = GameConfig.Palette.weaponPhaseLaser
+                    render.spriteId = "weaponPhaseLaser"
                 }
             } else {
                 switch item.utilityItemType {
