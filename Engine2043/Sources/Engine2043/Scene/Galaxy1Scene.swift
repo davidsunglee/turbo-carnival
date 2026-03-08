@@ -974,8 +974,8 @@ public final class Galaxy1Scene: GameScene {
         )
         entity.addComponent(physics)
 
-        let render = RenderComponent(size: GameConfig.Item.size, color: GameConfig.Palette.weaponModule)
-        render.spriteId = "weaponModule"
+        let render = RenderComponent(size: GameConfig.Item.size, color: GameConfig.Palette.weaponDoubleCannon)
+        render.spriteId = "weaponDoubleCannon"
         entity.addComponent(render)
 
         let itemComp = ItemComponent()
@@ -988,6 +988,20 @@ public final class Galaxy1Scene: GameScene {
         if let first = itemComp.weaponCycle.first {
             itemComp.displayedWeapon = first
             itemComp.weaponCycleIndex = 0
+            switch first {
+            case .doubleCannon:
+                render.color = GameConfig.Palette.weaponDoubleCannon
+                render.spriteId = "weaponDoubleCannon"
+            case .triSpread:
+                render.color = GameConfig.Palette.weaponTriSpread
+                render.spriteId = "weaponTriSpread"
+            case .lightningArc:
+                render.color = GameConfig.Palette.weaponLightningArc
+                render.spriteId = "weaponLightningArc"
+            case .phaseLaser:
+                render.color = GameConfig.Palette.weaponPhaseLaser
+                render.spriteId = "weaponPhaseLaser"
+            }
         }
 
         entity.addComponent(itemComp)
