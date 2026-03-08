@@ -21,6 +21,10 @@ final class MetalView: UIView {
     private var joystickBase: UIView!
     private var joystickKnob: UIView!
 
+    private var defaultJoystickCenter: CGPoint {
+        CGPoint(x: 60 + safeAreaInsets.left, y: bounds.height - 60 - safeAreaInsets.bottom)
+    }
+
     private static let controlTint = UIColor(red: 0, green: 1, blue: 210.0 / 255.0, alpha: 1)
 
     override init(frame: CGRect) {
@@ -69,7 +73,7 @@ final class MetalView: UIView {
         // Dynamic joystick (hidden until touch)
         joystickBase = UIView()
         joystickBase.isUserInteractionEnabled = false
-        joystickBase.alpha = 0
+        joystickBase.alpha = 0.15
         joystickBase.layer.borderColor = tint.withAlphaComponent(0.35).cgColor
         joystickBase.layer.borderWidth = 2
         joystickBase.bounds = CGRect(x: 0, y: 0, width: 80, height: 80)
@@ -78,7 +82,7 @@ final class MetalView: UIView {
 
         joystickKnob = UIView()
         joystickKnob.isUserInteractionEnabled = false
-        joystickKnob.alpha = 0
+        joystickKnob.alpha = 0.15
         joystickKnob.backgroundColor = tint.withAlphaComponent(0.35)
         joystickKnob.bounds = CGRect(x: 0, y: 0, width: 30, height: 30)
         joystickKnob.layer.cornerRadius = 15
@@ -151,8 +155,11 @@ final class MetalView: UIView {
                 joystickKnob.center = origin
             }
         } else {
-            joystickBase.alpha = 0
-            joystickKnob.alpha = 0
+            // Return to default position with dim opacity
+            joystickBase.alpha = 0.15
+            joystickBase.center = defaultJoystickCenter
+            joystickKnob.alpha = 0.15
+            joystickKnob.center = defaultJoystickCenter
         }
     }
 
