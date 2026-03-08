@@ -61,6 +61,7 @@ public final class Galaxy1Scene: GameScene {
         collisionSystem = CollisionSystem(worldBounds: worldBounds)
         setupPlayer()
         lightningArcSystem = LightningArcSystem(player: player)
+        sfx?.startMusic(.gameplay)
     }
 
     private func setupPlayer() {
@@ -143,6 +144,7 @@ public final class Galaxy1Scene: GameScene {
     // MARK: - GameScene Protocol
 
     public func fixedUpdate(time: GameTime) {
+        sfx?.updateMusicFade(deltaTime: Float(time.fixedDeltaTime))
         guard gameState == .playing else { return }
 
         // Slow-mo from EMP Sweep
@@ -198,6 +200,7 @@ public final class Galaxy1Scene: GameScene {
             scoreSystem.addScore(GameConfig.Score.boss)
             sfx?.play(.victory) // TODO: victory SFX not audible during gameplay — needs debugging
             sfx?.stopLaser()
+            sfx?.stopMusic()
         }
 
         // Physics
@@ -270,6 +273,7 @@ public final class Galaxy1Scene: GameScene {
             gameState = .gameOver
             sfx?.play(.playerDeath)
             sfx?.stopLaser()
+            sfx?.stopMusic()
         }
 
         // Capital ship hull updates
@@ -808,6 +812,8 @@ public final class Galaxy1Scene: GameScene {
             bossSystem.registerShield(shield)
             shieldEntities.append(shield)
         }
+
+        sfx?.fadeToTrack(.boss, fadeOut: 1.0, silence: 0.5, fadeIn: 1.0)
     }
 
     private func spawnPlayerProjectile(_ request: ProjectileSpawnRequest) {
