@@ -301,7 +301,7 @@ struct SpriteFactoryTests {
 
     // MARK: - Atlas
 
-    @Test func textureAtlasSpriteNames() {
+    @Test @MainActor func textureAtlasSpriteNames() {
         let names = TextureAtlas.spriteNames
         #expect(names.contains("player"))
         #expect(names.contains("swarmer"))
@@ -312,7 +312,7 @@ struct SpriteFactoryTests {
         #expect(names.contains("bossShield"))
     }
 
-    @Test func effectTextureSheetSpriteNames() {
+    @Test @MainActor func effectTextureSheetSpriteNames() {
         let names = EffectTextureSheet.spriteNames
         #expect(names.contains("gravBombBlast"))
         #expect(names.contains("empFlash"))
@@ -325,7 +325,7 @@ struct SpriteFactoryTests {
         #expect(names.contains("hudHeatFill"))
     }
 
-    @Test func textureAtlasIncludesProjectileAndPickupSprites() {
+    @Test @MainActor func textureAtlasIncludesProjectileAndPickupSprites() {
         let names = TextureAtlas.spriteNames
         #expect(names.contains("playerBullet"))
         #expect(names.contains("triSpreadBullet"))
@@ -377,5 +377,36 @@ struct SpriteFactoryTests {
         #expect(pixels.count == 24 * 24 * 4)
         let hasContent = stride(from: 3, to: pixels.count, by: 4).contains { pixels[$0] > 0 }
         #expect(hasContent)
+    }
+
+    // MARK: - Bitmap Font Glyphs
+
+    @Test func makeBitmapGlyphReturnsCorrectSize() {
+        let (pixels, width, height) = SpriteFactory.makeBitmapGlyph("A")
+        #expect(width == 6)
+        #expect(height == 8)
+        #expect(pixels.count == 6 * 8 * 4)
+    }
+
+    @Test func makeBitmapGlyphHasNonTransparentPixels() {
+        let (pixels, _, _) = SpriteFactory.makeBitmapGlyph("A")
+        let hasVisiblePixels = stride(from: 3, to: pixels.count, by: 4).contains { pixels[$0] > 0 }
+        #expect(hasVisiblePixels)
+    }
+
+    @Test func makeBitmapGlyphSpaceIsTransparent() {
+        let (pixels, _, _) = SpriteFactory.makeBitmapGlyph(" ")
+        let hasVisiblePixels = stride(from: 3, to: pixels.count, by: 4).contains { pixels[$0] > 0 }
+        #expect(!hasVisiblePixels)
+    }
+
+    @Test func makeBitmapGlyphAllDigitsProduceContent() {
+        for char: Character in ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"] {
+            let (pixels, w, h) = SpriteFactory.makeBitmapGlyph(char)
+            #expect(w == 6)
+            #expect(h == 8)
+            let hasContent = stride(from: 3, to: pixels.count, by: 4).contains { pixels[$0] > 0 }
+            #expect(hasContent, "Glyph '\(char)' should have visible pixels")
+        }
     }
 }
