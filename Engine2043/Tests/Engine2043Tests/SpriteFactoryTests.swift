@@ -379,6 +379,15 @@ struct SpriteFactoryTests {
         #expect(hasContent)
     }
 
+    @Test @MainActor func effectTextureSheetIncludesGlyphSprites() {
+        let names = EffectTextureSheet.spriteNames
+        #expect(names.contains("glyph_0"))
+        #expect(names.contains("glyph_9"))
+        #expect(names.contains("glyph_A"))
+        #expect(names.contains("glyph_Z"))
+        #expect(names.contains("glyph_-"))
+    }
+
     // MARK: - Bitmap Font Glyphs
 
     @Test func makeBitmapGlyphReturnsCorrectSize() {
