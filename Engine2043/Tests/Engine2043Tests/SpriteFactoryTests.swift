@@ -178,19 +178,6 @@ struct SpriteFactoryTests {
         #expect(hasVisiblePixels)
     }
 
-    @Test func makeWeaponModuleSpriteReturnsCorrectSize() {
-        let (pixels, width, height) = SpriteFactory.makeWeaponModuleSprite()
-        #expect(width == 20)
-        #expect(height == 20)
-        #expect(pixels.count == 20 * 20 * 4)
-    }
-
-    @Test func makeWeaponModuleSpriteHasNonTransparentPixels() {
-        let (pixels, _, _) = SpriteFactory.makeWeaponModuleSprite()
-        let hasVisiblePixels = stride(from: 3, to: pixels.count, by: 4).contains { pixels[$0] > 0 }
-        #expect(hasVisiblePixels)
-    }
-
     // MARK: - Effect Sprites
 
     @Test func makeGravBombBlastReturnsCorrectSize() {
@@ -347,7 +334,10 @@ struct SpriteFactoryTests {
         #expect(names.contains("gravBombSprite"))
         #expect(names.contains("energyDrop"))
         #expect(names.contains("chargeCell"))
-        #expect(names.contains("weaponModule"))
+        #expect(names.contains("weaponDoubleCannon"))
+        #expect(names.contains("weaponTriSpread"))
+        #expect(names.contains("weaponLightningArc"))
+        #expect(names.contains("weaponPhaseLaser"))
         #expect(names.contains("shieldDrop"))
         #expect(names.contains("shieldDrone"))
     }
