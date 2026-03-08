@@ -126,4 +126,37 @@ struct ItemSystemTests {
         system.update(deltaTime: 1.0 / 60.0)
         #expect(render.spriteId == "shieldDrop")
     }
+
+    @Test @MainActor func weaponModuleUpdatesSpriteIdPerWeapon() {
+        let system = ItemSystem()
+
+        let entity = GKEntity()
+        entity.addComponent(TransformComponent(position: SIMD2(0, 200)))
+        entity.addComponent(PhysicsComponent(collisionSize: GameConfig.Item.size, layer: .item, mask: []))
+        let item = ItemComponent()
+        item.isWeaponModule = true
+        item.weaponCycle = [.doubleCannon, .triSpread, .lightningArc, .phaseLaser]
+        item.displayedWeapon = .doubleCannon
+        item.weaponCycleIndex = 0
+        entity.addComponent(item)
+        let render = RenderComponent(size: GameConfig.Item.size, color: SIMD4(1, 1, 1, 1))
+        entity.addComponent(render)
+
+        system.register(entity)
+
+        system.update(deltaTime: 1.0 / 60.0)
+        #expect(render.spriteId == "weaponDoubleCannon")
+
+        system.handleProjectileHit(on: entity)
+        system.update(deltaTime: 1.0 / 60.0)
+        #expect(render.spriteId == "weaponTriSpread")
+
+        system.handleProjectileHit(on: entity)
+        system.update(deltaTime: 1.0 / 60.0)
+        #expect(render.spriteId == "weaponLightningArc")
+
+        system.handleProjectileHit(on: entity)
+        system.update(deltaTime: 1.0 / 60.0)
+        #expect(render.spriteId == "weaponPhaseLaser")
+    }
 }
