@@ -192,7 +192,7 @@ final class MetalView: UIView {
         // Secondary buttons: horizontal arc above primary fire
         let secSize: CGFloat = 44
         let fireCenter = CGPoint(x: fireRect.midX, y: fireRect.midY)
-        let arcRadius: CGFloat = 100
+        let arcRadius: CGFloat = 85
         // 3 buttons in a gentle arc, sweeping left from fire button
         // Order reversed: 3 (rightmost) → 2 → 1 (leftmost)
         let angles: [CGFloat] = [-1.60, -1.05, -0.50]  // radians from top
