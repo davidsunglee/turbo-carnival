@@ -18,6 +18,7 @@ public final class Galaxy1Scene: GameScene {
     private let formationSystem = FormationSystem()
     private let steeringSystem = SteeringSystem()
     private let itemSystem = ItemSystem()
+    private let shieldDroneSystem = ShieldDroneSystem()
     private let scoreSystem = ScoreSystem()
     private let backgroundSystem = BackgroundSystem()
     private let bossSystem = BossSystem()
@@ -38,6 +39,7 @@ public final class Galaxy1Scene: GameScene {
     private var capitalShipHulls: [GKEntity] = []
     private var bossEntity: GKEntity?
     private var shieldEntities: [GKEntity] = []
+    private var shieldDrones: [GKEntity] = []
     private var pendingRemovals: [GKEntity] = []
 
     // MARK: - Formation tracking
@@ -106,6 +108,7 @@ public final class Galaxy1Scene: GameScene {
         formationSystem.register(entity)
         steeringSystem.register(entity)
         itemSystem.register(entity)
+        shieldDroneSystem.register(entity)
     }
 
     private func unregisterEntity(_ entity: GKEntity) {
@@ -116,6 +119,7 @@ public final class Galaxy1Scene: GameScene {
         formationSystem.unregister(entity)
         steeringSystem.unregister(entity)
         itemSystem.unregister(entity)
+        shieldDroneSystem.unregister(entity)
         bossSystem.unregister(entity)
     }
 
@@ -130,6 +134,7 @@ public final class Galaxy1Scene: GameScene {
         gravBombEntities.removeAll { $0 === entity }
         gravBombTimers.removeValue(forKey: ObjectIdentifier(entity))
         shieldEntities.removeAll { $0 === entity }
+        shieldDrones.removeAll { $0 === entity }
 
         for (id, var members) in formationEnemies {
             members.removeAll { $0 === entity }
@@ -273,6 +278,12 @@ public final class Galaxy1Scene: GameScene {
             pendingRemovals.append(entity)
         }
 
+        // Shield drone system
+        shieldDroneSystem.update(deltaTime: time.fixedDeltaTime)
+        for drone in shieldDroneSystem.pendingRemovals {
+            pendingRemovals.append(drone)
+        }
+
         // Collisions
         processCollisions()
 
@@ -286,6 +297,9 @@ public final class Galaxy1Scene: GameScene {
             sfx?.play(.playerDeath)
             sfx?.stopLaser()
             sfx?.stopMusic()
+            for drone in shieldDrones {
+                pendingRemovals.append(drone)
+            }
         }
 
         // Capital ship hull updates
@@ -880,7 +894,7 @@ public final class Galaxy1Scene: GameScene {
         let physics = PhysicsComponent(
             collisionSize: SIMD2(8, 8),
             layer: .enemyProjectile,
-            mask: [.player]
+            mask: [.player, .shieldDrone]
         )
         physics.velocity = velocity
         entity.addComponent(physics)
@@ -927,11 +941,21 @@ public final class Galaxy1Scene: GameScene {
         entity.addComponent(physics)
 
         let render = RenderComponent(size: GameConfig.Item.size, color: SIMD4(1, 1, 1, 1))
-        render.spriteId = "energyDrop"
         entity.addComponent(render)
 
         let itemComp = ItemComponent()
         itemComp.currentCycleIndex = Int.random(in: 0..<UtilityItemType.allCases.count)
+
+        // Set initial sprite based on random type
+        switch itemComp.utilityItemType {
+        case .energyCell:
+            render.spriteId = "energyDrop"
+        case .chargeCell:
+            render.spriteId = "chargeCell"
+        case .orbitingShield:
+            render.spriteId = "shieldDrop"
+        }
+
         entity.addComponent(itemComp)
 
         registerEntity(entity)
@@ -971,6 +995,45 @@ public final class Galaxy1Scene: GameScene {
         registerEntity(entity)
         items.append(entity)
         sfx?.play(.itemSpawn)
+    }
+
+    private func spawnShieldDrones() {
+        guard let playerTransform = player.component(ofType: TransformComponent.self) else { return }
+        let maxDrones = GameConfig.ShieldDrone.maxDrones
+        let slotsAvailable = maxDrones - shieldDrones.count
+        guard slotsAvailable > 0 else { return }
+        let toSpawn = min(2, slotsAvailable)
+
+        for _ in 0..<toSpawn {
+            let entity = GKEntity()
+            entity.addComponent(TransformComponent(position: playerTransform.position))
+
+            let physics = PhysicsComponent(
+                collisionSize: GameConfig.ShieldDrone.droneSize,
+                layer: .shieldDrone,
+                mask: [.enemyProjectile]
+            )
+            entity.addComponent(physics)
+
+            let render = RenderComponent(size: GameConfig.ShieldDrone.droneSize, color: GameConfig.Palette.shieldDrone)
+            render.spriteId = "shieldDrone"
+            entity.addComponent(render)
+
+            let droneComp = ShieldDroneComponent()
+            droneComp.ownerEntity = player
+            entity.addComponent(droneComp)
+
+            registerEntity(entity)
+            shieldDrones.append(entity)
+        }
+
+        // Redistribute orbit angles evenly
+        let totalDrones = shieldDrones.count
+        for (i, drone) in shieldDrones.enumerated() {
+            if let comp = drone.component(ofType: ShieldDroneComponent.self) {
+                comp.orbitAngle = Float(i) * (2 * .pi / Float(totalDrones))
+            }
+        }
     }
 
     // MARK: - Updates
@@ -1185,6 +1248,18 @@ public final class Galaxy1Scene: GameScene {
                 handlePlayerEnemyCollision(enemy: entityB)
             } else if layerB.contains(.player) && layerA.contains(.enemy) {
                 handlePlayerEnemyCollision(enemy: entityA)
+            } else if layerA.contains(.shieldDrone) && layerB.contains(.enemyProjectile) {
+                if let drone = entityA.component(ofType: ShieldDroneComponent.self) {
+                    drone.takeHit()
+                    sfx?.play(.bossShieldDeflect)
+                    pendingRemovals.append(entityB)
+                }
+            } else if layerB.contains(.shieldDrone) && layerA.contains(.enemyProjectile) {
+                if let drone = entityB.component(ofType: ShieldDroneComponent.self) {
+                    drone.takeHit()
+                    sfx?.play(.bossShieldDeflect)
+                    pendingRemovals.append(entityA)
+                }
             } else if layerA.contains(.player) && layerB.contains(.enemyProjectile) {
                 handlePlayerHitByProjectile(projectile: entityB)
             } else if layerB.contains(.player) && layerA.contains(.enemyProjectile) {
@@ -1267,6 +1342,8 @@ public final class Galaxy1Scene: GameScene {
                 if let weapon = player.component(ofType: WeaponComponent.self) {
                     weapon.secondaryCharges = min(GameConfig.Weapon.gravBombMaxCharges, weapon.secondaryCharges + GameConfig.Item.chargeRestoreAmount)
                 }
+            case .orbitingShield:
+                spawnShieldDrones()
             }
         }
 

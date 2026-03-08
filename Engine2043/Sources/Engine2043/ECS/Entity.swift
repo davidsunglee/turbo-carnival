@@ -14,6 +14,7 @@ public struct CollisionLayer: OptionSet, Sendable {
     public static let item              = CollisionLayer(rawValue: 1 << 4)
     public static let bossShield        = CollisionLayer(rawValue: 1 << 5)
     public static let blast             = CollisionLayer(rawValue: 1 << 6)
+    public static let shieldDrone       = CollisionLayer(rawValue: 1 << 7)
 }
 
 public struct AABB: Sendable {

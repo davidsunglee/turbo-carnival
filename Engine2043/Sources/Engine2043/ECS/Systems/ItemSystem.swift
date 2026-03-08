@@ -44,7 +44,7 @@ public final class ItemSystem {
             physics.velocity.y = -GameConfig.Item.driftSpeed
             physics.velocity.x = item.bounceDirection * bounceSpeed
 
-            let margin: Float = 16 / 2
+            let margin: Float = GameConfig.Item.size.x / 2
             if transform.position.x > halfWidth - margin {
                 item.bounceDirection = -1
             } else if transform.position.x < -halfWidth + margin {
@@ -62,8 +62,13 @@ public final class ItemSystem {
                 switch item.utilityItemType {
                 case .energyCell:
                     render.color = GameConfig.Palette.item
+                    render.spriteId = "energyDrop"
                 case .chargeCell:
                     render.color = GameConfig.Palette.chargeCell
+                    render.spriteId = "chargeCell"
+                case .orbitingShield:
+                    render.color = GameConfig.Palette.shieldDrone
+                    render.spriteId = "shieldDrop"
                 }
             }
         }

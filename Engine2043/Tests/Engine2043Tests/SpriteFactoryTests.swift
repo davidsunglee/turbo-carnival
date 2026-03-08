@@ -128,9 +128,9 @@ struct SpriteFactoryTests {
 
     @Test func makeEnergyDropReturnsCorrectSize() {
         let (pixels, width, height) = SpriteFactory.makeEnergyDrop()
-        #expect(width == 16)
-        #expect(height == 16)
-        #expect(pixels.count == 16 * 16 * 4)
+        #expect(width == 24)
+        #expect(height == 24)
+        #expect(pixels.count == 24 * 24 * 4)
     }
 
     @Test func makeEnergyDropHasNonTransparentPixels() {
@@ -141,13 +141,39 @@ struct SpriteFactoryTests {
 
     @Test func makeChargeCellReturnsCorrectSize() {
         let (pixels, width, height) = SpriteFactory.makeChargeCell()
-        #expect(width == 16)
-        #expect(height == 16)
-        #expect(pixels.count == 16 * 16 * 4)
+        #expect(width == 24)
+        #expect(height == 24)
+        #expect(pixels.count == 24 * 24 * 4)
     }
 
     @Test func makeChargeCellHasNonTransparentPixels() {
         let (pixels, _, _) = SpriteFactory.makeChargeCell()
+        let hasVisiblePixels = stride(from: 3, to: pixels.count, by: 4).contains { pixels[$0] > 0 }
+        #expect(hasVisiblePixels)
+    }
+
+    @Test func makeShieldDropReturnsCorrectSize() {
+        let (pixels, width, height) = SpriteFactory.makeShieldDrop()
+        #expect(width == 24)
+        #expect(height == 24)
+        #expect(pixels.count == 24 * 24 * 4)
+    }
+
+    @Test func makeShieldDropHasNonTransparentPixels() {
+        let (pixels, _, _) = SpriteFactory.makeShieldDrop()
+        let hasVisiblePixels = stride(from: 3, to: pixels.count, by: 4).contains { pixels[$0] > 0 }
+        #expect(hasVisiblePixels)
+    }
+
+    @Test func makeShieldDroneReturnsCorrectSize() {
+        let (pixels, width, height) = SpriteFactory.makeShieldDrone()
+        #expect(width == 10)
+        #expect(height == 10)
+        #expect(pixels.count == 10 * 10 * 4)
+    }
+
+    @Test func makeShieldDroneHasNonTransparentPixels() {
+        let (pixels, _, _) = SpriteFactory.makeShieldDrone()
         let hasVisiblePixels = stride(from: 3, to: pixels.count, by: 4).contains { pixels[$0] > 0 }
         #expect(hasVisiblePixels)
     }
@@ -322,5 +348,7 @@ struct SpriteFactoryTests {
         #expect(names.contains("energyDrop"))
         #expect(names.contains("chargeCell"))
         #expect(names.contains("weaponModule"))
+        #expect(names.contains("shieldDrop"))
+        #expect(names.contains("shieldDrone"))
     }
 }
