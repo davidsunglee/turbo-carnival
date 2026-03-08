@@ -53,6 +53,7 @@ public final class Galaxy1Scene: GameScene {
     private var blastEffects: [(entity: GKEntity, timer: Double)] = []
     private var slowMoTimer: Double = 0
     private var isSlowMo: Bool = false
+    public var hudInsets: (top: Float, bottom: Float) = (0, 0)
     private var musicStarted = false
 
     // MARK: - World
@@ -448,7 +449,8 @@ public final class Galaxy1Scene: GameScene {
 
     private func appendEffectHUD(to sprites: inout [SpriteInstance], effectSheet: EffectTextureSheet?) {
         guard let effectSheet else { return }
-        let topY: Float = GameConfig.designHeight / 2 - 20
+        let topY: Float = GameConfig.designHeight / 2 - hudInsets.top - 10
+        let bottomY: Float = -GameConfig.designHeight / 2 + hudInsets.bottom + 10
 
         // Energy bar frame
         if let uv = effectSheet.uvRect(for: "hudBarFrame") {
@@ -488,7 +490,7 @@ public final class Galaxy1Scene: GameScene {
         if let uv = effectSheet.uvRect(for: "hudChargePip") {
             for i in 0..<charges {
                 sprites.append(SpriteInstance(
-                    position: SIMD2(140 - Float(i) * 14, -GameConfig.designHeight / 2 + 20),
+                    position: SIMD2(140 - Float(i) * 14, bottomY),
                     size: SIMD2(12, 12),
                     color: SIMD4(1, 1, 1, 1),
                     uvRect: uv
@@ -507,7 +509,7 @@ public final class Galaxy1Scene: GameScene {
         }
         if let uv = effectSheet.uvRect(for: "hudWeaponIcon") {
             sprites.append(SpriteInstance(
-                position: SIMD2(0, -GameConfig.designHeight / 2 + 20),
+                position: SIMD2(0, bottomY),
                 size: SIMD2(20, 8),
                 color: weaponColor,
                 uvRect: uv
@@ -518,7 +520,7 @@ public final class Galaxy1Scene: GameScene {
         if weaponType == .phaseLaser, let w = weapon {
             if let frameUV = effectSheet.uvRect(for: "hudHeatFrame") {
                 sprites.append(SpriteInstance(
-                    position: SIMD2(0, -GameConfig.designHeight / 2 + 30),
+                    position: SIMD2(0, bottomY + 10),
                     size: SIMD2(20, 3),
                     color: SIMD4(1, 1, 1, 1),
                     uvRect: frameUV
@@ -530,7 +532,7 @@ public final class Galaxy1Scene: GameScene {
                 if w.isLaserOverheated {
                     let cooldownFrac = Float(w.laserOverheatTimer / GameConfig.Weapon.laserOverheatCooldown)
                     sprites.append(SpriteInstance(
-                        position: SIMD2(0, -GameConfig.designHeight / 2 + 30),
+                        position: SIMD2(0, bottomY + 10),
                         size: SIMD2(20 * cooldownFrac, 2),
                         color: SIMD4(1, 0.2, 0.2, 0.8),
                         uvRect: fillUV
@@ -538,7 +540,7 @@ public final class Galaxy1Scene: GameScene {
                 } else if heatFrac > 0 {
                     let color = SIMD4<Float>(heatFrac, 1.0 - heatFrac * 0.6, 0.2, 0.8)
                     sprites.append(SpriteInstance(
-                        position: SIMD2(0, -GameConfig.designHeight / 2 + 30),
+                        position: SIMD2(0, bottomY + 10),
                         size: SIMD2(20 * heatFrac, 2),
                         color: color,
                         uvRect: fillUV
@@ -551,7 +553,7 @@ public final class Galaxy1Scene: GameScene {
         if weapon?.overchargeActive == true {
             if let uv = effectSheet.uvRect(for: "hudBarFill") {
                 sprites.append(SpriteInstance(
-                    position: SIMD2(0, -GameConfig.designHeight / 2 + 38),
+                    position: SIMD2(0, bottomY + 18),
                     size: SIMD2(20, 3),
                     color: GameConfig.Palette.overchargeGlow,
                     uvRect: uv

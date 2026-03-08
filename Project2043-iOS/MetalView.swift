@@ -11,6 +11,7 @@ final class MetalView: UIView {
     private var displayLink: CADisplayLink!
     private var lastTimestamp: CFTimeInterval = 0
     private var touchInput: TouchInputProvider!
+    private var scene: Galaxy1Scene!
 
     // Control overlays
     private var fireOverlay: UIView!
@@ -43,7 +44,7 @@ final class MetalView: UIView {
         engine = GameEngine(renderer: renderer)
 
         touchInput = TouchInputProvider()
-        let scene = Galaxy1Scene()
+        scene = Galaxy1Scene()
         scene.inputProvider = touchInput
 
         let audio = AVAudioManager()
@@ -204,6 +205,16 @@ final class MetalView: UIView {
 
         touchInput.secondary3ButtonRect = secRects[2]
         ocOverlay.frame = secRects[2]
+
+        // Convert safe area insets from screen points to game-coordinate units
+        let screenHeight = bounds.height
+        if screenHeight > 0 {
+            let gameUnitsPerPoint = GameConfig.designHeight / Float(screenHeight)
+            scene.hudInsets = (
+                top: Float(safeAreaInsets.top) * gameUnitsPerPoint,
+                bottom: Float(safeAreaInsets.bottom) * gameUnitsPerPoint
+            )
+        }
     }
 
     @objc private func render(_ displayLink: CADisplayLink) {
