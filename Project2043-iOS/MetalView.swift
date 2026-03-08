@@ -230,18 +230,18 @@ final class MetalView: UIView {
 
         engine.update(deltaTime: dt)
 
-        // Check for scene restart
+        // Check for scene restart — reuse existing audio engines
         if scene.shouldRestart {
-            // Shut down old audio engines before creating new ones
-            (scene.audioProvider as? AVAudioManager)?.shutdown()
-            scene.sfx?.shutdown()
+            let audio = scene.audioProvider
+            let sfx = scene.sfx
+            audio?.stopAll()
+            sfx?.stopLaser()
+            sfx?.stopMusic()
 
             scene = Galaxy1Scene()
             scene.inputProvider = touchInput
-            let audio = AVAudioManager()
             scene.audioProvider = audio
-            let sfxEngine = SynthAudioEngine()
-            scene.sfx = sfxEngine
+            scene.sfx = sfx
             engine.currentScene = scene
             // Reapply safe area insets
             let screenHeight = bounds.height
