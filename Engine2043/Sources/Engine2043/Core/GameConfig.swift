@@ -82,7 +82,6 @@ public enum GameConfig {
         public static let despawnTime: Double = 8.0
         public static let energyRestoreAmount: Float = 15
         public static let chargeRestoreAmount: Int = 1
-        public static let scoreBonusAmount: Int = 200
     }
 
     public enum Background {
@@ -111,10 +110,9 @@ public enum GameConfig {
         public static let overchargeGlow = SIMD4<Float>(1.0, 0.6, 0.0, 0.8)
         public static let laserBeam = SIMD4<Float>(0.4, 1.0, 0.4, 0.9)
         public static let chargeCell = SIMD4<Float>(0.6, 0.3, 1.0, 1.0)
-        public static let scoreBonus = SIMD4<Float>(1.0, 1.0, 0.4, 1.0)
         public static let weaponDoubleCannon = SIMD4<Float>(0.3, 0.5, 1.0, 1.0)
-        public static let weaponTriSpread = SIMD4<Float>(1.0, 0.5, 0.2, 1.0)
-        public static let weaponLightningArc = SIMD4<Float>(0.4, 0.7, 1.0, 1.0)
+        public static let weaponTriSpread = SIMD4<Float>(1.0, 0.3, 0.3, 1.0)
+        public static let weaponLightningArc = SIMD4<Float>(1.0, 0.9, 0.3, 1.0)
         public static let weaponPhaseLaser = SIMD4<Float>(0.4, 1.0, 0.4, 1.0)
     }
 }

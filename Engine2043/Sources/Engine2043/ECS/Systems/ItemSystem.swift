@@ -64,8 +64,6 @@ public final class ItemSystem {
                     render.color = GameConfig.Palette.item
                 case .chargeCell:
                     render.color = GameConfig.Palette.chargeCell
-                case .scoreBonus:
-                    render.color = GameConfig.Palette.scoreBonus
                 }
             }
         }

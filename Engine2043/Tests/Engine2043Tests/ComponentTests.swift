@@ -18,10 +18,6 @@ struct ComponentTests {
         #expect(item.utilityItemType == .chargeCell)
 
         item.advanceCycle()
-        #expect(item.currentCycleIndex == 2)
-        #expect(item.utilityItemType == .scoreBonus)
-
-        item.advanceCycle()
         #expect(item.currentCycleIndex == 0)
         #expect(item.utilityItemType == .energyCell)
     }
