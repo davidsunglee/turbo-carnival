@@ -55,6 +55,13 @@ struct SynthAudioTests {
         }
     }
 
+    @Test func musicStateDefaultValues() {
+        let state = MusicState()
+        state.amplitude.withLock { #expect($0 == 0.0) }
+        state.track.withLock { #expect($0 == .gameplay) }
+        state.samplePosition.withLock { #expect($0 == 0) }
+    }
+
     @Test func musicSynthesizerProducesNonSilentOutput() {
         let sampleRate: Float = 44100
         var hasNonZero = false
