@@ -56,6 +56,21 @@ public final class SynthAudioEngine {
     private let laser = LaserState()
     private var isLaserActive = false
 
+    // Background music real-time synthesis
+    private var musicNode: AVAudioSourceNode?
+    private let music = MusicState()
+    private var isMusicActive = false
+
+    // Fade state (main thread only)
+    private enum FadePhase {
+        case none
+        case fadingOut(targetTrack: MusicTrack, fadeOut: Float, silence: Float, fadeIn: Float)
+        case silence(targetTrack: MusicTrack, remaining: Float, fadeIn: Float)
+        case fadingIn(fadeIn: Float)
+    }
+    private var fadePhase: FadePhase = .none
+    private var fadeTimer: Float = 0
+
     public var volume: Float = 0.8 {
         didSet { volume = max(0, min(1, volume)); audioEngine.mainMixerNode.outputVolume = volume }
     }
@@ -293,5 +308,79 @@ public final class SynthAudioEngine {
         laser.frequency.withLock { $0 = 120.0 + clamped * 60.0 }
         // Map heat 0→1 to amplitude 0.3→0.5
         laser.amplitude.withLock { $0 = 0.3 + clamped * 0.2 }
+    }
+
+    // MARK: - Background Music
+
+    public func startMusic(_ track: MusicTrack) {
+        music.track.withLock { $0 = track }
+        music.amplitude.withLock { $0 = 0.20 }
+        music.samplePosition.withLock { $0 = 0 }
+
+        if !isMusicActive {
+            isMusicActive = true
+            let node = music.makeSourceNode(format: format, sampleRate: Float(sampleRate))
+            audioEngine.attach(node)
+            audioEngine.connect(node, to: audioEngine.mainMixerNode, format: format)
+            musicNode = node
+        }
+
+        fadePhase = .none
+    }
+
+    public func stopMusic() {
+        guard isMusicActive else { return }
+        isMusicActive = false
+        fadePhase = .none
+
+        music.amplitude.withLock { $0 = 0 }
+
+        if let node = musicNode {
+            audioEngine.detach(node)
+            musicNode = nil
+        }
+        music.samplePosition.withLock { $0 = 0 }
+    }
+
+    public func fadeToTrack(_ track: MusicTrack, fadeOut: Float, silence: Float, fadeIn: Float) {
+        fadeTimer = 0
+        fadePhase = .fadingOut(targetTrack: track, fadeOut: fadeOut, silence: silence, fadeIn: fadeIn)
+    }
+
+    public func updateMusicFade(deltaTime: Float) {
+        let musicVolume: Float = 0.20
+
+        switch fadePhase {
+        case .none:
+            return
+
+        case .fadingOut(let target, let fadeOut, let silence, let fadeIn):
+            fadeTimer += deltaTime
+            let progress = min(fadeTimer / fadeOut, 1.0)
+            music.amplitude.withLock { $0 = musicVolume * (1.0 - progress) }
+            if progress >= 1.0 {
+                fadeTimer = 0
+                fadePhase = .silence(targetTrack: target, remaining: silence, fadeIn: fadeIn)
+            }
+
+        case .silence(let target, let remaining, let fadeIn):
+            fadeTimer += deltaTime
+            music.amplitude.withLock { $0 = 0 }
+            if fadeTimer >= remaining {
+                // Switch track and start fading in
+                music.track.withLock { $0 = target }
+                music.samplePosition.withLock { $0 = 0 }
+                fadeTimer = 0
+                fadePhase = .fadingIn(fadeIn: fadeIn)
+            }
+
+        case .fadingIn(let fadeIn):
+            fadeTimer += deltaTime
+            let progress = min(fadeTimer / fadeIn, 1.0)
+            music.amplitude.withLock { $0 = musicVolume * progress }
+            if progress >= 1.0 {
+                fadePhase = .none
+            }
+        }
     }
 }

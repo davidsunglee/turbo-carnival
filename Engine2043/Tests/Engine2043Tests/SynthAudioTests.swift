@@ -93,6 +93,43 @@ struct SynthAudioTests {
         }
     }
 
+    @Test @MainActor func musicStartStopDoesNotCrash() {
+        let engine = SynthAudioEngine()
+        engine.startMusic(.gameplay)
+        engine.stopMusic()
+    }
+
+    @Test @MainActor func musicStartBossDoesNotCrash() {
+        let engine = SynthAudioEngine()
+        engine.startMusic(.boss)
+        engine.stopMusic()
+    }
+
+    @Test @MainActor func musicDoubleStartDoesNotCrash() {
+        let engine = SynthAudioEngine()
+        engine.startMusic(.gameplay)
+        engine.startMusic(.boss)
+        engine.stopMusic()
+    }
+
+    @Test @MainActor func musicFadeDoesNotCrash() {
+        let engine = SynthAudioEngine()
+        engine.startMusic(.gameplay)
+        engine.fadeToTrack(.boss, fadeOut: 1.0, silence: 0.5, fadeIn: 1.0)
+        engine.stopMusic()
+    }
+
+    @Test @MainActor func musicUpdateFadeAdvancesFade() {
+        let engine = SynthAudioEngine()
+        engine.startMusic(.gameplay)
+        engine.fadeToTrack(.boss, fadeOut: 1.0, silence: 0.5, fadeIn: 1.0)
+        // Simulate several update ticks
+        for _ in 0..<60 {
+            engine.updateMusicFade(deltaTime: 1.0 / 60.0)
+        }
+        // Should not crash, fade should progress
+    }
+
     @Test func sfxTypeHasAllExpectedCases() {
         let allCases = SFXType.allCases
         #expect(allCases.count == 16)
