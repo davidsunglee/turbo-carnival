@@ -8,7 +8,7 @@ public final class EffectTextureSheet {
 
     public static let sheetSize = 256
 
-    public nonisolated(unsafe) static let spriteNames: Set<String> = [
+    public static let spriteNames: Set<String> = [
         "gravBombBlast", "empFlash", "overchargeGlow",
         "hudBarFrame", "hudBarFill", "hudChargePip",
         "hudWeaponIcon", "hudHeatFrame", "hudHeatFill"
