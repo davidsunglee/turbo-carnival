@@ -32,6 +32,22 @@ public final class TouchInputProvider: InputProvider {
     public var secondary2ButtonRect: CGRect = .zero
     public var secondary3ButtonRect: CGRect = .zero
 
+    // Public accessors for control overlay rendering
+    public var joystickOriginPoint: CGPoint? {
+        guard let o = joystickOrigin else { return nil }
+        return CGPoint(x: CGFloat(o.x), y: CGFloat(o.y))
+    }
+
+    public var joystickCurrentPoint: CGPoint? {
+        guard let c = joystickCurrent else { return nil }
+        return CGPoint(x: CGFloat(c.x), y: CGFloat(c.y))
+    }
+
+    public var isPrimaryFireActive: Bool { primaryFireActive }
+    public var isSecondary1Active: Bool { secondary1Active }
+    public var isSecondary2Active: Bool { secondary2Active }
+    public var isSecondary3Active: Bool { secondary3Active }
+
     public init() {}
 
     public func poll() -> PlayerInput {
