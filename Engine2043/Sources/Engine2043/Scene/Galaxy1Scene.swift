@@ -220,7 +220,15 @@ public final class Galaxy1Scene: GameScene {
         }
         for (entity, damage) in lightningArcSystem.pendingDamage {
             if let health = entity.component(ofType: HealthComponent.self) {
-                health.currentHealth -= damage
+                health.takeDamage(damage)
+                if !health.isAlive {
+                    sfx?.play(.enemyDestroyed)
+                    if let score = entity.component(ofType: ScoreComponent.self) {
+                        scoreSystem.addScore(score.points)
+                    }
+                    pendingRemovals.append(entity)
+                    checkFormationWipe(enemy: entity)
+                }
             }
         }
 
