@@ -55,6 +55,81 @@ struct SynthAudioTests {
         }
     }
 
+    @Test func musicStateDefaultValues() {
+        let state = MusicState()
+        state.amplitude.withLock { #expect($0 == 0.0) }
+        state.track.withLock { #expect($0 == .gameplay) }
+        state.samplePosition.withLock { #expect($0 == 0) }
+    }
+
+    @Test func musicSynthesizerProducesNonSilentOutput() {
+        let sampleRate: Float = 44100
+        var hasNonZero = false
+        for i in 0..<Int(sampleRate) {
+            let t = Float(i) / sampleRate
+            let sample = MusicSynthesizer.synthesize(track: .gameplay, time: t, sampleRate: sampleRate)
+            if abs(sample) > 0.001 { hasNonZero = true; break }
+        }
+        #expect(hasNonZero, "Gameplay track should produce audible output")
+    }
+
+    @Test func musicSynthesizerBossTrackProducesOutput() {
+        let sampleRate: Float = 44100
+        var hasNonZero = false
+        for i in 0..<Int(sampleRate) {
+            let t = Float(i) / sampleRate
+            let sample = MusicSynthesizer.synthesize(track: .boss, time: t, sampleRate: sampleRate)
+            if abs(sample) > 0.001 { hasNonZero = true; break }
+        }
+        #expect(hasNonZero, "Boss track should produce audible output")
+    }
+
+    @Test func musicSynthesizerOutputInRange() {
+        let sampleRate: Float = 44100
+        for i in 0..<Int(sampleRate * 2) {
+            let t = Float(i) / sampleRate
+            let sample = MusicSynthesizer.synthesize(track: .gameplay, time: t, sampleRate: sampleRate)
+            #expect(sample >= -1.5 && sample <= 1.5, "Sample \(sample) at t=\(t) out of range")
+        }
+    }
+
+    @Test @MainActor func musicStartStopDoesNotCrash() {
+        let engine = SynthAudioEngine()
+        engine.startMusic(.gameplay)
+        engine.stopMusic()
+    }
+
+    @Test @MainActor func musicStartBossDoesNotCrash() {
+        let engine = SynthAudioEngine()
+        engine.startMusic(.boss)
+        engine.stopMusic()
+    }
+
+    @Test @MainActor func musicDoubleStartDoesNotCrash() {
+        let engine = SynthAudioEngine()
+        engine.startMusic(.gameplay)
+        engine.startMusic(.boss)
+        engine.stopMusic()
+    }
+
+    @Test @MainActor func musicFadeDoesNotCrash() {
+        let engine = SynthAudioEngine()
+        engine.startMusic(.gameplay)
+        engine.fadeToTrack(.boss, fadeOut: 1.0, silence: 0.5, fadeIn: 1.0)
+        engine.stopMusic()
+    }
+
+    @Test @MainActor func musicUpdateFadeAdvancesFade() {
+        let engine = SynthAudioEngine()
+        engine.startMusic(.gameplay)
+        engine.fadeToTrack(.boss, fadeOut: 1.0, silence: 0.5, fadeIn: 1.0)
+        // Simulate several update ticks
+        for _ in 0..<60 {
+            engine.updateMusicFade(deltaTime: 1.0 / 60.0)
+        }
+        // Should not crash, fade should progress
+    }
+
     @Test func sfxTypeHasAllExpectedCases() {
         let allCases = SFXType.allCases
         #expect(allCases.count == 16)

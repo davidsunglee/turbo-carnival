@@ -51,6 +51,7 @@ public final class Galaxy1Scene: GameScene {
     private var blastEffects: [(entity: GKEntity, timer: Double)] = []
     private var slowMoTimer: Double = 0
     private var isSlowMo: Bool = false
+    private var musicStarted = false
 
     // MARK: - World
     private let worldBounds = AABB(min: SIMD2(-200, -340), max: SIMD2(200, 340))
@@ -143,6 +144,11 @@ public final class Galaxy1Scene: GameScene {
     // MARK: - GameScene Protocol
 
     public func fixedUpdate(time: GameTime) {
+        if !musicStarted {
+            musicStarted = true
+            sfx?.startMusic(.gameplay)
+        }
+        sfx?.updateMusicFade(deltaTime: Float(time.fixedDeltaTime))
         guard gameState == .playing else { return }
 
         // Slow-mo from EMP Sweep
@@ -198,6 +204,7 @@ public final class Galaxy1Scene: GameScene {
             scoreSystem.addScore(GameConfig.Score.boss)
             sfx?.play(.victory) // TODO: victory SFX not audible during gameplay — needs debugging
             sfx?.stopLaser()
+            sfx?.stopMusic()
         }
 
         // Physics
@@ -270,6 +277,7 @@ public final class Galaxy1Scene: GameScene {
             gameState = .gameOver
             sfx?.play(.playerDeath)
             sfx?.stopLaser()
+            sfx?.stopMusic()
         }
 
         // Capital ship hull updates
@@ -808,6 +816,8 @@ public final class Galaxy1Scene: GameScene {
             bossSystem.registerShield(shield)
             shieldEntities.append(shield)
         }
+
+        sfx?.fadeToTrack(.boss, fadeOut: 1.0, silence: 0.5, fadeIn: 1.0)
     }
 
     private func spawnPlayerProjectile(_ request: ProjectileSpawnRequest) {
