@@ -8,11 +8,19 @@ public final class EffectTextureSheet {
 
     public static let sheetSize = 256
 
-    public static let spriteNames: Set<String> = [
-        "gravBombBlast", "empFlash", "overchargeGlow",
-        "hudBarFrame", "hudBarFill", "hudChargePip",
-        "hudWeaponIcon", "hudHeatFrame", "hudHeatFill"
-    ]
+    public static let spriteNames: Set<String> = {
+        var names: Set<String> = [
+            "gravBombBlast", "empFlash", "overchargeGlow",
+            "hudBarFrame", "hudBarFill", "hudChargePip",
+            "hudWeaponIcon", "hudHeatFrame", "hudHeatFill"
+        ]
+        for char in EffectTextureSheet.glyphChars {
+            names.insert("glyph_\(char)")
+        }
+        return names
+    }()
+
+    static let glyphChars = Array("0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ- ")
 
     struct SpriteEntry {
         let name: String
@@ -22,20 +30,33 @@ public final class EffectTextureSheet {
         let height: Int
     }
 
-    static let layout: [SpriteEntry] = [
-        // Row 0: Effects
-        SpriteEntry(name: "gravBombBlast",  x: 0,   y: 0,   width: 128, height: 128),
-        SpriteEntry(name: "empFlash",       x: 128, y: 0,   width: 128, height: 128),
-        // Row 128: Overcharge
-        SpriteEntry(name: "overchargeGlow", x: 0,   y: 128, width: 64,  height: 64),
-        // Row 192: HUD elements
-        SpriteEntry(name: "hudBarFrame",    x: 0,   y: 192, width: 64,  height: 8),
-        SpriteEntry(name: "hudBarFill",     x: 64,  y: 192, width: 32,  height: 4),
-        SpriteEntry(name: "hudChargePip",   x: 96,  y: 192, width: 12,  height: 12),
-        SpriteEntry(name: "hudWeaponIcon",  x: 108, y: 192, width: 16,  height: 8),
-        SpriteEntry(name: "hudHeatFrame",   x: 124, y: 192, width: 16,  height: 3),
-        SpriteEntry(name: "hudHeatFill",    x: 140, y: 192, width: 14,  height: 2),
-    ]
+    static let layout: [SpriteEntry] = {
+        var entries: [SpriteEntry] = [
+            // Row 0: Effects
+            SpriteEntry(name: "gravBombBlast",  x: 0,   y: 0,   width: 128, height: 128),
+            SpriteEntry(name: "empFlash",       x: 128, y: 0,   width: 128, height: 128),
+            // Row 128: Overcharge
+            SpriteEntry(name: "overchargeGlow", x: 0,   y: 128, width: 64,  height: 64),
+            // Row 192: HUD elements
+            SpriteEntry(name: "hudBarFrame",    x: 0,   y: 192, width: 64,  height: 8),
+            SpriteEntry(name: "hudBarFill",     x: 64,  y: 192, width: 32,  height: 4),
+            SpriteEntry(name: "hudChargePip",   x: 96,  y: 192, width: 12,  height: 12),
+            SpriteEntry(name: "hudWeaponIcon",  x: 108, y: 192, width: 16,  height: 8),
+            SpriteEntry(name: "hudHeatFrame",   x: 124, y: 192, width: 16,  height: 3),
+            SpriteEntry(name: "hudHeatFill",    x: 140, y: 192, width: 14,  height: 2),
+        ]
+        // Row 208: Bitmap font glyphs (6x8 each, 38 chars fit in one row: 228px < 256px)
+        for (i, char) in glyphChars.enumerated() {
+            entries.append(SpriteEntry(
+                name: "glyph_\(char)",
+                x: i * 6,
+                y: 208,
+                width: 6,
+                height: 8
+            ))
+        }
+        return entries
+    }()
 
     init(device: MTLDevice) throws {
         let size = Self.sheetSize
@@ -61,7 +82,7 @@ public final class EffectTextureSheet {
             bytesPerRow: 4
         )
 
-        let generators: [(String, () -> (pixels: [UInt8], width: Int, height: Int))] = [
+        var generators: [(String, () -> (pixels: [UInt8], width: Int, height: Int))] = [
             ("gravBombBlast",  SpriteFactory.makeGravBombBlast),
             ("empFlash",       SpriteFactory.makeEmpFlash),
             ("overchargeGlow", SpriteFactory.makeOverchargeGlow),
@@ -72,6 +93,9 @@ public final class EffectTextureSheet {
             ("hudHeatFrame",   SpriteFactory.makeHudHeatFrame),
             ("hudHeatFill",    SpriteFactory.makeHudHeatFill),
         ]
+        for char in Self.glyphChars {
+            generators.append(("glyph_\(char)", { SpriteFactory.makeBitmapGlyph(char) }))
+        }
 
         let s = Float(size)
 

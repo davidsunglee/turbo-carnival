@@ -11,6 +11,7 @@ final class MetalView: UIView {
     private var displayLink: CADisplayLink!
     private var lastTimestamp: CFTimeInterval = 0
     private var touchInput: TouchInputProvider!
+    private var scene: Galaxy1Scene!
 
     // Control overlays
     private var fireOverlay: UIView!
@@ -19,6 +20,10 @@ final class MetalView: UIView {
     private var ocOverlay: UIView!
     private var joystickBase: UIView!
     private var joystickKnob: UIView!
+
+    private var defaultJoystickCenter: CGPoint {
+        CGPoint(x: 60 + safeAreaInsets.left, y: bounds.height - 60 - safeAreaInsets.bottom)
+    }
 
     private static let controlTint = UIColor(red: 0, green: 1, blue: 210.0 / 255.0, alpha: 1)
 
@@ -43,7 +48,7 @@ final class MetalView: UIView {
         engine = GameEngine(renderer: renderer)
 
         touchInput = TouchInputProvider()
-        let scene = Galaxy1Scene()
+        scene = Galaxy1Scene()
         scene.inputProvider = touchInput
 
         let audio = AVAudioManager()
@@ -68,7 +73,7 @@ final class MetalView: UIView {
         // Dynamic joystick (hidden until touch)
         joystickBase = UIView()
         joystickBase.isUserInteractionEnabled = false
-        joystickBase.alpha = 0
+        joystickBase.alpha = 0.15
         joystickBase.layer.borderColor = tint.withAlphaComponent(0.35).cgColor
         joystickBase.layer.borderWidth = 2
         joystickBase.bounds = CGRect(x: 0, y: 0, width: 80, height: 80)
@@ -77,7 +82,7 @@ final class MetalView: UIView {
 
         joystickKnob = UIView()
         joystickKnob.isUserInteractionEnabled = false
-        joystickKnob.alpha = 0
+        joystickKnob.alpha = 0.15
         joystickKnob.backgroundColor = tint.withAlphaComponent(0.35)
         joystickKnob.bounds = CGRect(x: 0, y: 0, width: 30, height: 30)
         joystickKnob.layer.cornerRadius = 15
@@ -150,8 +155,11 @@ final class MetalView: UIView {
                 joystickKnob.center = origin
             }
         } else {
-            joystickBase.alpha = 0
-            joystickKnob.alpha = 0
+            // Return to default position with dim opacity
+            joystickBase.alpha = 0.15
+            joystickBase.center = defaultJoystickCenter
+            joystickKnob.alpha = 0.15
+            joystickKnob.center = defaultJoystickCenter
         }
     }
 
@@ -184,7 +192,7 @@ final class MetalView: UIView {
         // Secondary buttons: horizontal arc above primary fire
         let secSize: CGFloat = 44
         let fireCenter = CGPoint(x: fireRect.midX, y: fireRect.midY)
-        let arcRadius: CGFloat = 100
+        let arcRadius: CGFloat = 85
         // 3 buttons in a gentle arc, sweeping left from fire button
         // Order reversed: 3 (rightmost) → 2 → 1 (leftmost)
         let angles: [CGFloat] = [-1.60, -1.05, -0.50]  // radians from top
@@ -204,13 +212,42 @@ final class MetalView: UIView {
 
         touchInput.secondary3ButtonRect = secRects[2]
         ocOverlay.frame = secRects[2]
+
+    }
+
+    private func updateHudInsets() {
+        let screenHeight = bounds.height
+        if screenHeight > 0 {
+            let gameUnitsPerPoint = GameConfig.designHeight / Float(screenHeight)
+            scene.hudInsets = (
+                top: Float(safeAreaInsets.top) * gameUnitsPerPoint,
+                bottom: Float(safeAreaInsets.bottom) * gameUnitsPerPoint
+            )
+        }
     }
 
     @objc private func render(_ displayLink: CADisplayLink) {
         let dt = lastTimestamp == 0 ? 1.0 / 60.0 : displayLink.timestamp - lastTimestamp
         lastTimestamp = displayLink.timestamp
 
+        updateHudInsets()
         engine.update(deltaTime: dt)
+
+        // Check for scene restart — reuse existing audio engines
+        if scene.shouldRestart {
+            let audio = scene.audioProvider
+            let sfx = scene.sfx
+            audio?.stopAll()
+            sfx?.stopLaser()
+            sfx?.stopMusic()
+
+            scene = Galaxy1Scene()
+            scene.inputProvider = touchInput
+            scene.audioProvider = audio
+            scene.sfx = sfx
+            engine.currentScene = scene
+        }
+
         updateControlOverlays()
 
         guard let drawable = metalLayer.nextDrawable() else { return }

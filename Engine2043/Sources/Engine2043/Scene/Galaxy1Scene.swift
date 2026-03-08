@@ -53,6 +53,13 @@ public final class Galaxy1Scene: GameScene {
     private var blastEffects: [(entity: GKEntity, timer: Double)] = []
     private var slowMoTimer: Double = 0
     private var isSlowMo: Bool = false
+    public var hudInsets: (top: Float, bottom: Float) = (0, 0)
+    private var lastWeaponType: WeaponType?
+    private var weaponNameTimer: Double = 0
+    private static let weaponNameDuration: Double = 2.0
+    public private(set) var shouldRestart = false
+    private var gameOverTimer: Double = 0
+    private static let restartDelay: Double = 1.5
     private var musicStarted = false
 
     // MARK: - World
@@ -165,6 +172,19 @@ public final class Galaxy1Scene: GameScene {
         }
 
         handleInput()
+
+        // Track weapon type changes for HUD flash
+        if let weapon = player.component(ofType: WeaponComponent.self) {
+            if lastWeaponType == nil {
+                lastWeaponType = weapon.weaponType
+            } else if weapon.weaponType != lastWeaponType {
+                lastWeaponType = weapon.weaponType
+                weaponNameTimer = Self.weaponNameDuration
+            }
+        }
+        if weaponNameTimer > 0 {
+            weaponNameTimer -= time.fixedDeltaTime
+        }
 
         // Background and spawn director
         backgroundSystem.update(deltaTime: time.fixedDeltaTime)
@@ -313,6 +333,16 @@ public final class Galaxy1Scene: GameScene {
             removeEntity(entity)
         }
         pendingRemovals.removeAll()
+
+        // Game over / victory restart timer
+        if gameState != .playing {
+            gameOverTimer += time.fixedDeltaTime
+            if gameOverTimer > Self.restartDelay {
+                if let input = inputProvider?.poll(), input.primaryFire {
+                    shouldRestart = true
+                }
+            }
+        }
     }
 
     public func update(time: GameTime) {
@@ -441,6 +471,42 @@ public final class Galaxy1Scene: GameScene {
             }
         }
 
+        if gameState == .gameOver, let effectSheet {
+            sprites.append(contentsOf: makeTextSprites(
+                "GAME OVER",
+                at: SIMD2(0, 30),
+                color: SIMD4(0.9, 0.15, 0.15, 0.95),
+                scale: 3.0,
+                effectSheet: effectSheet
+            ))
+            let scoreText = String(format: "%08d", scoreSystem.currentScore)
+            sprites.append(contentsOf: makeTextSprites(
+                scoreText,
+                at: SIMD2(0, -10),
+                color: SIMD4(1, 1, 1, 0.8),
+                scale: 2.0,
+                effectSheet: effectSheet
+            ))
+        }
+
+        if gameState == .victory, let effectSheet {
+            sprites.append(contentsOf: makeTextSprites(
+                "VICTORY",
+                at: SIMD2(0, 30),
+                color: SIMD4(GameConfig.Palette.player.x, GameConfig.Palette.player.y, GameConfig.Palette.player.z, 0.95),
+                scale: 3.0,
+                effectSheet: effectSheet
+            ))
+            let scoreText = String(format: "%08d", scoreSystem.currentScore)
+            sprites.append(contentsOf: makeTextSprites(
+                scoreText,
+                at: SIMD2(0, -10),
+                color: SIMD4(1, 1, 1, 0.8),
+                scale: 2.0,
+                effectSheet: effectSheet
+            ))
+        }
+
         appendEffectHUD(to: &sprites, effectSheet: effectSheet)
 
         return sprites
@@ -448,7 +514,8 @@ public final class Galaxy1Scene: GameScene {
 
     private func appendEffectHUD(to sprites: inout [SpriteInstance], effectSheet: EffectTextureSheet?) {
         guard let effectSheet else { return }
-        let topY: Float = GameConfig.designHeight / 2 - 20
+        let topY: Float = GameConfig.designHeight / 2 - hudInsets.top - 10
+        let bottomY: Float = -GameConfig.designHeight / 2 + hudInsets.bottom + 10
 
         // Energy bar frame
         if let uv = effectSheet.uvRect(for: "hudBarFrame") {
@@ -474,21 +541,24 @@ public final class Galaxy1Scene: GameScene {
             ))
         }
 
-        // Score bar (white quad via effect sheet white pixel)
-        sprites.append(SpriteInstance(
-            position: SIMD2(100, topY),
-            size: SIMD2(max(min(Float(scoreSystem.currentScore) / 10.0, 100.0), 0), 8),
-            color: SIMD4(1, 1, 1, 0.8),
-            uvRect: effectSheet.whitePixelUV
+        // Numeric score (8-digit zero-padded)
+        let scoreText = String(format: "%08d", scoreSystem.currentScore)
+        sprites.append(contentsOf: makeTextSprites(
+            scoreText,
+            at: SIMD2(110, topY),
+            color: SIMD4(1, 1, 1, 0.9),
+            scale: 1.5,
+            effectSheet: effectSheet
         ))
 
-        // Secondary charges
+        // Secondary charges (centered, raised to secondary button height)
+        let weaponY = bottomY + 55
         let weapon = player.component(ofType: WeaponComponent.self)
         let charges = weapon?.secondaryCharges ?? 0
         if let uv = effectSheet.uvRect(for: "hudChargePip") {
             for i in 0..<charges {
                 sprites.append(SpriteInstance(
-                    position: SIMD2(140 - Float(i) * 14, -GameConfig.designHeight / 2 + 20),
+                    position: SIMD2(-14 + Float(i) * 14, weaponY),
                     size: SIMD2(12, 12),
                     color: SIMD4(1, 1, 1, 1),
                     uvRect: uv
@@ -496,7 +566,7 @@ public final class Galaxy1Scene: GameScene {
             }
         }
 
-        // Weapon indicator
+        // Weapon indicator (left side, scaled up)
         let weaponType = weapon?.weaponType ?? .doubleCannon
         let weaponColor: SIMD4<Float>
         switch weaponType {
@@ -507,19 +577,32 @@ public final class Galaxy1Scene: GameScene {
         }
         if let uv = effectSheet.uvRect(for: "hudWeaponIcon") {
             sprites.append(SpriteInstance(
-                position: SIMD2(0, -GameConfig.designHeight / 2 + 20),
-                size: SIMD2(20, 8),
+                position: SIMD2(0, weaponY),
+                size: SIMD2(32, 12),
                 color: weaponColor,
                 uvRect: uv
             ))
         }
 
-        // Phase Laser heat gauge
+        // Weapon name flash
+        if weaponNameTimer > 0 {
+            let fadeAlpha = Float(min(weaponNameTimer / 0.3, 1.0))
+            let name = weaponDisplayName(weaponType)
+            sprites.append(contentsOf: makeTextSprites(
+                name,
+                at: SIMD2(0, weaponY + 14),
+                color: SIMD4(weaponColor.x, weaponColor.y, weaponColor.z, fadeAlpha),
+                scale: 1.0,
+                effectSheet: effectSheet
+            ))
+        }
+
+        // Phase Laser heat gauge (scaled up)
         if weaponType == .phaseLaser, let w = weapon {
             if let frameUV = effectSheet.uvRect(for: "hudHeatFrame") {
                 sprites.append(SpriteInstance(
-                    position: SIMD2(0, -GameConfig.designHeight / 2 + 30),
-                    size: SIMD2(20, 3),
+                    position: SIMD2(0, weaponY + 12),
+                    size: SIMD2(32, 5),
                     color: SIMD4(1, 1, 1, 1),
                     uvRect: frameUV
                 ))
@@ -530,16 +613,16 @@ public final class Galaxy1Scene: GameScene {
                 if w.isLaserOverheated {
                     let cooldownFrac = Float(w.laserOverheatTimer / GameConfig.Weapon.laserOverheatCooldown)
                     sprites.append(SpriteInstance(
-                        position: SIMD2(0, -GameConfig.designHeight / 2 + 30),
-                        size: SIMD2(20 * cooldownFrac, 2),
+                        position: SIMD2(0, weaponY + 12),
+                        size: SIMD2(30 * cooldownFrac, 3),
                         color: SIMD4(1, 0.2, 0.2, 0.8),
                         uvRect: fillUV
                     ))
                 } else if heatFrac > 0 {
                     let color = SIMD4<Float>(heatFrac, 1.0 - heatFrac * 0.6, 0.2, 0.8)
                     sprites.append(SpriteInstance(
-                        position: SIMD2(0, -GameConfig.designHeight / 2 + 30),
-                        size: SIMD2(20 * heatFrac, 2),
+                        position: SIMD2(0, weaponY + 12),
+                        size: SIMD2(30 * heatFrac, 3),
                         color: color,
                         uvRect: fillUV
                     ))
@@ -551,13 +634,51 @@ public final class Galaxy1Scene: GameScene {
         if weapon?.overchargeActive == true {
             if let uv = effectSheet.uvRect(for: "hudBarFill") {
                 sprites.append(SpriteInstance(
-                    position: SIMD2(0, -GameConfig.designHeight / 2 + 38),
-                    size: SIMD2(20, 3),
+                    position: SIMD2(0, weaponY + 20),
+                    size: SIMD2(32, 4),
                     color: GameConfig.Palette.overchargeGlow,
                     uvRect: uv
                 ))
             }
         }
+    }
+
+    private func weaponDisplayName(_ type: WeaponType) -> String {
+        switch type {
+        case .doubleCannon: return "DOUBLE CANNON"
+        case .triSpread:    return "TRI-SPREAD"
+        case .lightningArc: return "LIGHTNING ARC"
+        case .phaseLaser:   return "PHASE LASER"
+        }
+    }
+
+    private func makeTextSprites(
+        _ text: String,
+        at position: SIMD2<Float>,
+        color: SIMD4<Float>,
+        scale: Float = 1.0,
+        effectSheet: EffectTextureSheet
+    ) -> [SpriteInstance] {
+        var sprites: [SpriteInstance] = []
+        let glyphW: Float = 6 * scale
+        let glyphH: Float = 8 * scale
+        let totalWidth = Float(text.count) * glyphW
+        var x = position.x - totalWidth / 2 + glyphW / 2
+        for char in text {
+            if char != " " {
+                let key = "glyph_\(char)"
+                if let uv = effectSheet.uvRect(for: key) {
+                    sprites.append(SpriteInstance(
+                        position: SIMD2(x, position.y),
+                        size: SIMD2(glyphW, glyphH),
+                        color: color,
+                        uvRect: uv
+                    ))
+                }
+            }
+            x += glyphW
+        }
+        return sprites
     }
 
     // MARK: - Input
@@ -1410,23 +1531,20 @@ public final class Galaxy1Scene: GameScene {
     // MARK: - HUD
 
     private func appendGameOverOverlay(to sprites: inout [SpriteInstance]) {
+        // Dim overlay
         sprites.append(SpriteInstance(
             position: .zero,
-            size: SIMD2(GameConfig.designWidth, GameConfig.designHeight),
+            size: SIMD2(GameConfig.designWidth * 2, GameConfig.designHeight * 2),
             color: SIMD4(0, 0, 0, 0.6)
-        ))
-        sprites.append(SpriteInstance(
-            position: SIMD2(0, 20),
-            size: SIMD2(160, 30),
-            color: SIMD4(0.8, 0.1, 0.1, 0.9)
         ))
     }
 
     private func appendVictoryOverlay(to sprites: inout [SpriteInstance]) {
+        // Dim overlay (lighter than game over)
         sprites.append(SpriteInstance(
-            position: SIMD2(0, 20),
-            size: SIMD2(160, 30),
-            color: GameConfig.Palette.player
+            position: .zero,
+            size: SIMD2(GameConfig.designWidth * 2, GameConfig.designHeight * 2),
+            color: SIMD4(0, 0, 0, 0.4)
         ))
     }
 }
