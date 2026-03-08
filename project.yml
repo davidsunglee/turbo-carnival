@@ -16,6 +16,8 @@ targets:
     platform: macOS
     sources:
       - path: Project2043-macOS
+      - path: Shared/Assets.xcassets
+        type: file
     dependencies:
       - package: Engine2043
     settings:
@@ -32,6 +34,8 @@ targets:
     platform: iOS
     sources:
       - path: Project2043-iOS
+      - path: Shared/Assets.xcassets
+        type: file
     dependencies:
       - package: Engine2043
     settings:
