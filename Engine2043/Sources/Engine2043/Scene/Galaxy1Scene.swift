@@ -551,13 +551,13 @@ public final class Galaxy1Scene: GameScene {
             effectSheet: effectSheet
         ))
 
-        // Secondary charges
+        // Secondary charges (left side, above bottom safe area)
         let weapon = player.component(ofType: WeaponComponent.self)
         let charges = weapon?.secondaryCharges ?? 0
         if let uv = effectSheet.uvRect(for: "hudChargePip") {
             for i in 0..<charges {
                 sprites.append(SpriteInstance(
-                    position: SIMD2(140 - Float(i) * 14, bottomY),
+                    position: SIMD2(-130 + Float(i) * 14, bottomY),
                     size: SIMD2(12, 12),
                     color: SIMD4(1, 1, 1, 1),
                     uvRect: uv
@@ -565,7 +565,7 @@ public final class Galaxy1Scene: GameScene {
             }
         }
 
-        // Weapon indicator
+        // Weapon indicator (left side, scaled up)
         let weaponType = weapon?.weaponType ?? .doubleCannon
         let weaponColor: SIMD4<Float>
         switch weaponType {
@@ -576,8 +576,8 @@ public final class Galaxy1Scene: GameScene {
         }
         if let uv = effectSheet.uvRect(for: "hudWeaponIcon") {
             sprites.append(SpriteInstance(
-                position: SIMD2(0, bottomY),
-                size: SIMD2(20, 8),
+                position: SIMD2(-80, bottomY),
+                size: SIMD2(32, 12),
                 color: weaponColor,
                 uvRect: uv
             ))
@@ -589,19 +589,19 @@ public final class Galaxy1Scene: GameScene {
             let name = weaponDisplayName(weaponType)
             sprites.append(contentsOf: makeTextSprites(
                 name,
-                at: SIMD2(0, bottomY + 12),
+                at: SIMD2(-80, bottomY + 14),
                 color: SIMD4(weaponColor.x, weaponColor.y, weaponColor.z, fadeAlpha),
                 scale: 1.0,
                 effectSheet: effectSheet
             ))
         }
 
-        // Phase Laser heat gauge
+        // Phase Laser heat gauge (scaled up)
         if weaponType == .phaseLaser, let w = weapon {
             if let frameUV = effectSheet.uvRect(for: "hudHeatFrame") {
                 sprites.append(SpriteInstance(
-                    position: SIMD2(0, bottomY + 10),
-                    size: SIMD2(20, 3),
+                    position: SIMD2(-80, bottomY + 12),
+                    size: SIMD2(32, 5),
                     color: SIMD4(1, 1, 1, 1),
                     uvRect: frameUV
                 ))
@@ -612,16 +612,16 @@ public final class Galaxy1Scene: GameScene {
                 if w.isLaserOverheated {
                     let cooldownFrac = Float(w.laserOverheatTimer / GameConfig.Weapon.laserOverheatCooldown)
                     sprites.append(SpriteInstance(
-                        position: SIMD2(0, bottomY + 10),
-                        size: SIMD2(20 * cooldownFrac, 2),
+                        position: SIMD2(-80, bottomY + 12),
+                        size: SIMD2(30 * cooldownFrac, 3),
                         color: SIMD4(1, 0.2, 0.2, 0.8),
                         uvRect: fillUV
                     ))
                 } else if heatFrac > 0 {
                     let color = SIMD4<Float>(heatFrac, 1.0 - heatFrac * 0.6, 0.2, 0.8)
                     sprites.append(SpriteInstance(
-                        position: SIMD2(0, bottomY + 10),
-                        size: SIMD2(20 * heatFrac, 2),
+                        position: SIMD2(-80, bottomY + 12),
+                        size: SIMD2(30 * heatFrac, 3),
                         color: color,
                         uvRect: fillUV
                     ))
@@ -633,8 +633,8 @@ public final class Galaxy1Scene: GameScene {
         if weapon?.overchargeActive == true {
             if let uv = effectSheet.uvRect(for: "hudBarFill") {
                 sprites.append(SpriteInstance(
-                    position: SIMD2(0, bottomY + 18),
-                    size: SIMD2(20, 3),
+                    position: SIMD2(-80, bottomY + 20),
+                    size: SIMD2(32, 4),
                     color: GameConfig.Palette.overchargeGlow,
                     uvRect: uv
                 ))

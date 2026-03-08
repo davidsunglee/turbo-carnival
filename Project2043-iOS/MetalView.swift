@@ -213,7 +213,9 @@ final class MetalView: UIView {
         touchInput.secondary3ButtonRect = secRects[2]
         ocOverlay.frame = secRects[2]
 
-        // Convert safe area insets from screen points to game-coordinate units
+    }
+
+    private func updateHudInsets() {
         let screenHeight = bounds.height
         if screenHeight > 0 {
             let gameUnitsPerPoint = GameConfig.designHeight / Float(screenHeight)
@@ -228,6 +230,7 @@ final class MetalView: UIView {
         let dt = lastTimestamp == 0 ? 1.0 / 60.0 : displayLink.timestamp - lastTimestamp
         lastTimestamp = displayLink.timestamp
 
+        updateHudInsets()
         engine.update(deltaTime: dt)
 
         // Check for scene restart — reuse existing audio engines
@@ -243,15 +246,6 @@ final class MetalView: UIView {
             scene.audioProvider = audio
             scene.sfx = sfx
             engine.currentScene = scene
-            // Reapply safe area insets
-            let screenHeight = bounds.height
-            if screenHeight > 0 {
-                let gameUnitsPerPoint = GameConfig.designHeight / Float(screenHeight)
-                scene.hudInsets = (
-                    top: Float(safeAreaInsets.top) * gameUnitsPerPoint,
-                    bottom: Float(safeAreaInsets.bottom) * gameUnitsPerPoint
-                )
-            }
         }
 
         updateControlOverlays()
