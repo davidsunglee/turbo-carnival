@@ -82,11 +82,19 @@ public enum GameConfig {
     }
 
     public enum Item {
-        public static let size = SIMD2<Float>(16, 16)
+        public static let size = SIMD2<Float>(24, 24)
         public static let driftSpeed: Float = 40
         public static let despawnTime: Double = 8.0
         public static let energyRestoreAmount: Float = 15
         public static let chargeRestoreAmount: Int = 1
+    }
+
+    public enum ShieldDrone {
+        public static let orbitRadius: Float = 25
+        public static let orbitSpeed: Float = 3.14
+        public static let hitsPerDrone: Int = 3
+        public static let maxDrones: Int = 4
+        public static let droneSize = SIMD2<Float>(10, 10)
     }
 
     public enum Background {
@@ -115,6 +123,7 @@ public enum GameConfig {
         public static let overchargeGlow = SIMD4<Float>(1.0, 0.6, 0.0, 0.8)
         public static let laserBeam = SIMD4<Float>(0.4, 1.0, 0.4, 0.9)
         public static let chargeCell = SIMD4<Float>(0.6, 0.3, 1.0, 1.0)
+        public static let shieldDrone = SIMD4<Float>(0.0, 1.0, 210.0 / 255.0, 1.0)
         public static let weaponDoubleCannon = SIMD4<Float>(0.0, 0.5, 1.0, 1.0)
         public static let weaponTriSpread = SIMD4<Float>(1.0, 0.0, 0.2, 1.0)
         public static let weaponLightningArc = SIMD4<Float>(1.0, 1.0, 0.0, 1.0)
