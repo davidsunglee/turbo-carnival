@@ -11,7 +11,7 @@ public final class TextureAtlas {
     public nonisolated(unsafe) static let spriteNames: Set<String> = [
         "player", "swarmer", "bruiser", "capitalHull", "turret", "bossCore", "bossShield",
         "playerBullet", "triSpreadBullet", "lightningArcIcon", "enemyBullet", "gravBombSprite",
-        "energyDrop", "chargeCell", "weaponModule"
+        "energyDrop", "chargeCell", "weaponModule", "shieldDrop", "shieldDrone"
     ]
 
     struct SpriteEntry {
@@ -37,9 +37,11 @@ public final class TextureAtlas {
         SpriteEntry(name: "enemyBullet",     x: 18,  y: 172, width: 8,  height: 8),
         SpriteEntry(name: "gravBombSprite",  x: 26,  y: 172, width: 16, height: 16),
         // Row 188: Pickups
-        SpriteEntry(name: "energyDrop",      x: 0,   y: 188, width: 16, height: 16),
-        SpriteEntry(name: "chargeCell",      x: 16,  y: 188, width: 16, height: 16),
-        SpriteEntry(name: "weaponModule",    x: 32,  y: 188, width: 20, height: 20),
+        SpriteEntry(name: "energyDrop",      x: 0,   y: 188, width: 24, height: 24),
+        SpriteEntry(name: "chargeCell",      x: 24,  y: 188, width: 24, height: 24),
+        SpriteEntry(name: "weaponModule",    x: 48,  y: 188, width: 20, height: 20),
+        SpriteEntry(name: "shieldDrop",      x: 68,  y: 188, width: 24, height: 24),
+        SpriteEntry(name: "shieldDrone",     x: 92,  y: 188, width: 10, height: 10),
     ]
 
     public var defaultTexture: MTLTexture { texture }
@@ -88,6 +90,8 @@ public final class TextureAtlas {
             ("energyDrop",      SpriteFactory.makeEnergyDrop),
             ("chargeCell",      SpriteFactory.makeChargeCell),
             ("weaponModule",    SpriteFactory.makeWeaponModuleSprite),
+            ("shieldDrop",      SpriteFactory.makeShieldDrop),
+            ("shieldDrone",     SpriteFactory.makeShieldDrone),
         ]
 
         for entry in Self.layout {

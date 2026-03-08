@@ -594,26 +594,30 @@ public enum SpriteFactory {
         return (extractPixels(from: ctx, width: w, height: h), w, h)
     }
 
-    // MARK: - Energy Drop (16x16)
+    // MARK: - Energy Drop (24x24)
     // Lightning bolt silhouette, gold (#e0af68) fill, white highlight line.
 
     public static func makeEnergyDrop() -> (pixels: [UInt8], width: Int, height: Int) {
-        let w = 16, h = 16
+        let w = 24, h = 24
         guard let ctx = makeContext(width: w, height: h) else {
             return (Array(repeating: 0, count: w * h * 4), w, h)
         }
 
-        // Lightning bolt shape
+        // Outer glow (subtle gold halo)
+        ctx.setFillColor(cgColor(224, 175, 104, 40))
+        ctx.fillEllipse(in: CGRect(x: 2, y: 2, width: 20, height: 20))
+
+        // Lightning bolt shape — larger, more detailed
         ctx.setFillColor(cgColor(224, 175, 104))
         ctx.beginPath()
-        ctx.move(to: CGPoint(x: 9, y: 14))
-        ctx.addLine(to: CGPoint(x: 5, y: 14))
-        ctx.addLine(to: CGPoint(x: 8, y: 8))
-        ctx.addLine(to: CGPoint(x: 5, y: 8))
-        ctx.addLine(to: CGPoint(x: 10, y: 2))
-        ctx.addLine(to: CGPoint(x: 11, y: 2))
-        ctx.addLine(to: CGPoint(x: 8, y: 7))
-        ctx.addLine(to: CGPoint(x: 11, y: 7))
+        ctx.move(to: CGPoint(x: 14, y: 21))
+        ctx.addLine(to: CGPoint(x: 7, y: 21))
+        ctx.addLine(to: CGPoint(x: 11, y: 13))
+        ctx.addLine(to: CGPoint(x: 7, y: 13))
+        ctx.addLine(to: CGPoint(x: 14, y: 3))
+        ctx.addLine(to: CGPoint(x: 16, y: 3))
+        ctx.addLine(to: CGPoint(x: 12, y: 11))
+        ctx.addLine(to: CGPoint(x: 16, y: 11))
         ctx.closePath()
         ctx.fillPath()
 
@@ -621,19 +625,19 @@ public enum SpriteFactory {
         ctx.setStrokeColor(cgColor(255, 255, 255, 200))
         ctx.setLineWidth(1)
         ctx.beginPath()
-        ctx.move(to: CGPoint(x: 9, y: 13))
-        ctx.addLine(to: CGPoint(x: 7, y: 8))
-        ctx.addLine(to: CGPoint(x: 10, y: 3))
+        ctx.move(to: CGPoint(x: 13, y: 20))
+        ctx.addLine(to: CGPoint(x: 10, y: 13))
+        ctx.addLine(to: CGPoint(x: 14, y: 4))
         ctx.strokePath()
 
         return (extractPixels(from: ctx, width: w, height: h), w, h)
     }
 
-    // MARK: - Charge Cell (16x16)
+    // MARK: - Charge Cell (24x24)
     // Hexagonal battery, purple (#9966ff) outline, segmented interior, bright core.
 
     public static func makeChargeCell() -> (pixels: [UInt8], width: Int, height: Int) {
-        let w = 16, h = 16
+        let w = 24, h = 24
         guard let ctx = makeContext(width: w, height: h) else {
             return (Array(repeating: 0, count: w * h * 4), w, h)
         }
@@ -642,7 +646,7 @@ public enum SpriteFactory {
         let cy = CGFloat(h) / 2
 
         // Hexagon
-        let r: CGFloat = 6
+        let r: CGFloat = 9
         var hexPts: [CGPoint] = []
         for i in 0..<6 {
             let angle = CGFloat(i) * .pi / 3 - .pi / 6
@@ -666,18 +670,77 @@ public enum SpriteFactory {
         ctx.closePath()
         ctx.strokePath()
 
-        // Segment lines
+        // Segment lines (3 horizontal lines)
         ctx.setStrokeColor(cgColor(80, 50, 140))
         ctx.setLineWidth(1)
         ctx.beginPath()
-        ctx.move(to: CGPoint(x: 4, y: cy - 1))
-        ctx.addLine(to: CGPoint(x: CGFloat(w) - 4, y: cy - 1))
-        ctx.move(to: CGPoint(x: 4, y: cy + 1))
-        ctx.addLine(to: CGPoint(x: CGFloat(w) - 4, y: cy + 1))
+        ctx.move(to: CGPoint(x: 5, y: cy - 3))
+        ctx.addLine(to: CGPoint(x: CGFloat(w) - 5, y: cy - 3))
+        ctx.move(to: CGPoint(x: 5, y: cy))
+        ctx.addLine(to: CGPoint(x: CGFloat(w) - 5, y: cy))
+        ctx.move(to: CGPoint(x: 5, y: cy + 3))
+        ctx.addLine(to: CGPoint(x: CGFloat(w) - 5, y: cy + 3))
         ctx.strokePath()
 
         // Bright core
         ctx.setFillColor(cgColor(200, 180, 255))
+        ctx.fillEllipse(in: CGRect(x: cx - 3, y: cy - 3, width: 6, height: 6))
+
+        return (extractPixels(from: ctx, width: w, height: h), w, h)
+    }
+
+    // MARK: - Shield Drop (24x24)
+    // Concentric cyan rings with bright center dot — "Cyan Halo" per spec.
+
+    public static func makeShieldDrop() -> (pixels: [UInt8], width: Int, height: Int) {
+        let w = 24, h = 24
+        guard let ctx = makeContext(width: w, height: h) else {
+            return (Array(repeating: 0, count: w * h * 4), w, h)
+        }
+
+        let cx = CGFloat(w) / 2
+        let cy = CGFloat(h) / 2
+
+        // Outer ring
+        ctx.setStrokeColor(cgColor(0, 255, 210, 100))
+        ctx.setLineWidth(2)
+        ctx.strokeEllipse(in: CGRect(x: 2, y: 2, width: 20, height: 20))
+
+        // Middle ring
+        ctx.setStrokeColor(cgColor(0, 255, 210, 180))
+        ctx.setLineWidth(2)
+        ctx.strokeEllipse(in: CGRect(x: 5, y: 5, width: 14, height: 14))
+
+        // Inner ring
+        ctx.setStrokeColor(cgColor(0, 255, 210, 255))
+        ctx.setLineWidth(1.5)
+        ctx.strokeEllipse(in: CGRect(x: 8, y: 8, width: 8, height: 8))
+
+        // Bright center dot
+        ctx.setFillColor(cgColor(200, 255, 240))
+        ctx.fillEllipse(in: CGRect(x: cx - 2, y: cy - 2, width: 4, height: 4))
+
+        return (extractPixels(from: ctx, width: w, height: h), w, h)
+    }
+
+    // MARK: - Shield Drone (10x10)
+    // Small cyan filled circle — orbits the player ship.
+
+    public static func makeShieldDrone() -> (pixels: [UInt8], width: Int, height: Int) {
+        let w = 10, h = 10
+        guard let ctx = makeContext(width: w, height: h) else {
+            return (Array(repeating: 0, count: w * h * 4), w, h)
+        }
+
+        let cx = CGFloat(w) / 2
+        let cy = CGFloat(h) / 2
+
+        // Cyan filled circle
+        ctx.setFillColor(cgColor(0, 255, 210, 200))
+        ctx.fillEllipse(in: CGRect(x: 1, y: 1, width: 8, height: 8))
+
+        // Bright center
+        ctx.setFillColor(cgColor(200, 255, 240))
         ctx.fillEllipse(in: CGRect(x: cx - 2, y: cy - 2, width: 4, height: 4))
 
         return (extractPixels(from: ctx, width: w, height: h), w, h)
