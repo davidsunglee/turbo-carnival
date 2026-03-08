@@ -1267,6 +1267,8 @@ public final class Galaxy1Scene: GameScene {
                 if let weapon = player.component(ofType: WeaponComponent.self) {
                     weapon.secondaryCharges = min(GameConfig.Weapon.gravBombMaxCharges, weapon.secondaryCharges + GameConfig.Item.chargeRestoreAmount)
                 }
+            case .orbitingShield:
+                break
             }
         }
 

@@ -10,10 +10,10 @@ struct ItemSystemTests {
         let entity = GKEntity()
         let transform = TransformComponent(position: SIMD2(0, 200))
         entity.addComponent(transform)
-        let physics = PhysicsComponent(collisionSize: SIMD2(16, 16), layer: .item, mask: [.playerProjectile, .player])
+        let physics = PhysicsComponent(collisionSize: GameConfig.Item.size, layer: .item, mask: [.playerProjectile, .player])
         entity.addComponent(physics)
         entity.addComponent(ItemComponent())
-        entity.addComponent(RenderComponent(size: SIMD2(16, 16), color: SIMD4(1, 1, 0, 1)))
+        entity.addComponent(RenderComponent(size: GameConfig.Item.size, color: SIMD4(1, 1, 0, 1)))
 
         system.register(entity)
         system.update(deltaTime: 1.0)
@@ -28,12 +28,12 @@ struct ItemSystemTests {
         let halfW = GameConfig.designWidth / 2
         let transform = TransformComponent(position: SIMD2(halfW - 5, 200))
         entity.addComponent(transform)
-        let physics = PhysicsComponent(collisionSize: SIMD2(16, 16), layer: .item, mask: [.playerProjectile, .player])
+        let physics = PhysicsComponent(collisionSize: GameConfig.Item.size, layer: .item, mask: [.playerProjectile, .player])
         entity.addComponent(physics)
         let item = ItemComponent()
         item.bounceDirection = 1
         entity.addComponent(item)
-        entity.addComponent(RenderComponent(size: SIMD2(16, 16), color: SIMD4(1, 1, 0, 1)))
+        entity.addComponent(RenderComponent(size: GameConfig.Item.size, color: SIMD4(1, 1, 0, 1)))
 
         system.register(entity)
         system.update(deltaTime: 1.0 / 60.0)
@@ -46,11 +46,11 @@ struct ItemSystemTests {
 
         let entity = GKEntity()
         entity.addComponent(TransformComponent(position: SIMD2(0, 200)))
-        let physics = PhysicsComponent(collisionSize: SIMD2(16, 16), layer: .item, mask: [])
+        let physics = PhysicsComponent(collisionSize: GameConfig.Item.size, layer: .item, mask: [])
         entity.addComponent(physics)
         let item = ItemComponent()
         entity.addComponent(item)
-        entity.addComponent(RenderComponent(size: SIMD2(16, 16), color: SIMD4(1, 1, 0, 1)))
+        entity.addComponent(RenderComponent(size: GameConfig.Item.size, color: SIMD4(1, 1, 0, 1)))
 
         system.register(entity)
 
@@ -66,15 +66,64 @@ struct ItemSystemTests {
 
         let entity = GKEntity()
         entity.addComponent(TransformComponent(position: SIMD2(0, 200)))
-        entity.addComponent(PhysicsComponent(collisionSize: SIMD2(16, 16), layer: .item, mask: []))
+        entity.addComponent(PhysicsComponent(collisionSize: GameConfig.Item.size, layer: .item, mask: []))
         let item = ItemComponent()
         entity.addComponent(item)
-        entity.addComponent(RenderComponent(size: SIMD2(16, 16), color: SIMD4(1, 1, 0, 1)))
+        entity.addComponent(RenderComponent(size: GameConfig.Item.size, color: SIMD4(1, 1, 0, 1)))
 
         system.register(entity)
 
         #expect(item.utilityItemType == .energyCell)
         system.handleProjectileHit(on: entity)
         #expect(item.utilityItemType == .chargeCell)
+    }
+
+    @Test @MainActor func itemSystemCyclesToOrbitingShield() {
+        let system = ItemSystem()
+
+        let entity = GKEntity()
+        entity.addComponent(TransformComponent(position: SIMD2(0, 200)))
+        entity.addComponent(PhysicsComponent(collisionSize: GameConfig.Item.size, layer: .item, mask: []))
+        let item = ItemComponent()
+        entity.addComponent(item)
+        entity.addComponent(RenderComponent(size: GameConfig.Item.size, color: SIMD4(1, 1, 0, 1)))
+
+        system.register(entity)
+
+        #expect(item.utilityItemType == .energyCell)
+        system.handleProjectileHit(on: entity)
+        #expect(item.utilityItemType == .chargeCell)
+        system.handleProjectileHit(on: entity)
+        #expect(item.utilityItemType == .orbitingShield)
+        system.handleProjectileHit(on: entity)
+        #expect(item.utilityItemType == .energyCell)
+    }
+
+    @Test @MainActor func itemSystemUpdatesSpriteIdPerType() {
+        let system = ItemSystem()
+
+        let entity = GKEntity()
+        entity.addComponent(TransformComponent(position: SIMD2(0, 200)))
+        entity.addComponent(PhysicsComponent(collisionSize: GameConfig.Item.size, layer: .item, mask: []))
+        let item = ItemComponent()
+        entity.addComponent(item)
+        let render = RenderComponent(size: GameConfig.Item.size, color: SIMD4(1, 1, 1, 1))
+        entity.addComponent(render)
+
+        system.register(entity)
+
+        // energyCell
+        system.update(deltaTime: 1.0 / 60.0)
+        #expect(render.spriteId == "energyDrop")
+
+        // chargeCell
+        system.handleProjectileHit(on: entity)
+        system.update(deltaTime: 1.0 / 60.0)
+        #expect(render.spriteId == "chargeCell")
+
+        // orbitingShield
+        system.handleProjectileHit(on: entity)
+        system.update(deltaTime: 1.0 / 60.0)
+        #expect(render.spriteId == "shieldDrop")
     }
 }
