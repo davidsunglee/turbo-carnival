@@ -167,7 +167,7 @@ public final class SynthAudioEngine {
                 envelope = 1.0 - (Float(i - attackFrames) / Float(Int(frameCount) - attackFrames))
             }
 
-            sample *= envelope * 0.4 // master gain to prevent clipping
+            sample *= envelope * 0.25 // master gain to prevent clipping
             samples[i] = sample
         }
 
@@ -314,7 +314,7 @@ public final class SynthAudioEngine {
 
     public func startMusic(_ track: MusicTrack) {
         music.track.withLock { $0 = track }
-        music.amplitude.withLock { $0 = 0.20 }
+        music.amplitude.withLock { $0 = 1.0 }
         music.samplePosition.withLock { $0 = 0 }
 
         if !isMusicActive {
@@ -348,7 +348,7 @@ public final class SynthAudioEngine {
     }
 
     public func updateMusicFade(deltaTime: Float) {
-        let musicVolume: Float = 0.20
+        let musicVolume: Float = 1.0
 
         switch fadePhase {
         case .none:
