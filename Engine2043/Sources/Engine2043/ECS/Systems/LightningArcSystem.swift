@@ -15,6 +15,10 @@ public final class LightningArcSystem {
 
     private var tickAccumulator: Double = 0
 
+    // Ramp-up tracking
+    private weak var currentPrimaryTarget: GKEntity?
+    private var rampTimer: Double = 0
+
     public init(player: GKEntity) {
         self.playerEntity = player
     }
@@ -37,6 +41,8 @@ public final class LightningArcSystem {
               weapon.isFiring,
               let playerTransform = player.component(ofType: TransformComponent.self) else {
             tickAccumulator = 0
+            currentPrimaryTarget = nil
+            rampTimer = 0
             return
         }
 
@@ -64,8 +70,23 @@ public final class LightningArcSystem {
         guard let primary = primaryTarget,
               let primaryTransform = primary.component(ofType: TransformComponent.self) else {
             tickAccumulator = 0
+            currentPrimaryTarget = nil
+            rampTimer = 0
             return
         }
+
+        // Ramp-up: reset if primary target changed
+        if primary !== currentPrimaryTarget {
+            currentPrimaryTarget = primary
+            rampTimer = 0
+        }
+
+        // Calculate ramp multiplier from current state before advancing timer
+        let rampProgress = Float(rampTimer / GameConfig.Weapon.lightningArcRampDuration)
+        let minRamp = GameConfig.Weapon.lightningArcMinRampMultiplier
+        let rampMultiplier = minRamp + (1.0 - minRamp) * rampProgress
+
+        rampTimer = min(rampTimer + deltaTime, GameConfig.Weapon.lightningArcRampDuration)
 
         // Build arc chain
         var chainTargets: [GKEntity] = [primary]
@@ -106,8 +127,8 @@ public final class LightningArcSystem {
         while tickAccumulator >= tickInterval {
             tickAccumulator -= tickInterval
             for (i, target) in chainTargets.enumerated() {
-                let multiplier = powf(falloff, Float(i))
-                pendingDamage.append((entity: target, damage: baseDamage * multiplier))
+                let chainFalloff = powf(falloff, Float(i))
+                pendingDamage.append((entity: target, damage: baseDamage * rampMultiplier * chainFalloff))
             }
         }
     }
