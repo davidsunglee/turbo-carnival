@@ -54,13 +54,13 @@ enum MusicSynthesizer {
         let drums = synthDrums(beatInLoop: beatInLoop, beatFraction: beatFraction, track: track, sampleRate: sampleRate)
         let pad = synthPad(chord: chord, time: time)
 
-        // Mix levels — keep total under ~0.4 to leave headroom
+        // Mix levels — keep total under ~0.6 to leave headroom
         let mix: Float
         switch track {
         case .gameplay:
-            mix = bass * 0.12 + arp * 0.08 + drums * 0.10 + pad * 0.05
+            mix = bass * 0.18 + arp * 0.12 + drums * 0.15 + pad * 0.08
         case .boss:
-            mix = bass * 0.14 + arp * 0.09 + drums * 0.12 + pad * 0.04
+            mix = bass * 0.21 + arp * 0.14 + drums * 0.18 + pad * 0.06
         }
 
         return mix

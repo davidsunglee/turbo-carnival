@@ -167,7 +167,7 @@ public final class SynthAudioEngine {
                 envelope = 1.0 - (Float(i - attackFrames) / Float(Int(frameCount) - attackFrames))
             }
 
-            sample *= envelope * 0.25 // master gain to prevent clipping
+            sample *= envelope * 0.15 // master gain to prevent clipping
             samples[i] = sample
         }
 
@@ -279,7 +279,7 @@ public final class SynthAudioEngine {
         isLaserActive = true
 
         laser.frequency.withLock { $0 = 120.0 }
-        laser.amplitude.withLock { $0 = 0.3 }
+        laser.amplitude.withLock { $0 = 0.18 }
         laser.phase.withLock { $0 = 0 }
 
         let node = laser.makeSourceNode(format: format, sampleRate: Float(sampleRate))
@@ -307,7 +307,7 @@ public final class SynthAudioEngine {
         // Map heat 0→1 to frequency 120Hz→180Hz
         laser.frequency.withLock { $0 = 120.0 + clamped * 60.0 }
         // Map heat 0→1 to amplitude 0.3→0.5
-        laser.amplitude.withLock { $0 = 0.3 + clamped * 0.2 }
+        laser.amplitude.withLock { $0 = 0.18 + clamped * 0.12 }
     }
 
     // MARK: - Background Music
