@@ -8,7 +8,7 @@ public final class TextureAtlas {
 
     public static let atlasSize = 512
 
-    public nonisolated(unsafe) static let spriteNames: Set<String> = [
+    public static let spriteNames: Set<String> = [
         "player", "swarmer", "bruiser", "capitalHull", "turret", "bossCore", "bossShield",
         "playerBullet", "triSpreadBullet", "lightningArcIcon", "enemyBullet", "gravBombSprite",
         "energyDrop", "chargeCell", "shieldDrop", "shieldDrone",
