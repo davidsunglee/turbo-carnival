@@ -229,6 +229,27 @@ final class MetalView: UIView {
         lastTimestamp = displayLink.timestamp
 
         engine.update(deltaTime: dt)
+
+        // Check for scene restart
+        if scene.shouldRestart {
+            scene = Galaxy1Scene()
+            scene.inputProvider = touchInput
+            let audio = AVAudioManager()
+            scene.audioProvider = audio
+            let sfxEngine = SynthAudioEngine()
+            scene.sfx = sfxEngine
+            engine.currentScene = scene
+            // Reapply safe area insets
+            let screenHeight = bounds.height
+            if screenHeight > 0 {
+                let gameUnitsPerPoint = GameConfig.designHeight / Float(screenHeight)
+                scene.hudInsets = (
+                    top: Float(safeAreaInsets.top) * gameUnitsPerPoint,
+                    bottom: Float(safeAreaInsets.bottom) * gameUnitsPerPoint
+                )
+            }
+        }
+
         updateControlOverlays()
 
         guard let drawable = metalLayer.nextDrawable() else { return }

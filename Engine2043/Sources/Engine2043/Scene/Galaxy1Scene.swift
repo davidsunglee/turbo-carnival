@@ -57,6 +57,9 @@ public final class Galaxy1Scene: GameScene {
     private var lastWeaponType: WeaponType?
     private var weaponNameTimer: Double = 0
     private static let weaponNameDuration: Double = 2.0
+    public private(set) var shouldRestart = false
+    private var gameOverTimer: Double = 0
+    private static let restartDelay: Double = 1.5
     private var musicStarted = false
 
     // MARK: - World
@@ -330,6 +333,16 @@ public final class Galaxy1Scene: GameScene {
             removeEntity(entity)
         }
         pendingRemovals.removeAll()
+
+        // Game over / victory restart timer
+        if gameState != .playing {
+            gameOverTimer += time.fixedDeltaTime
+            if gameOverTimer > Self.restartDelay {
+                if let input = inputProvider?.poll(), input.primaryFire {
+                    shouldRestart = true
+                }
+            }
+        }
     }
 
     public func update(time: GameTime) {
@@ -456,6 +469,42 @@ public final class Galaxy1Scene: GameScene {
                     uvRect: uv
                 ))
             }
+        }
+
+        if gameState == .gameOver, let effectSheet {
+            sprites.append(contentsOf: makeTextSprites(
+                "GAME OVER",
+                at: SIMD2(0, 30),
+                color: SIMD4(0.9, 0.15, 0.15, 0.95),
+                scale: 3.0,
+                effectSheet: effectSheet
+            ))
+            let scoreText = String(format: "%08d", scoreSystem.currentScore)
+            sprites.append(contentsOf: makeTextSprites(
+                scoreText,
+                at: SIMD2(0, -10),
+                color: SIMD4(1, 1, 1, 0.8),
+                scale: 2.0,
+                effectSheet: effectSheet
+            ))
+        }
+
+        if gameState == .victory, let effectSheet {
+            sprites.append(contentsOf: makeTextSprites(
+                "VICTORY",
+                at: SIMD2(0, 30),
+                color: SIMD4(GameConfig.Palette.player.x, GameConfig.Palette.player.y, GameConfig.Palette.player.z, 0.95),
+                scale: 3.0,
+                effectSheet: effectSheet
+            ))
+            let scoreText = String(format: "%08d", scoreSystem.currentScore)
+            sprites.append(contentsOf: makeTextSprites(
+                scoreText,
+                at: SIMD2(0, -10),
+                color: SIMD4(1, 1, 1, 0.8),
+                scale: 2.0,
+                effectSheet: effectSheet
+            ))
         }
 
         appendEffectHUD(to: &sprites, effectSheet: effectSheet)
@@ -1481,23 +1530,20 @@ public final class Galaxy1Scene: GameScene {
     // MARK: - HUD
 
     private func appendGameOverOverlay(to sprites: inout [SpriteInstance]) {
+        // Dim overlay
         sprites.append(SpriteInstance(
             position: .zero,
-            size: SIMD2(GameConfig.designWidth, GameConfig.designHeight),
+            size: SIMD2(GameConfig.designWidth * 2, GameConfig.designHeight * 2),
             color: SIMD4(0, 0, 0, 0.6)
-        ))
-        sprites.append(SpriteInstance(
-            position: SIMD2(0, 20),
-            size: SIMD2(160, 30),
-            color: SIMD4(0.8, 0.1, 0.1, 0.9)
         ))
     }
 
     private func appendVictoryOverlay(to sprites: inout [SpriteInstance]) {
+        // Dim overlay (lighter than game over)
         sprites.append(SpriteInstance(
-            position: SIMD2(0, 20),
-            size: SIMD2(160, 30),
-            color: GameConfig.Palette.player
+            position: .zero,
+            size: SIMD2(GameConfig.designWidth * 2, GameConfig.designHeight * 2),
+            color: SIMD4(0, 0, 0, 0.4)
         ))
     }
 }

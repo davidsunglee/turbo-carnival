@@ -7,6 +7,7 @@ class MetalView: NSView {
     private var metalLayer: CAMetalLayer!
     private var engine: GameEngine!
     private var inputProvider: KeyboardInputProvider!
+    private var scene: Galaxy1Scene!
     private var displayLink: CADisplayLink?
     private var lastTimestamp: CFTimeInterval = 0
 
@@ -35,7 +36,7 @@ class MetalView: NSView {
         engine = GameEngine(renderer: renderer)
 
         inputProvider = KeyboardInputProvider()
-        let scene = Galaxy1Scene()
+        scene = Galaxy1Scene()
         scene.inputProvider = inputProvider
 
         let audio = AVAudioManager()
@@ -74,6 +75,17 @@ class MetalView: NSView {
         lastTimestamp = timestamp
 
         engine.update(deltaTime: dt)
+
+        // Check for scene restart
+        if scene.shouldRestart {
+            scene = Galaxy1Scene()
+            scene.inputProvider = inputProvider
+            let audio = AVAudioManager()
+            scene.audioProvider = audio
+            let sfxEngine = SynthAudioEngine()
+            scene.sfx = sfxEngine
+            engine.currentScene = scene
+        }
 
         guard let drawable = metalLayer.nextDrawable() else { return }
         engine.render(to: drawable)
