@@ -51,6 +51,7 @@ public final class Galaxy1Scene: GameScene {
     private var blastEffects: [(entity: GKEntity, timer: Double)] = []
     private var slowMoTimer: Double = 0
     private var isSlowMo: Bool = false
+    private var musicStarted = false
 
     // MARK: - World
     private let worldBounds = AABB(min: SIMD2(-200, -340), max: SIMD2(200, 340))
@@ -61,7 +62,6 @@ public final class Galaxy1Scene: GameScene {
         collisionSystem = CollisionSystem(worldBounds: worldBounds)
         setupPlayer()
         lightningArcSystem = LightningArcSystem(player: player)
-        sfx?.startMusic(.gameplay)
     }
 
     private func setupPlayer() {
@@ -144,6 +144,10 @@ public final class Galaxy1Scene: GameScene {
     // MARK: - GameScene Protocol
 
     public func fixedUpdate(time: GameTime) {
+        if !musicStarted {
+            musicStarted = true
+            sfx?.startMusic(.gameplay)
+        }
         sfx?.updateMusicFade(deltaTime: Float(time.fixedDeltaTime))
         guard gameState == .playing else { return }
 
