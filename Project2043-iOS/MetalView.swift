@@ -12,6 +12,16 @@ final class MetalView: UIView {
     private var lastTimestamp: CFTimeInterval = 0
     private var touchInput: TouchInputProvider!
 
+    // Control overlays
+    private var fireOverlay: UIView!
+    private var bombOverlay: UIView!
+    private var empOverlay: UIView!
+    private var ocOverlay: UIView!
+    private var joystickBase: UIView!
+    private var joystickKnob: UIView!
+
+    private static let controlTint = UIColor(red: 0, green: 1, blue: 210.0 / 255.0, alpha: 1)
+
     override init(frame: CGRect) {
         super.init(frame: frame)
         setup()
@@ -44,8 +54,105 @@ final class MetalView: UIView {
 
         engine.currentScene = scene
 
+        setupControlOverlays()
+
         displayLink = CADisplayLink(target: self, selector: #selector(render(_:)))
         displayLink.add(to: .main, forMode: .default)
+    }
+
+    // MARK: - Control overlays
+
+    private func setupControlOverlays() {
+        let tint = Self.controlTint
+
+        // Dynamic joystick (hidden until touch)
+        joystickBase = UIView()
+        joystickBase.isUserInteractionEnabled = false
+        joystickBase.alpha = 0
+        joystickBase.layer.borderColor = tint.withAlphaComponent(0.35).cgColor
+        joystickBase.layer.borderWidth = 2
+        joystickBase.bounds = CGRect(x: 0, y: 0, width: 80, height: 80)
+        joystickBase.layer.cornerRadius = 40
+        addSubview(joystickBase)
+
+        joystickKnob = UIView()
+        joystickKnob.isUserInteractionEnabled = false
+        joystickKnob.alpha = 0
+        joystickKnob.backgroundColor = tint.withAlphaComponent(0.35)
+        joystickKnob.bounds = CGRect(x: 0, y: 0, width: 30, height: 30)
+        joystickKnob.layer.cornerRadius = 15
+        addSubview(joystickKnob)
+
+        // Buttons
+        fireOverlay = makeButtonOverlay(label: "A", cornerRadius: 40)
+        bombOverlay = makeButtonOverlay(label: "1", cornerRadius: 22)
+        empOverlay = makeButtonOverlay(label: "2", cornerRadius: 22)
+        ocOverlay = makeButtonOverlay(label: "3", cornerRadius: 22)
+
+        addSubview(fireOverlay)
+        addSubview(bombOverlay)
+        addSubview(empOverlay)
+        addSubview(ocOverlay)
+    }
+
+    private func makeButtonOverlay(label text: String, cornerRadius: CGFloat) -> UIView {
+        let tint = Self.controlTint
+        let v = UIView()
+        v.isUserInteractionEnabled = false
+        v.backgroundColor = tint.withAlphaComponent(0.06)
+        v.layer.borderColor = tint.withAlphaComponent(0.25).cgColor
+        v.layer.borderWidth = 1.5
+        v.layer.cornerRadius = cornerRadius
+
+        let lbl = UILabel()
+        lbl.text = text
+        lbl.textColor = tint.withAlphaComponent(0.5)
+        lbl.font = .monospacedSystemFont(ofSize: 14, weight: .heavy)
+        lbl.textAlignment = .center
+        lbl.translatesAutoresizingMaskIntoConstraints = false
+        v.addSubview(lbl)
+        NSLayoutConstraint.activate([
+            lbl.centerXAnchor.constraint(equalTo: v.centerXAnchor),
+            lbl.centerYAnchor.constraint(equalTo: v.centerYAnchor),
+        ])
+
+        return v
+    }
+
+    private func updateControlOverlays() {
+        let tint = Self.controlTint
+        let active: CGFloat = 0.25
+        let idle: CGFloat = 0.06
+
+        // Button pressed states
+        fireOverlay.backgroundColor = tint.withAlphaComponent(touchInput.isPrimaryFireActive ? active : idle)
+        bombOverlay.backgroundColor = tint.withAlphaComponent(touchInput.isSecondary1Active ? active : idle)
+        empOverlay.backgroundColor = tint.withAlphaComponent(touchInput.isSecondary2Active ? active : idle)
+        ocOverlay.backgroundColor = tint.withAlphaComponent(touchInput.isSecondary3Active ? active : idle)
+
+        // Dynamic joystick
+        if let origin = touchInput.joystickOriginPoint {
+            joystickBase.alpha = 1
+            joystickBase.center = origin
+            joystickKnob.alpha = 1
+
+            if let current = touchInput.joystickCurrentPoint {
+                var dx = current.x - origin.x
+                var dy = current.y - origin.y
+                let dist = sqrt(dx * dx + dy * dy)
+                let maxR: CGFloat = 40
+                if dist > maxR {
+                    dx = dx / dist * maxR
+                    dy = dy / dist * maxR
+                }
+                joystickKnob.center = CGPoint(x: origin.x + dx, y: origin.y + dy)
+            } else {
+                joystickKnob.center = origin
+            }
+        } else {
+            joystickBase.alpha = 0
+            joystickKnob.alpha = 0
+        }
     }
 
     override func layoutSubviews() {
@@ -65,37 +172,38 @@ final class MetalView: UIView {
         let rightEdge = bounds.width - margin
 
         // Primary fire: larger, lower right
-        touchInput.primaryButtonRect = CGRect(
+        let fireRect = CGRect(
             x: rightEdge - buttonW,
             y: bounds.height - margin - buttonH,
             width: buttonW,
             height: buttonH
         )
+        touchInput.primaryButtonRect = fireRect
+        fireOverlay.frame = fireRect
 
-        // Secondary buttons: stacked vertically above primary
-        let secW: CGFloat = 60
-        let secH: CGFloat = 50
-        let secGap: CGFloat = 10
-        let secX = rightEdge - secW - 10
-        let secBaseY = bounds.height - margin - buttonH - secGap
+        // Secondary buttons: horizontal arc above primary fire
+        let secSize: CGFloat = 44
+        let fireCenter = CGPoint(x: fireRect.midX, y: fireRect.midY)
+        let arcRadius: CGFloat = 100
+        // 3 buttons in a gentle arc, sweeping left from fire button
+        // Order reversed: 3 (rightmost) → 2 → 1 (leftmost)
+        let angles: [CGFloat] = [-1.60, -1.05, -0.50]  // radians from top
 
-        // Secondary 1 (Grav-Bomb): lowest, just above primary
-        touchInput.secondary1ButtonRect = CGRect(
-            x: secX, y: secBaseY - secH,
-            width: secW, height: secH
-        )
+        let secRects: [CGRect] = angles.map { angle in
+            let cx = fireCenter.x + arcRadius * sin(angle)
+            let cy = fireCenter.y - arcRadius * cos(angle)
+            return CGRect(x: cx - secSize / 2, y: cy - secSize / 2,
+                          width: secSize, height: secSize)
+        }
 
-        // Secondary 2 (EMP Sweep): middle
-        touchInput.secondary2ButtonRect = CGRect(
-            x: secX, y: secBaseY - secH * 2 - secGap,
-            width: secW, height: secH
-        )
+        touchInput.secondary1ButtonRect = secRects[0]
+        bombOverlay.frame = secRects[0]
 
-        // Secondary 3 (Overcharge): top
-        touchInput.secondary3ButtonRect = CGRect(
-            x: secX, y: secBaseY - secH * 3 - secGap * 2,
-            width: secW, height: secH
-        )
+        touchInput.secondary2ButtonRect = secRects[1]
+        empOverlay.frame = secRects[1]
+
+        touchInput.secondary3ButtonRect = secRects[2]
+        ocOverlay.frame = secRects[2]
     }
 
     @objc private func render(_ displayLink: CADisplayLink) {
@@ -103,6 +211,7 @@ final class MetalView: UIView {
         lastTimestamp = displayLink.timestamp
 
         engine.update(deltaTime: dt)
+        updateControlOverlays()
 
         guard let drawable = metalLayer.nextDrawable() else { return }
         engine.render(to: drawable)
