@@ -39,6 +39,23 @@ public enum SpriteFactory {
         )
     }
 
+    static func makeSoftContext(width: Int, height: Int) -> CGContext? {
+        let colorSpace = CGColorSpaceCreateDeviceRGB()
+        guard let ctx = CGContext(
+            data: nil,
+            width: width,
+            height: height,
+            bitsPerComponent: 8,
+            bytesPerRow: width * 4,
+            space: colorSpace,
+            bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+        ) else { return nil }
+        ctx.setShouldAntialias(true)
+        ctx.setAllowsAntialiasing(true)
+        ctx.interpolationQuality = .high
+        return ctx
+    }
+
     // MARK: - Player Ship (48x48)
     // Diamond/chevron pointing up. Cyan (#00ffd2) outline, dark interior, bright core, engine glow.
 
@@ -384,6 +401,593 @@ public enum SpriteFactory {
         ctx.move(to: CGPoint(x: 6, y: CGFloat(h) / 2))
         ctx.addLine(to: CGPoint(x: CGFloat(w) - 6, y: CGFloat(h) / 2))
         ctx.strokePath()
+
+        return (extractPixels(from: ctx, width: w, height: h), w, h)
+    }
+
+    // MARK: - Player Bullet (6x12)
+    // Vertical elongated diamond, white core with cyan (#00ffd2) trailing edge.
+
+    public static func makePlayerBullet() -> (pixels: [UInt8], width: Int, height: Int) {
+        let w = 6, h = 12
+        guard let ctx = makeContext(width: w, height: h) else {
+            return (Array(repeating: 0, count: w * h * 4), w, h)
+        }
+
+        let cx = CGFloat(w) / 2
+
+        // Cyan trailing edge (bottom half)
+        ctx.setFillColor(cgColor(0, 255, 210))
+        ctx.beginPath()
+        ctx.move(to: CGPoint(x: cx, y: CGFloat(h) - 1))
+        ctx.addLine(to: CGPoint(x: 1, y: CGFloat(h) / 2))
+        ctx.addLine(to: CGPoint(x: cx, y: 2))
+        ctx.addLine(to: CGPoint(x: CGFloat(w) - 1, y: CGFloat(h) / 2))
+        ctx.closePath()
+        ctx.fillPath()
+
+        // White core (upper portion)
+        ctx.setFillColor(cgColor(255, 255, 255))
+        ctx.beginPath()
+        ctx.move(to: CGPoint(x: cx, y: CGFloat(h) - 2))
+        ctx.addLine(to: CGPoint(x: 2, y: CGFloat(h) / 2 + 1))
+        ctx.addLine(to: CGPoint(x: cx, y: 4))
+        ctx.addLine(to: CGPoint(x: CGFloat(w) - 2, y: CGFloat(h) / 2 + 1))
+        ctx.closePath()
+        ctx.fillPath()
+
+        return (extractPixels(from: ctx, width: w, height: h), w, h)
+    }
+
+    // MARK: - Tri-Spread Bullet (8x8)
+    // Small rotated diamond, orange (#ff8033) outline, bright center.
+
+    public static func makeTriSpreadBullet() -> (pixels: [UInt8], width: Int, height: Int) {
+        let w = 8, h = 8
+        guard let ctx = makeContext(width: w, height: h) else {
+            return (Array(repeating: 0, count: w * h * 4), w, h)
+        }
+
+        let cx = CGFloat(w) / 2
+        let cy = CGFloat(h) / 2
+
+        // Dark orange fill
+        ctx.setFillColor(cgColor(100, 50, 20))
+        ctx.beginPath()
+        ctx.move(to: CGPoint(x: cx, y: CGFloat(h) - 1))
+        ctx.addLine(to: CGPoint(x: 1, y: cy))
+        ctx.addLine(to: CGPoint(x: cx, y: 1))
+        ctx.addLine(to: CGPoint(x: CGFloat(w) - 1, y: cy))
+        ctx.closePath()
+        ctx.fillPath()
+
+        // Orange outline
+        ctx.setStrokeColor(cgColor(255, 128, 51))
+        ctx.setLineWidth(1)
+        ctx.beginPath()
+        ctx.move(to: CGPoint(x: cx, y: CGFloat(h) - 1))
+        ctx.addLine(to: CGPoint(x: 1, y: cy))
+        ctx.addLine(to: CGPoint(x: cx, y: 1))
+        ctx.addLine(to: CGPoint(x: CGFloat(w) - 1, y: cy))
+        ctx.closePath()
+        ctx.strokePath()
+
+        // Bright center
+        ctx.setFillColor(cgColor(255, 200, 150))
+        ctx.fillEllipse(in: CGRect(x: cx - 1, y: cy - 1, width: 2, height: 2))
+
+        return (extractPixels(from: ctx, width: w, height: h), w, h)
+    }
+
+    // MARK: - Lightning Arc Icon (8x8)
+    // Electric bolt icon for weapon module display.
+
+    public static func makeLightningArcIcon() -> (pixels: [UInt8], width: Int, height: Int) {
+        let w = 8, h = 8
+        guard let ctx = makeContext(width: w, height: h) else {
+            return (Array(repeating: 0, count: w * h * 4), w, h)
+        }
+
+        // Cyan-white lightning bolt shape
+        ctx.setStrokeColor(cgColor(100, 180, 255))
+        ctx.setLineWidth(2)
+        ctx.beginPath()
+        ctx.move(to: CGPoint(x: 5, y: 0))
+        ctx.addLine(to: CGPoint(x: 3, y: 3))
+        ctx.addLine(to: CGPoint(x: 5, y: 3))
+        ctx.addLine(to: CGPoint(x: 3, y: 7))
+        ctx.strokePath()
+
+        // Bright white core
+        ctx.setStrokeColor(cgColor(220, 240, 255))
+        ctx.setLineWidth(1)
+        ctx.beginPath()
+        ctx.move(to: CGPoint(x: 5, y: 0))
+        ctx.addLine(to: CGPoint(x: 3, y: 3))
+        ctx.addLine(to: CGPoint(x: 5, y: 3))
+        ctx.addLine(to: CGPoint(x: 3, y: 7))
+        ctx.strokePath()
+
+        return (extractPixels(from: ctx, width: w, height: h), w, h)
+    }
+
+    // MARK: - Enemy Bullet (8x8)
+    // Downward-pointing arrowhead, hostile orange (#ff9e64) outline, dark fill.
+
+    public static func makeEnemyBullet() -> (pixels: [UInt8], width: Int, height: Int) {
+        let w = 8, h = 8
+        guard let ctx = makeContext(width: w, height: h) else {
+            return (Array(repeating: 0, count: w * h * 4), w, h)
+        }
+
+        let cx = CGFloat(w) / 2
+
+        // Dark fill
+        ctx.setFillColor(cgColor(80, 40, 20))
+        ctx.beginPath()
+        ctx.move(to: CGPoint(x: cx, y: 1))
+        ctx.addLine(to: CGPoint(x: 1, y: CGFloat(h) - 2))
+        ctx.addLine(to: CGPoint(x: cx, y: CGFloat(h) - 4))
+        ctx.addLine(to: CGPoint(x: CGFloat(w) - 1, y: CGFloat(h) - 2))
+        ctx.closePath()
+        ctx.fillPath()
+
+        // Orange outline
+        ctx.setStrokeColor(cgColor(255, 158, 100))
+        ctx.setLineWidth(1)
+        ctx.beginPath()
+        ctx.move(to: CGPoint(x: cx, y: 1))
+        ctx.addLine(to: CGPoint(x: 1, y: CGFloat(h) - 2))
+        ctx.addLine(to: CGPoint(x: cx, y: CGFloat(h) - 4))
+        ctx.addLine(to: CGPoint(x: CGFloat(w) - 1, y: CGFloat(h) - 2))
+        ctx.closePath()
+        ctx.strokePath()
+
+        // Bright core
+        ctx.setFillColor(cgColor(255, 220, 180))
+        ctx.fillEllipse(in: CGRect(x: cx - 1, y: 3, width: 2, height: 2))
+
+        return (extractPixels(from: ctx, width: w, height: h), w, h)
+    }
+
+    // MARK: - Gravity Bomb Sprite (16x16)
+    // Octagonal shell, gold (#ffda4d) outline, dark center, bright core dot.
+
+    public static func makeGravBombSprite() -> (pixels: [UInt8], width: Int, height: Int) {
+        let w = 16, h = 16
+        guard let ctx = makeContext(width: w, height: h) else {
+            return (Array(repeating: 0, count: w * h * 4), w, h)
+        }
+
+        let cx = CGFloat(w) / 2
+        let cy = CGFloat(h) / 2
+
+        // Octagon
+        let r: CGFloat = 6
+        var pts: [CGPoint] = []
+        for i in 0..<8 {
+            let angle = CGFloat(i) * .pi / 4
+            pts.append(CGPoint(x: cx + r * cos(angle), y: cy + r * sin(angle)))
+        }
+
+        // Dark fill
+        ctx.setFillColor(cgColor(50, 40, 10))
+        ctx.beginPath()
+        ctx.move(to: pts[0])
+        for pt in pts.dropFirst() { ctx.addLine(to: pt) }
+        ctx.closePath()
+        ctx.fillPath()
+
+        // Gold outline
+        ctx.setStrokeColor(cgColor(255, 218, 77))
+        ctx.setLineWidth(2)
+        ctx.beginPath()
+        ctx.move(to: pts[0])
+        for pt in pts.dropFirst() { ctx.addLine(to: pt) }
+        ctx.closePath()
+        ctx.strokePath()
+
+        // Bright core dot
+        ctx.setFillColor(cgColor(255, 240, 180))
+        ctx.fillEllipse(in: CGRect(x: cx - 2, y: cy - 2, width: 4, height: 4))
+
+        return (extractPixels(from: ctx, width: w, height: h), w, h)
+    }
+
+    // MARK: - Energy Drop (16x16)
+    // Lightning bolt silhouette, gold (#e0af68) fill, white highlight line.
+
+    public static func makeEnergyDrop() -> (pixels: [UInt8], width: Int, height: Int) {
+        let w = 16, h = 16
+        guard let ctx = makeContext(width: w, height: h) else {
+            return (Array(repeating: 0, count: w * h * 4), w, h)
+        }
+
+        // Lightning bolt shape
+        ctx.setFillColor(cgColor(224, 175, 104))
+        ctx.beginPath()
+        ctx.move(to: CGPoint(x: 9, y: 14))
+        ctx.addLine(to: CGPoint(x: 5, y: 14))
+        ctx.addLine(to: CGPoint(x: 8, y: 8))
+        ctx.addLine(to: CGPoint(x: 5, y: 8))
+        ctx.addLine(to: CGPoint(x: 10, y: 2))
+        ctx.addLine(to: CGPoint(x: 11, y: 2))
+        ctx.addLine(to: CGPoint(x: 8, y: 7))
+        ctx.addLine(to: CGPoint(x: 11, y: 7))
+        ctx.closePath()
+        ctx.fillPath()
+
+        // White highlight line down center
+        ctx.setStrokeColor(cgColor(255, 255, 255, 200))
+        ctx.setLineWidth(1)
+        ctx.beginPath()
+        ctx.move(to: CGPoint(x: 9, y: 13))
+        ctx.addLine(to: CGPoint(x: 7, y: 8))
+        ctx.addLine(to: CGPoint(x: 10, y: 3))
+        ctx.strokePath()
+
+        return (extractPixels(from: ctx, width: w, height: h), w, h)
+    }
+
+    // MARK: - Charge Cell (16x16)
+    // Hexagonal battery, purple (#9966ff) outline, segmented interior, bright core.
+
+    public static func makeChargeCell() -> (pixels: [UInt8], width: Int, height: Int) {
+        let w = 16, h = 16
+        guard let ctx = makeContext(width: w, height: h) else {
+            return (Array(repeating: 0, count: w * h * 4), w, h)
+        }
+
+        let cx = CGFloat(w) / 2
+        let cy = CGFloat(h) / 2
+
+        // Hexagon
+        let r: CGFloat = 6
+        var hexPts: [CGPoint] = []
+        for i in 0..<6 {
+            let angle = CGFloat(i) * .pi / 3 - .pi / 6
+            hexPts.append(CGPoint(x: cx + r * cos(angle), y: cy + r * sin(angle)))
+        }
+
+        // Dark purple fill
+        ctx.setFillColor(cgColor(30, 15, 60))
+        ctx.beginPath()
+        ctx.move(to: hexPts[0])
+        for pt in hexPts.dropFirst() { ctx.addLine(to: pt) }
+        ctx.closePath()
+        ctx.fillPath()
+
+        // Purple outline
+        ctx.setStrokeColor(cgColor(153, 102, 255))
+        ctx.setLineWidth(2)
+        ctx.beginPath()
+        ctx.move(to: hexPts[0])
+        for pt in hexPts.dropFirst() { ctx.addLine(to: pt) }
+        ctx.closePath()
+        ctx.strokePath()
+
+        // Segment lines
+        ctx.setStrokeColor(cgColor(80, 50, 140))
+        ctx.setLineWidth(1)
+        ctx.beginPath()
+        ctx.move(to: CGPoint(x: 4, y: cy - 1))
+        ctx.addLine(to: CGPoint(x: CGFloat(w) - 4, y: cy - 1))
+        ctx.move(to: CGPoint(x: 4, y: cy + 1))
+        ctx.addLine(to: CGPoint(x: CGFloat(w) - 4, y: cy + 1))
+        ctx.strokePath()
+
+        // Bright core
+        ctx.setFillColor(cgColor(200, 180, 255))
+        ctx.fillEllipse(in: CGRect(x: cx - 2, y: cy - 2, width: 4, height: 4))
+
+        return (extractPixels(from: ctx, width: w, height: h), w, h)
+    }
+
+    // MARK: - Weapon Module (20x20)
+    // Diamond frame with crosshair/plus inside, blue (#4d80ff) outline, darker fill.
+
+    public static func makeWeaponModuleSprite() -> (pixels: [UInt8], width: Int, height: Int) {
+        let w = 20, h = 20
+        guard let ctx = makeContext(width: w, height: h) else {
+            return (Array(repeating: 0, count: w * h * 4), w, h)
+        }
+
+        let cx = CGFloat(w) / 2
+        let cy = CGFloat(h) / 2
+
+        // Dark fill diamond
+        ctx.setFillColor(cgColor(15, 25, 60))
+        ctx.beginPath()
+        ctx.move(to: CGPoint(x: cx, y: CGFloat(h) - 2))
+        ctx.addLine(to: CGPoint(x: 2, y: cy))
+        ctx.addLine(to: CGPoint(x: cx, y: 2))
+        ctx.addLine(to: CGPoint(x: CGFloat(w) - 2, y: cy))
+        ctx.closePath()
+        ctx.fillPath()
+
+        // Blue outline diamond
+        ctx.setStrokeColor(cgColor(77, 128, 255))
+        ctx.setLineWidth(2)
+        ctx.beginPath()
+        ctx.move(to: CGPoint(x: cx, y: CGFloat(h) - 2))
+        ctx.addLine(to: CGPoint(x: 2, y: cy))
+        ctx.addLine(to: CGPoint(x: cx, y: 2))
+        ctx.addLine(to: CGPoint(x: CGFloat(w) - 2, y: cy))
+        ctx.closePath()
+        ctx.strokePath()
+
+        // Crosshair/plus inside
+        ctx.setStrokeColor(cgColor(120, 160, 255))
+        ctx.setLineWidth(1)
+        ctx.beginPath()
+        ctx.move(to: CGPoint(x: cx, y: cy - 4))
+        ctx.addLine(to: CGPoint(x: cx, y: cy + 4))
+        ctx.move(to: CGPoint(x: cx - 4, y: cy))
+        ctx.addLine(to: CGPoint(x: cx + 4, y: cy))
+        ctx.strokePath()
+
+        return (extractPixels(from: ctx, width: w, height: h), w, h)
+    }
+
+    // MARK: - Grav Bomb Blast (128x128)
+    // Radial gradient ring — gold-white center fading to transparent gold. Hollow center.
+
+    public static func makeGravBombBlast() -> (pixels: [UInt8], width: Int, height: Int) {
+        let w = 128, h = 128
+        guard let ctx = makeSoftContext(width: w, height: h) else {
+            return (Array(repeating: 0, count: w * h * 4), w, h)
+        }
+
+        let cx = CGFloat(w) / 2
+        let cy = CGFloat(h) / 2
+
+        // Draw radial gradient ring manually with concentric circles
+        let maxR: CGFloat = 60
+        let minR: CGFloat = 20
+        let steps = 40
+        for i in 0..<steps {
+            let t = CGFloat(i) / CGFloat(steps)
+            let r = maxR - t * (maxR - minR)
+            let alpha = UInt8(min(255, Int((1.0 - t) * 0.6 * 255)))
+            let green = UInt8(min(255, 218 + Int(t * 37)))
+            ctx.setFillColor(cgColor(255, green, UInt8(min(255, 77 + Int(t * 103))), alpha))
+            ctx.fillEllipse(in: CGRect(x: cx - r, y: cy - r, width: r * 2, height: r * 2))
+        }
+
+        // Hollow center — clear inner circle
+        ctx.setBlendMode(.clear)
+        ctx.fillEllipse(in: CGRect(x: cx - minR + 4, y: cy - minR + 4,
+                                    width: (minR - 4) * 2, height: (minR - 4) * 2))
+        ctx.setBlendMode(.normal)
+
+        // Bright ring at inner edge
+        ctx.setStrokeColor(cgColor(255, 255, 230, 200))
+        ctx.setLineWidth(2)
+        ctx.strokeEllipse(in: CGRect(x: cx - minR + 3, y: cy - minR + 3,
+                                      width: (minR - 3) * 2, height: (minR - 3) * 2))
+
+        return (extractPixels(from: ctx, width: w, height: h), w, h)
+    }
+
+    // MARK: - EMP Flash (128x128)
+    // Full radial gradient — cyan-white center fading to transparent blue.
+
+    public static func makeEmpFlash() -> (pixels: [UInt8], width: Int, height: Int) {
+        let w = 128, h = 128
+        guard let ctx = makeSoftContext(width: w, height: h) else {
+            return (Array(repeating: 0, count: w * h * 4), w, h)
+        }
+
+        let cx = CGFloat(w) / 2
+        let cy = CGFloat(h) / 2
+
+        // Radial gradient from bright center to transparent edge
+        let maxR: CGFloat = 60
+        let steps = 50
+        for i in (0..<steps).reversed() {
+            let t = CGFloat(i) / CGFloat(steps)
+            let r = maxR * (1.0 - t)
+            let alpha = UInt8(min(255, Int(t * 0.5 * 255)))
+            let red = UInt8(min(255, Int(128 * t + 80 * (1.0 - t))))
+            let green = UInt8(min(255, Int(178 * t + 120 * (1.0 - t))))
+            ctx.setFillColor(cgColor(red, green, 255, alpha))
+            ctx.fillEllipse(in: CGRect(x: cx - r, y: cy - r, width: r * 2, height: r * 2))
+        }
+
+        // Bright white center
+        ctx.setFillColor(cgColor(220, 240, 255, 180))
+        ctx.fillEllipse(in: CGRect(x: cx - 8, y: cy - 8, width: 16, height: 16))
+
+        return (extractPixels(from: ctx, width: w, height: h), w, h)
+    }
+
+    // MARK: - Overcharge Glow (64x64)
+    // Soft diamond/star shape — orange-yellow center with transparent falloff.
+
+    public static func makeOverchargeGlow() -> (pixels: [UInt8], width: Int, height: Int) {
+        let w = 64, h = 64
+        guard let ctx = makeSoftContext(width: w, height: h) else {
+            return (Array(repeating: 0, count: w * h * 4), w, h)
+        }
+
+        let cx = CGFloat(w) / 2
+        let cy = CGFloat(h) / 2
+
+        // Layered diamond shapes from outer (transparent) to inner (bright)
+        let layers = 8
+        for i in (0..<layers).reversed() {
+            let t = CGFloat(i) / CGFloat(layers)
+            let size = 28 * (1.0 - t) + 4
+            let alpha = UInt8(min(255, Int(t * 0.8 * 255)))
+            let green = UInt8(min(255, Int(153 * t + 100 * (1.0 - t))))
+            ctx.setFillColor(cgColor(255, green, 0, alpha))
+            ctx.beginPath()
+            ctx.move(to: CGPoint(x: cx, y: cy + size))
+            ctx.addLine(to: CGPoint(x: cx - size * 0.6, y: cy))
+            ctx.addLine(to: CGPoint(x: cx, y: cy - size))
+            ctx.addLine(to: CGPoint(x: cx + size * 0.6, y: cy))
+            ctx.closePath()
+            ctx.fillPath()
+        }
+
+        // Bright center
+        ctx.setFillColor(cgColor(255, 230, 150, 220))
+        ctx.fillEllipse(in: CGRect(x: cx - 4, y: cy - 4, width: 8, height: 8))
+
+        return (extractPixels(from: ctx, width: w, height: h), w, h)
+    }
+
+    // MARK: - HUD Bar Frame (64x8)
+    // Rounded-rect border, cyan (#00ffd2) outline, transparent interior.
+
+    public static func makeHudBarFrame() -> (pixels: [UInt8], width: Int, height: Int) {
+        let w = 64, h = 8
+        guard let ctx = makeSoftContext(width: w, height: h) else {
+            return (Array(repeating: 0, count: w * h * 4), w, h)
+        }
+
+        let rect = CGRect(x: 1, y: 1, width: CGFloat(w) - 2, height: CGFloat(h) - 2)
+        let path = CGPath(roundedRect: rect, cornerWidth: 2, cornerHeight: 2, transform: nil)
+        ctx.setStrokeColor(cgColor(0, 255, 210, 200))
+        ctx.setLineWidth(1)
+        ctx.addPath(path)
+        ctx.strokePath()
+
+        return (extractPixels(from: ctx, width: w, height: h), w, h)
+    }
+
+    // MARK: - HUD Bar Fill (32x4)
+    // Horizontal gradient pill, player cyan.
+
+    public static func makeHudBarFill() -> (pixels: [UInt8], width: Int, height: Int) {
+        let w = 32, h = 4
+        guard let ctx = makeSoftContext(width: w, height: h) else {
+            return (Array(repeating: 0, count: w * h * 4), w, h)
+        }
+
+        let rect = CGRect(x: 0, y: 0, width: CGFloat(w), height: CGFloat(h))
+        let path = CGPath(roundedRect: rect, cornerWidth: 2, cornerHeight: 2, transform: nil)
+
+        // Gradient from bright left to slightly dimmer right
+        for x in 0..<w {
+            let t = CGFloat(x) / CGFloat(w)
+            let alpha = UInt8(min(255, Int((1.0 - t * 0.3) * 255)))
+            ctx.setFillColor(cgColor(0, 255, 210, alpha))
+            ctx.fill(CGRect(x: CGFloat(x), y: 0, width: 1, height: CGFloat(h)))
+        }
+
+        // Clip to rounded rect shape
+        ctx.setBlendMode(.destinationIn)
+        ctx.addPath(path)
+        ctx.fillPath()
+        ctx.setBlendMode(.normal)
+
+        return (extractPixels(from: ctx, width: w, height: h), w, h)
+    }
+
+    // MARK: - HUD Charge Pip (12x12)
+    // Small octagon, gold outline, dark fill, bright center dot.
+
+    public static func makeHudChargePip() -> (pixels: [UInt8], width: Int, height: Int) {
+        let w = 12, h = 12
+        guard let ctx = makeSoftContext(width: w, height: h) else {
+            return (Array(repeating: 0, count: w * h * 4), w, h)
+        }
+
+        let cx = CGFloat(w) / 2
+        let cy = CGFloat(h) / 2
+        let r: CGFloat = 4.5
+
+        var pts: [CGPoint] = []
+        for i in 0..<8 {
+            let angle = CGFloat(i) * .pi / 4
+            pts.append(CGPoint(x: cx + r * cos(angle), y: cy + r * sin(angle)))
+        }
+
+        // Dark fill
+        ctx.setFillColor(cgColor(40, 30, 10))
+        ctx.beginPath()
+        ctx.move(to: pts[0])
+        for pt in pts.dropFirst() { ctx.addLine(to: pt) }
+        ctx.closePath()
+        ctx.fillPath()
+
+        // Gold outline
+        ctx.setStrokeColor(cgColor(255, 218, 77))
+        ctx.setLineWidth(1.5)
+        ctx.beginPath()
+        ctx.move(to: pts[0])
+        for pt in pts.dropFirst() { ctx.addLine(to: pt) }
+        ctx.closePath()
+        ctx.strokePath()
+
+        // Bright center
+        ctx.setFillColor(cgColor(255, 240, 180))
+        ctx.fillEllipse(in: CGRect(x: cx - 1.5, y: cy - 1.5, width: 3, height: 3))
+
+        return (extractPixels(from: ctx, width: w, height: h), w, h)
+    }
+
+    // MARK: - HUD Weapon Icon (16x8)
+    // Small chevron pointing up, tinted per weapon type at runtime.
+
+    public static func makeHudWeaponIcon() -> (pixels: [UInt8], width: Int, height: Int) {
+        let w = 16, h = 8
+        guard let ctx = makeSoftContext(width: w, height: h) else {
+            return (Array(repeating: 0, count: w * h * 4), w, h)
+        }
+
+        let cx = CGFloat(w) / 2
+
+        // White chevron (will be tinted by RenderComponent.color at runtime)
+        ctx.setFillColor(cgColor(255, 255, 255))
+        ctx.beginPath()
+        ctx.move(to: CGPoint(x: cx, y: CGFloat(h) - 1))
+        ctx.addLine(to: CGPoint(x: 2, y: 2))
+        ctx.addLine(to: CGPoint(x: 4, y: 2))
+        ctx.addLine(to: CGPoint(x: cx, y: CGFloat(h) - 3))
+        ctx.addLine(to: CGPoint(x: CGFloat(w) - 4, y: 2))
+        ctx.addLine(to: CGPoint(x: CGFloat(w) - 2, y: 2))
+        ctx.closePath()
+        ctx.fillPath()
+
+        return (extractPixels(from: ctx, width: w, height: h), w, h)
+    }
+
+    // MARK: - HUD Heat Frame (16x3)
+    // Thin rounded-rect outline, neutral gray.
+
+    public static func makeHudHeatFrame() -> (pixels: [UInt8], width: Int, height: Int) {
+        let w = 16, h = 3
+        guard let ctx = makeSoftContext(width: w, height: h) else {
+            return (Array(repeating: 0, count: w * h * 4), w, h)
+        }
+
+        let rect = CGRect(x: 0.5, y: 0.5, width: CGFloat(w) - 1, height: CGFloat(h) - 1)
+        let path = CGPath(roundedRect: rect, cornerWidth: 1, cornerHeight: 1, transform: nil)
+        ctx.setStrokeColor(cgColor(150, 150, 150, 180))
+        ctx.setLineWidth(0.5)
+        ctx.addPath(path)
+        ctx.strokePath()
+
+        return (extractPixels(from: ctx, width: w, height: h), w, h)
+    }
+
+    // MARK: - HUD Heat Fill (14x2)
+    // Simple gradient pill, tinted green-to-red at runtime.
+
+    public static func makeHudHeatFill() -> (pixels: [UInt8], width: Int, height: Int) {
+        let w = 14, h = 2
+        guard let ctx = makeSoftContext(width: w, height: h) else {
+            return (Array(repeating: 0, count: w * h * 4), w, h)
+        }
+
+        // White fill (tinted at runtime)
+        ctx.setFillColor(cgColor(255, 255, 255))
+        let rect = CGRect(x: 0, y: 0, width: CGFloat(w), height: CGFloat(h))
+        let path = CGPath(roundedRect: rect, cornerWidth: 1, cornerHeight: 1, transform: nil)
+        ctx.addPath(path)
+        ctx.fillPath()
 
         return (extractPixels(from: ctx, width: w, height: h), w, h)
     }

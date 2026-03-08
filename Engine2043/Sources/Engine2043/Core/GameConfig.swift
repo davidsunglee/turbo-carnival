@@ -50,10 +50,13 @@ public enum GameConfig {
         public static let gravBombBlastRadius: Float = 120
         public static let gravBombDamage: Float = 3
 
-        // Vulcan Auto-Gun
-        public static let vulcanFireRateMultiplier: Double = 2.0
-        public static let vulcanDamage: Float = 1.0
-        public static let vulcanProjectileSize = SIMD2<Float>(4, 10)
+        // Lightning Arc
+        public static let lightningArcRange: Float = 200
+        public static let lightningArcDamagePerTick: Float = 0.8
+        public static let lightningArcTickRate: Double = 10.0
+        public static let lightningArcChainTargets: Int = 2
+        public static let lightningArcChainDamageFalloff: Float = 0.5
+        public static let lightningArcChainRange: Float = 80
 
         // Phase Laser
         public static let laserTickInterval: Double = 0.1
@@ -111,7 +114,7 @@ public enum GameConfig {
         public static let scoreBonus = SIMD4<Float>(1.0, 1.0, 0.4, 1.0)
         public static let weaponDoubleCannon = SIMD4<Float>(0.3, 0.5, 1.0, 1.0)
         public static let weaponTriSpread = SIMD4<Float>(1.0, 0.5, 0.2, 1.0)
-        public static let weaponVulcan = SIMD4<Float>(1.0, 0.2, 0.2, 1.0)
+        public static let weaponLightningArc = SIMD4<Float>(0.4, 0.7, 1.0, 1.0)
         public static let weaponPhaseLaser = SIMD4<Float>(0.4, 1.0, 0.4, 1.0)
     }
 }

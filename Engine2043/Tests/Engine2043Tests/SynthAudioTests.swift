@@ -38,12 +38,12 @@ struct SynthAudioTests {
         // No crash = pass; values are atomics read on audio thread
     }
 
-    @Test @MainActor func vulcanCooldownPreventsRapidFire() {
+    @Test @MainActor func lightningArcCooldownPreventsRapidFire() {
         let engine = SynthAudioEngine()
         // First play should succeed, rapid second should be rate-limited
         // (We can't directly observe skipped plays, but verify no crash under rapid fire)
         for _ in 0..<100 {
-            engine.play(.vulcanFire)
+            engine.play(.lightningArcZap)
         }
         // If we got here without crash or audio glitch, rate limiting is working
     }
@@ -60,7 +60,7 @@ struct SynthAudioTests {
         #expect(allCases.count == 16)
         #expect(allCases.contains(.doubleCannonFire))
         #expect(allCases.contains(.triSpreadFire))
-        #expect(allCases.contains(.vulcanFire))
+        #expect(allCases.contains(.lightningArcZap))
         #expect(allCases.contains(.enemyHit))
         #expect(allCases.contains(.enemyDestroyed))
         #expect(allCases.contains(.playerDamaged))

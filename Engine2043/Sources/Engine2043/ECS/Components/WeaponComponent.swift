@@ -3,7 +3,7 @@ import GameplayKit
 public enum WeaponType: Int, CaseIterable, Sendable {
     case doubleCannon = 0
     case triSpread = 1
-    case vulcanAutoGun = 2
+    case lightningArc = 2
     case phaseLaser = 3
 }
 

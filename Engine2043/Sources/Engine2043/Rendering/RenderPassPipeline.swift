@@ -139,6 +139,30 @@ final class RenderPassPipeline {
         encoder.endEncoding()
     }
 
+    func encodeEffectPass(
+        commandBuffer: MTLCommandBuffer,
+        batcher: SpriteBatcher,
+        uniforms: inout Uniforms,
+        texture: MTLTexture
+    ) {
+        guard let offscreen = offscreenTexture else { return }
+
+        let passDesc = MTLRenderPassDescriptor()
+        passDesc.colorAttachments[0].texture = offscreen
+        passDesc.colorAttachments[0].loadAction = .load
+        passDesc.colorAttachments[0].storeAction = .store
+
+        guard let encoder = commandBuffer.makeRenderCommandEncoder(descriptor: passDesc) else { return }
+        encoder.setRenderPipelineState(spritePipelineState)
+        encoder.setVertexBytes(&uniforms, length: MemoryLayout<Uniforms>.size, index: 2)
+        encoder.setFragmentTexture(texture, index: 0)
+        encoder.setFragmentSamplerState(postProcessSampler, index: 0)
+
+        batcher.encode(encoder: encoder)
+
+        encoder.endEncoding()
+    }
+
     func encodeBloomExtractPass(commandBuffer: MTLCommandBuffer) {
         guard let bloomExtract = bloomExtractTexture,
               let offscreen = offscreenTexture else { return }

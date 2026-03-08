@@ -25,6 +25,15 @@ public struct WaveDefinition: Sendable {
     }
 }
 
+public struct ScriptedDrop: Sendable {
+    public let triggerDistance: Float
+    public let type: ScriptedDropType
+
+    public enum ScriptedDropType: Sendable {
+        case weaponModule
+    }
+}
+
 @MainActor
 public final class SpawnDirector {
     private let waves: [WaveDefinition]
@@ -32,12 +41,18 @@ public final class SpawnDirector {
     public private(set) var pendingWaves: [WaveDefinition] = []
     public private(set) var shouldLockScroll: Bool = false
 
+    private var scriptedDrops: [ScriptedDrop]
+    private var nextDropIndex: Int = 0
+    public private(set) var pendingDrops: [ScriptedDrop] = []
+
     public init() {
         waves = Self.galaxy1Waves()
+        scriptedDrops = Self.galaxy1ScriptedDrops()
     }
 
     public func update(scrollDistance: Float) {
         pendingWaves.removeAll(keepingCapacity: true)
+        pendingDrops.removeAll(keepingCapacity: true)
 
         while nextWaveIndex < waves.count {
             let wave = waves[nextWaveIndex]
@@ -51,50 +66,61 @@ public final class SpawnDirector {
                 break
             }
         }
+
+        while nextDropIndex < scriptedDrops.count,
+              scrollDistance >= scriptedDrops[nextDropIndex].triggerDistance {
+            pendingDrops.append(scriptedDrops[nextDropIndex])
+            nextDropIndex += 1
+        }
     }
 
     public func unlockScroll() {
         shouldLockScroll = false
     }
 
+    private static func galaxy1ScriptedDrops() -> [ScriptedDrop] {
+        return [
+            ScriptedDrop(triggerDistance: 715, type: .weaponModule),
+            ScriptedDrop(triggerDistance: 1430, type: .weaponModule),
+        ]
+    }
+
     private static func galaxy1Waves() -> [WaveDefinition] {
-        var waves: [WaveDefinition] = []
+        return [
+            // -- Tutorial ramp (was 50-400, now 50-260)
+            WaveDefinition(trigger: 50,   tier: .tier1, pattern: .vShape,        count: 5),
+            WaveDefinition(trigger: 155,  tier: .tier1, pattern: .vShape,        count: 5),
+            WaveDefinition(trigger: 260,  tier: .tier1, pattern: .vShape,        count: 5),
 
-        // 0-500: Tutorial ramp
-        waves.append(WaveDefinition(trigger: 50, tier: .tier1, pattern: .vShape, count: 5))
-        waves.append(WaveDefinition(trigger: 200, tier: .tier1, pattern: .vShape, count: 5))
-        waves.append(WaveDefinition(trigger: 400, tier: .tier1, pattern: .vShape, count: 5))
+            // -- Escalation (was 550-1100, now 350-700)
+            WaveDefinition(trigger: 350,  tier: .tier1, pattern: .sineWave,      count: 5),
+            WaveDefinition(trigger: 440,  tier: .tier1, pattern: .staggeredLine, count: 5),
+            WaveDefinition(trigger: 500,  tier: .tier2, pattern: .vShape,        count: 2, spawnX: -60),
+            WaveDefinition(trigger: 560,  tier: .tier1, pattern: .sineWave,      count: 5),
+            WaveDefinition(trigger: 700,  tier: .tier1, pattern: .vShape,        count: 5),
 
-        // 500-1200: Tier 1 variety + first Tier 2
-        waves.append(WaveDefinition(trigger: 550, tier: .tier1, pattern: .sineWave, count: 5))
-        waves.append(WaveDefinition(trigger: 700, tier: .tier1, pattern: .staggeredLine, count: 5))
-        waves.append(WaveDefinition(trigger: 800, tier: .tier2, count: 2, spawnX: -60))
-        waves.append(WaveDefinition(trigger: 900, tier: .tier1, pattern: .sineWave, count: 5))
-        waves.append(WaveDefinition(trigger: 1100, tier: .tier1, pattern: .vShape, count: 5))
+            // -- Capital ship approach (was 1250-1900, now 800-1200)
+            WaveDefinition(trigger: 800,  tier: .tier2, pattern: .vShape,        count: 3, spawnX: 50),
+            WaveDefinition(trigger: 880,  tier: .tier1, pattern: .sineWave,      count: 5),
+            WaveDefinition(trigger: 960,  tier: .tier1, pattern: .staggeredLine, count: 5),
+            WaveDefinition(trigger: 1020, tier: .tier2, pattern: .vShape,        count: 2, spawnX: -40),
+            WaveDefinition(trigger: 1120, tier: .tier1, pattern: .vShape,        count: 5),
+            WaveDefinition(trigger: 1200, tier: .tier1, pattern: .sineWave,      count: 5),
 
-        // 1200-2000: Escalation
-        waves.append(WaveDefinition(trigger: 1250, tier: .tier2, count: 3, spawnX: 50))
-        waves.append(WaveDefinition(trigger: 1400, tier: .tier1, pattern: .sineWave, count: 5))
-        waves.append(WaveDefinition(trigger: 1500, tier: .tier1, pattern: .staggeredLine, count: 5))
-        waves.append(WaveDefinition(trigger: 1600, tier: .tier2, count: 2, spawnX: -40))
-        waves.append(WaveDefinition(trigger: 1800, tier: .tier1, pattern: .vShape, count: 5))
-        waves.append(WaveDefinition(trigger: 1900, tier: .tier1, pattern: .sineWave, count: 5))
+            // -- Capital ship battle (was 2000-2500, now 1250-1550)
+            WaveDefinition(trigger: 1250, tier: .tier3, pattern: .vShape,        count: 4),
+            WaveDefinition(trigger: 1370, tier: .tier1, pattern: .vShape,        count: 5),
+            WaveDefinition(trigger: 1550, tier: .tier1, pattern: .sineWave,      count: 5),
 
-        // 2000-2800: Capital Ship
-        waves.append(WaveDefinition(trigger: 2000, tier: .tier3, count: 4))
-        waves.append(WaveDefinition(trigger: 2200, tier: .tier1, pattern: .vShape, count: 5))
-        waves.append(WaveDefinition(trigger: 2500, tier: .tier1, pattern: .sineWave, count: 5))
+            // -- Final gauntlet (was 2800-3300, now 1700-2000)
+            WaveDefinition(trigger: 1700, tier: .tier2, pattern: .vShape,        count: 3),
+            WaveDefinition(trigger: 1760, tier: .tier1, pattern: .staggeredLine, count: 5),
+            WaveDefinition(trigger: 1880, tier: .tier2, pattern: .vShape,        count: 2, spawnX: -80),
+            WaveDefinition(trigger: 1940, tier: .tier1, pattern: .vShape,        count: 5),
+            WaveDefinition(trigger: 2000, tier: .tier1, pattern: .sineWave,      count: 5),
 
-        // 2800-3400: Final gauntlet
-        waves.append(WaveDefinition(trigger: 2800, tier: .tier2, count: 3, spawnX: 0))
-        waves.append(WaveDefinition(trigger: 2900, tier: .tier1, pattern: .staggeredLine, count: 5))
-        waves.append(WaveDefinition(trigger: 3100, tier: .tier2, count: 2, spawnX: -80))
-        waves.append(WaveDefinition(trigger: 3200, tier: .tier1, pattern: .vShape, count: 5))
-        waves.append(WaveDefinition(trigger: 3300, tier: .tier1, pattern: .sineWave, count: 5))
-
-        // 3500: Boss
-        waves.append(WaveDefinition(trigger: 3500, tier: .boss, count: 1))
-
-        return waves
+            // -- Boss (was 3500, now 2150)
+            WaveDefinition(trigger: 2150, tier: .boss,  pattern: .vShape,        count: 1),
+        ]
     }
 }

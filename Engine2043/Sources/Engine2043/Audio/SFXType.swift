@@ -1,7 +1,7 @@
 public enum SFXType: CaseIterable, Sendable {
     case doubleCannonFire
     case triSpreadFire
-    case vulcanFire
+    case lightningArcZap
     case enemyHit
     case enemyDestroyed
     case playerDamaged

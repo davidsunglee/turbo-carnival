@@ -6,6 +6,13 @@ public protocol GameScene: AnyObject {
     func fixedUpdate(time: GameTime)
     func update(time: GameTime)
     func collectSprites(atlas: TextureAtlas?) -> [SpriteInstance]
+    func collectEffectSprites(effectSheet: EffectTextureSheet?) -> [SpriteInstance]
+}
+
+extension GameScene {
+    public func collectEffectSprites(effectSheet: EffectTextureSheet?) -> [SpriteInstance] {
+        []
+    }
 }
 
 @MainActor
@@ -32,6 +39,7 @@ public final class GameEngine {
 
     public func render(to drawable: CAMetalDrawable) {
         let sprites = currentScene?.collectSprites(atlas: renderer.textureAtlas) ?? []
-        renderer.render(to: drawable, sprites: sprites, totalTime: Float(time.totalTime))
+        let effectSprites = currentScene?.collectEffectSprites(effectSheet: renderer.effectSheet) ?? []
+        renderer.render(to: drawable, sprites: sprites, effectSprites: effectSprites, totalTime: Float(time.totalTime))
     }
 }
