@@ -102,6 +102,8 @@ public final class WeaponSystem {
                 var effectiveFireRate = weapon.fireRate
                 if weapon.weaponType == .lightningArc {
                     effectiveFireRate = GameConfig.Weapon.lightningArcTickRate
+                } else if weapon.weaponType == .triSpread {
+                    effectiveFireRate = GameConfig.Weapon.triSpreadFireRate
                 }
                 if weapon.overchargeActive {
                     effectiveFireRate *= GameConfig.Weapon.overchargeFireRateMultiplier
