@@ -55,6 +55,37 @@ struct SynthAudioTests {
         }
     }
 
+    @Test func musicSynthesizerProducesNonSilentOutput() {
+        let sampleRate: Float = 44100
+        var hasNonZero = false
+        for i in 0..<Int(sampleRate) {
+            let t = Float(i) / sampleRate
+            let sample = MusicSynthesizer.synthesize(track: .gameplay, time: t, sampleRate: sampleRate)
+            if abs(sample) > 0.001 { hasNonZero = true; break }
+        }
+        #expect(hasNonZero, "Gameplay track should produce audible output")
+    }
+
+    @Test func musicSynthesizerBossTrackProducesOutput() {
+        let sampleRate: Float = 44100
+        var hasNonZero = false
+        for i in 0..<Int(sampleRate) {
+            let t = Float(i) / sampleRate
+            let sample = MusicSynthesizer.synthesize(track: .boss, time: t, sampleRate: sampleRate)
+            if abs(sample) > 0.001 { hasNonZero = true; break }
+        }
+        #expect(hasNonZero, "Boss track should produce audible output")
+    }
+
+    @Test func musicSynthesizerOutputInRange() {
+        let sampleRate: Float = 44100
+        for i in 0..<Int(sampleRate * 2) {
+            let t = Float(i) / sampleRate
+            let sample = MusicSynthesizer.synthesize(track: .gameplay, time: t, sampleRate: sampleRate)
+            #expect(sample >= -1.5 && sample <= 1.5, "Sample \(sample) at t=\(t) out of range")
+        }
+    }
+
     @Test func sfxTypeHasAllExpectedCases() {
         let allCases = SFXType.allCases
         #expect(allCases.count == 16)
