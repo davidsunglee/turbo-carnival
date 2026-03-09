@@ -133,6 +133,7 @@ public final class Galaxy1Scene: GameScene {
     private func removeEntity(_ entity: GKEntity) {
         unregisterEntity(entity)
         lightningArcSystem.unregisterEnemy(entity)
+        lightningArcSystem.unregisterItem(entity)
         enemies.removeAll { $0 === entity }
         projectiles.removeAll { $0 === entity }
         enemyProjectiles.removeAll { $0 === entity }
@@ -255,6 +256,10 @@ public final class Galaxy1Scene: GameScene {
                     checkFormationWipe(enemy: entity)
                 }
             }
+        }
+        for entity in lightningArcSystem.pendingItemHits {
+            itemSystem.handleProjectileHit(on: entity)
+            sfx?.play(.itemCycle)
         }
 
         // Spawn player projectiles
@@ -1081,6 +1086,7 @@ public final class Galaxy1Scene: GameScene {
 
         registerEntity(entity)
         items.append(entity)
+        lightningArcSystem.registerItem(entity)
         sfx?.play(.itemSpawn)
     }
 
@@ -1129,6 +1135,7 @@ public final class Galaxy1Scene: GameScene {
 
         registerEntity(entity)
         items.append(entity)
+        lightningArcSystem.registerItem(entity)
         sfx?.play(.itemSpawn)
     }
 

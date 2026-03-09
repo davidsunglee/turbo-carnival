@@ -61,6 +61,7 @@ public enum GameConfig {
         public static let lightningArcChainRange: Float = 80
         public static let lightningArcRampDuration: Double = 0.5
         public static let lightningArcMinRampMultiplier: Float = 0.25
+        public static let lightningArcItemCycleCooldown: Double = 0.3
 
         // Phase Laser
         public static let laserTickInterval: Double = 0.1
