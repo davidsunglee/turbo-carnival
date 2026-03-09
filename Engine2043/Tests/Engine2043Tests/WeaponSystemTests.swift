@@ -239,6 +239,84 @@ struct WeaponSystemTests {
         #expect(abs(enemy2Damage[0].damage - expectedMinDamage) < 0.01, "Ramp should reset when primary target changes")
     }
 
+    @Test @MainActor func lightningArcHitsItemToCycle() {
+        let player = GKEntity()
+        player.addComponent(TransformComponent(position: SIMD2(0, 0)))
+        let weapon = WeaponComponent(fireRate: 4, damage: 1, projectileSpeed: 500)
+        weapon.weaponType = .lightningArc
+        weapon.isFiring = true
+        player.addComponent(weapon)
+
+        let item = GKEntity()
+        item.addComponent(TransformComponent(position: SIMD2(0, 100)))
+        let itemComp = ItemComponent()
+        item.addComponent(itemComp)
+
+        let system = LightningArcSystem(player: player)
+        system.registerItem(item)
+
+        let tickInterval = 1.0 / GameConfig.Weapon.lightningArcTickRate
+        system.update(deltaTime: tickInterval)
+
+        #expect(!system.pendingItemHits.isEmpty, "Lightning arc should hit items within range")
+        #expect(system.pendingItemHits.contains(where: { $0 === item }))
+        #expect(system.pendingDamage.isEmpty, "Items should not take damage")
+    }
+
+    @Test @MainActor func lightningArcItemHitHasCooldown() {
+        let player = GKEntity()
+        player.addComponent(TransformComponent(position: SIMD2(0, 0)))
+        let weapon = WeaponComponent(fireRate: 4, damage: 1, projectileSpeed: 500)
+        weapon.weaponType = .lightningArc
+        weapon.isFiring = true
+        player.addComponent(weapon)
+
+        let item = GKEntity()
+        item.addComponent(TransformComponent(position: SIMD2(0, 100)))
+        item.addComponent(ItemComponent())
+
+        let system = LightningArcSystem(player: player)
+        system.registerItem(item)
+
+        let tickInterval = 1.0 / GameConfig.Weapon.lightningArcTickRate
+        system.update(deltaTime: tickInterval)
+        #expect(system.pendingItemHits.count == 1)
+
+        // Second tick immediately after should NOT hit again (cooldown)
+        system.update(deltaTime: tickInterval)
+        #expect(system.pendingItemHits.isEmpty, "Item should be on cooldown")
+    }
+
+    @Test @MainActor func lightningArcChainsToItemAfterEnemy() {
+        let player = GKEntity()
+        player.addComponent(TransformComponent(position: SIMD2(0, 0)))
+        let weapon = WeaponComponent(fireRate: 4, damage: 1, projectileSpeed: 500)
+        weapon.weaponType = .lightningArc
+        weapon.isFiring = true
+        player.addComponent(weapon)
+
+        let enemy = GKEntity()
+        enemy.addComponent(TransformComponent(position: SIMD2(0, 80)))
+        enemy.addComponent(HealthComponent(health: 20))
+
+        let item = GKEntity()
+        item.addComponent(TransformComponent(position: SIMD2(0, 140)))
+        item.addComponent(ItemComponent())
+
+        let system = LightningArcSystem(player: player)
+        system.registerEnemy(enemy)
+        system.registerItem(item)
+
+        let tickInterval = 1.0 / GameConfig.Weapon.lightningArcTickRate
+        system.update(deltaTime: tickInterval)
+
+        // Enemy gets damaged, item gets hit
+        #expect(!system.pendingDamage.isEmpty, "Enemy should take damage")
+        #expect(!system.pendingItemHits.isEmpty, "Item should be hit via chain")
+        // Should have arc segments to both targets
+        #expect(system.activeArcs.count == 2)
+    }
+
     @Test @MainActor func phaseLaserDamageScalesWithHeat() {
         let system = WeaponSystem()
 
