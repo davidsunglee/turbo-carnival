@@ -5,7 +5,7 @@ struct PostProcessUniforms {
     float time;
     float bloomIntensity;
     float scanlineIntensity;
-    float _pad;
+    float transitionProgress;
 };
 
 struct PostProcessVertexOut {
@@ -74,6 +74,15 @@ fragment float4 postprocess_fragment(
     float scanline = sin(uv.y * resolution.y * M_PI_F + uniforms.time * 2.0);
     float scanlineFactor = clamp(scanline * uniforms.scanlineIntensity + (1.0 - uniforms.scanlineIntensity), 0.65, 1.0);
     sceneColor.rgb *= scanlineFactor;
+
+    // --- CRT static transition ---
+    if (uniforms.transitionProgress > 0.0) {
+        // Hash-based noise
+        float2 noiseUV = uv * resolution;
+        float noise = fract(sin(dot(noiseUV + uniforms.time * 100.0, float2(12.9898, 78.233))) * 43758.5453);
+        float3 staticColor = float3(noise);
+        sceneColor.rgb = mix(sceneColor.rgb, staticColor, uniforms.transitionProgress);
+    }
 
     return sceneColor;
 }

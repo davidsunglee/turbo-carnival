@@ -13,6 +13,7 @@ public final class Renderer {
     public let textureAtlas: TextureAtlas
     public let effectSheet: EffectTextureSheet
     private let bloomBlurKernel: MPSImageGaussianBlur
+    public var transitionProgress: Float = 0
 
     public init(device: MTLDevice) throws {
         self.device = device
@@ -72,7 +73,7 @@ public final class Renderer {
         }
 
         // Pass 4: Final composite (offscreen + bloom blur -> drawable)
-        var ppUniforms = PostProcessUniforms(time: totalTime)
+        var ppUniforms = PostProcessUniforms(time: totalTime, transitionProgress: transitionProgress)
         renderPassPipeline.encodePostProcessPass(
             commandBuffer: commandBuffer,
             drawable: drawable,
