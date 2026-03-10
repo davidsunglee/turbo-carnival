@@ -4,6 +4,7 @@ import simd
 public final class TitleScene: GameScene {
     private let backgroundSystem = BackgroundSystem()
     public var inputProvider: (any InputProvider)?
+    public var sfx: SynthAudioEngine?
 
     // Attract mode entities — simple scripted sprites (no ECS needed)
     private var attractShipPos = SIMD2<Float>(0, -100)
