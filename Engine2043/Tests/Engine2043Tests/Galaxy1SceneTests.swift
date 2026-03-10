@@ -58,4 +58,28 @@ struct Galaxy1SceneTests {
         let scene = Galaxy1Scene()
         #expect(scene.shouldRestart == false)
     }
+
+    @Test @MainActor func sceneTracksEnemiesDestroyed() {
+        let scene = Galaxy1Scene()
+        #expect(scene.enemiesDestroyed == 0)
+    }
+
+    @Test @MainActor func sceneTracksElapsedTime() {
+        let scene = Galaxy1Scene()
+        var time = GameTime()
+        time.advance(by: 1.0 / 60.0)
+        while time.shouldPerformFixedUpdate() {
+            scene.fixedUpdate(time: time)
+            time.consumeFixedUpdate()
+        }
+        #expect(scene.elapsedTime > 0)
+    }
+
+    @Test @MainActor func sceneExposesGameResult() {
+        let scene = Galaxy1Scene()
+        let result = scene.gameResult
+        #expect(result.finalScore == 0)
+        #expect(result.enemiesDestroyed == 0)
+        #expect(result.didWin == false)
+    }
 }

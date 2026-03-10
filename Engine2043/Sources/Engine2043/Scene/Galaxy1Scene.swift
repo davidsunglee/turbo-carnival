@@ -61,6 +61,17 @@ public final class Galaxy1Scene: GameScene {
     private var gameOverTimer: Double = 0
     private static let restartDelay: Double = 1.5
     private var musicStarted = false
+    public private(set) var enemiesDestroyed: Int = 0
+    public private(set) var elapsedTime: Double = 0
+
+    public var gameResult: GameResult {
+        GameResult(
+            finalScore: scoreSystem.currentScore,
+            enemiesDestroyed: enemiesDestroyed,
+            elapsedTime: elapsedTime,
+            didWin: gameState == .victory
+        )
+    }
 
     // MARK: - World
     private let worldBounds = AABB(min: SIMD2(-200, -340), max: SIMD2(200, 340))
@@ -162,6 +173,9 @@ public final class Galaxy1Scene: GameScene {
             sfx?.startMusic(.gameplay)
         }
         sfx?.updateMusicFade(deltaTime: Float(time.fixedDeltaTime))
+        if gameState == .playing {
+            elapsedTime += time.fixedDeltaTime
+        }
         guard gameState == .playing else { return }
 
         // Slow-mo from EMP Sweep
@@ -228,6 +242,7 @@ public final class Galaxy1Scene: GameScene {
            bossPhase.isDefeated {
             gameState = .victory
             scoreSystem.addScore(GameConfig.Score.boss)
+            enemiesDestroyed += 1
             sfx?.play(.victory) // TODO: victory SFX not audible during gameplay — needs debugging
             sfx?.stopLaser()
             sfx?.stopMusic()
@@ -252,6 +267,7 @@ public final class Galaxy1Scene: GameScene {
                     if let score = entity.component(ofType: ScoreComponent.self) {
                         scoreSystem.addScore(score.points)
                     }
+                    enemiesDestroyed += 1
                     pendingRemovals.append(entity)
                     checkFormationWipe(enemy: entity)
                 }
@@ -1220,6 +1236,7 @@ public final class Galaxy1Scene: GameScene {
                     if let score = enemy.component(ofType: ScoreComponent.self) {
                         scoreSystem.addScore(score.points)
                     }
+                    enemiesDestroyed += 1
                     pendingRemovals.append(enemy)
                 }
             }
@@ -1307,6 +1324,7 @@ public final class Galaxy1Scene: GameScene {
                     if let score = enemy.component(ofType: ScoreComponent.self) {
                         scoreSystem.addScore(score.points)
                     }
+                    enemiesDestroyed += 1
                     pendingRemovals.append(enemy)
                     checkFormationWipe(enemy: enemy)
                 } else {
@@ -1393,6 +1411,7 @@ public final class Galaxy1Scene: GameScene {
                 if let score = enemy.component(ofType: ScoreComponent.self) {
                     scoreSystem.addScore(score.points)
                 }
+                enemiesDestroyed += 1
                 pendingRemovals.append(enemy)
                 checkFormationWipe(enemy: enemy)
             } else {
@@ -1411,6 +1430,7 @@ public final class Galaxy1Scene: GameScene {
                 if let score = enemy.component(ofType: ScoreComponent.self) {
                     scoreSystem.addScore(score.points)
                 }
+                enemiesDestroyed += 1
                 pendingRemovals.append(enemy)
             }
         }
