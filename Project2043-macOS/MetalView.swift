@@ -106,4 +106,12 @@ class MetalView: NSView {
     override func keyUp(with event: NSEvent) {
         inputProvider.keyUp(event.keyCode)
     }
+
+    override func mouseDown(with event: NSEvent) {
+        let loc = convert(event.locationInWindow, from: nil)
+        // NSView has flipped Y from bottom-left
+        let point = SIMD2<Float>(Float(loc.x), Float(bounds.height - loc.y))
+        let viewSize = SIMD2<Float>(Float(bounds.width), Float(bounds.height))
+        inputProvider.mouseDown(at: point, viewSize: viewSize)
+    }
 }
