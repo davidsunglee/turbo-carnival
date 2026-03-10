@@ -1,0 +1,56 @@
+import Testing
+import simd
+@testable import Engine2043
+
+@MainActor
+final class MockInputForMenu: InputProvider {
+    var tapPos: SIMD2<Float>?
+    var fire: Bool = false
+
+    func poll() -> PlayerInput {
+        var input = PlayerInput()
+        input.tapPosition = tapPos
+        input.primaryFire = fire
+        tapPos = nil  // consume after one poll
+        fire = false
+        return input
+    }
+}
+
+struct SceneTransitionTests {
+    @Test @MainActor func titleSceneRequestsGameOnInput() {
+        let scene = TitleScene()
+        let input = MockInputForMenu()
+        input.fire = true
+        scene.inputProvider = input
+
+        var time = GameTime()
+        time.advance(by: 1.0 / 60.0)
+        while time.shouldPerformFixedUpdate() {
+            scene.fixedUpdate(time: time)
+            time.consumeFixedUpdate()
+        }
+
+        #expect(scene.requestedTransition != nil)
+    }
+
+    @Test @MainActor func gameOverSceneStartsWithNoTransition() {
+        let result = GameResult(finalScore: 1000, enemiesDestroyed: 5, elapsedTime: 60.0, didWin: false)
+        let scene = GameOverScene(result: result)
+        #expect(scene.requestedTransition == nil)
+    }
+
+    @Test @MainActor func victorySceneStartsWithNoTransition() {
+        let result = GameResult(finalScore: 5000, enemiesDestroyed: 47, elapsedTime: 180.0, didWin: true)
+        let scene = VictoryScene(result: result)
+        #expect(scene.requestedTransition == nil)
+    }
+
+    @Test @MainActor func gameResultPreservesData() {
+        let result = GameResult(finalScore: 12345, enemiesDestroyed: 42, elapsedTime: 123.45, didWin: true)
+        #expect(result.finalScore == 12345)
+        #expect(result.enemiesDestroyed == 42)
+        #expect(result.elapsedTime == 123.45)
+        #expect(result.didWin == true)
+    }
+}
