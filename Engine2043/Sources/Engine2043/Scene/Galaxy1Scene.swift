@@ -60,6 +60,10 @@ public final class Galaxy1Scene: GameScene {
     public private(set) var requestedTransition: SceneTransition?
     private var gameOverTimer: Double = 0
     private static let restartDelay: Double = 1.5
+    private static let bossFlashDuration: Double = 0.7
+    private static let bossFadeDuration: Double = 3.0
+    private var bossDyingTimer: Double = 0
+    private var isBossDying: Bool = false
     private var musicStarted = false
     public private(set) var enemiesDestroyed: Int = 0
     public private(set) var elapsedTime: Double = 0
@@ -176,7 +180,43 @@ public final class Galaxy1Scene: GameScene {
         if gameState == .playing {
             elapsedTime += time.fixedDeltaTime
         }
-        guard gameState == .playing else { return }
+
+        // Game over / victory — transition after delay
+        if gameState != .playing {
+            gameOverTimer += time.fixedDeltaTime
+            if gameOverTimer > Self.restartDelay && requestedTransition == nil {
+                if gameState == .gameOver {
+                    requestedTransition = .toGameOver(gameResult)
+                } else if gameState == .victory {
+                    requestedTransition = .toVictory(gameResult)
+                }
+            }
+            return
+        }
+
+        // Boss dying animation — gameplay continues while boss fades out
+        if isBossDying {
+            bossDyingTimer += time.fixedDeltaTime
+            if let boss = bossEntity,
+               let render = boss.component(ofType: RenderComponent.self) {
+                if bossDyingTimer < Self.bossFlashDuration {
+                    let t = Float(bossDyingTimer / Self.bossFlashDuration)
+                    render.color = SIMD4(1, 1, 1, 1 - t * 0.3)
+                } else {
+                    let fadeElapsed = bossDyingTimer - Self.bossFlashDuration
+                    let alpha = Float(max(0, 1 - fadeElapsed / Self.bossFadeDuration))
+                    render.color = SIMD4(1, 1, 1, alpha)
+                    if alpha <= 0 {
+                        render.isVisible = false
+                    }
+                }
+            }
+            let totalBossDeathDuration = Self.bossFlashDuration + Self.bossFadeDuration
+            if bossDyingTimer >= totalBossDeathDuration {
+                gameState = .victory
+                isBossDying = false
+            }
+        }
 
         // Slow-mo from EMP Sweep
         if isSlowMo {
@@ -234,18 +274,6 @@ public final class Galaxy1Scene: GameScene {
             for spawn in bossSystem.pendingProjectileSpawns {
                 spawnEnemyProjectile(position: spawn.position, velocity: spawn.velocity, damage: spawn.damage)
             }
-        }
-
-        // Check boss defeat
-        if let boss = bossEntity,
-           let bossPhase = boss.component(ofType: BossPhaseComponent.self),
-           bossPhase.isDefeated {
-            gameState = .victory
-            scoreSystem.addScore(GameConfig.Score.boss)
-            enemiesDestroyed += 1
-            sfx?.play(.victory) // TODO: victory SFX not audible during gameplay — needs debugging
-            sfx?.stopLaser()
-            sfx?.stopMusic()
         }
 
         // Physics
@@ -332,6 +360,20 @@ public final class Galaxy1Scene: GameScene {
         player.component(ofType: HealthComponent.self)?
             .updateInvulnerability(deltaTime: time.fixedDeltaTime)
 
+        // Check boss defeat (after all damage systems have run)
+        if !isBossDying,
+           let boss = bossEntity,
+           let health = boss.component(ofType: HealthComponent.self),
+           !health.isAlive,
+           gameState == .playing {
+            isBossDying = true
+            bossDyingTimer = 0
+            sfx?.play(.victory)
+            sfx?.stopLaser()
+            sfx?.stopMusic()
+            pendingRemovals.removeAll { $0 === boss }
+        }
+
         // Check game over
         if let health = player.component(ofType: HealthComponent.self), !health.isAlive {
             gameState = .gameOver
@@ -355,17 +397,6 @@ public final class Galaxy1Scene: GameScene {
         }
         pendingRemovals.removeAll()
 
-        // Game over / victory — transition after delay
-        if gameState != .playing {
-            gameOverTimer += time.fixedDeltaTime
-            if gameOverTimer > Self.restartDelay && requestedTransition == nil {
-                if gameState == .gameOver {
-                    requestedTransition = .toGameOver(gameResult)
-                } else if gameState == .victory {
-                    requestedTransition = .toVictory(gameResult)
-                }
-            }
-        }
     }
 
     public func update(time: GameTime) {
