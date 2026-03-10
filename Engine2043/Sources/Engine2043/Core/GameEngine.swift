@@ -7,12 +7,14 @@ public protocol GameScene: AnyObject {
     func update(time: GameTime)
     func collectSprites(atlas: TextureAtlas?) -> [SpriteInstance]
     func collectEffectSprites(effectSheet: EffectTextureSheet?) -> [SpriteInstance]
+    var requestedTransition: SceneTransition? { get }
 }
 
 extension GameScene {
     public func collectEffectSprites(effectSheet: EffectTextureSheet?) -> [SpriteInstance] {
         []
     }
+    public var requestedTransition: SceneTransition? { nil }
 }
 
 @MainActor
