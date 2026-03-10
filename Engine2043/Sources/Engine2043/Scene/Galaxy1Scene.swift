@@ -58,6 +58,7 @@ public final class Galaxy1Scene: GameScene {
     private var weaponNameTimer: Double = 0
     private static let weaponNameDuration: Double = 2.0
     public private(set) var shouldRestart = false
+    public private(set) var requestedTransition: SceneTransition?
     private var gameOverTimer: Double = 0
     private static let restartDelay: Double = 1.5
     private var musicStarted = false
@@ -355,12 +356,14 @@ public final class Galaxy1Scene: GameScene {
         }
         pendingRemovals.removeAll()
 
-        // Game over / victory restart timer
+        // Game over / victory — transition after delay
         if gameState != .playing {
             gameOverTimer += time.fixedDeltaTime
-            if gameOverTimer > Self.restartDelay {
-                if let input = inputProvider?.poll(), input.primaryFire {
-                    shouldRestart = true
+            if gameOverTimer > Self.restartDelay && requestedTransition == nil {
+                if gameState == .gameOver {
+                    requestedTransition = .toGameOver(gameResult)
+                } else if gameState == .victory {
+                    requestedTransition = .toVictory(gameResult)
                 }
             }
         }
