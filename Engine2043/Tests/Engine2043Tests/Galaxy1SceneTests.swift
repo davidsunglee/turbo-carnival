@@ -54,9 +54,9 @@ struct Galaxy1SceneTests {
         #expect(scene.gameState == .playing)
     }
 
-    @Test @MainActor func sceneShouldRestartIsFalseInitially() {
+    @Test @MainActor func sceneRequestedTransitionIsNilInitially() {
         let scene = Galaxy1Scene()
-        #expect(scene.shouldRestart == false)
+        #expect(scene.requestedTransition == nil)
     }
 
     @Test @MainActor func sceneTracksEnemiesDestroyed() {

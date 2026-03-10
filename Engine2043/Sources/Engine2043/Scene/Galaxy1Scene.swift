@@ -57,7 +57,6 @@ public final class Galaxy1Scene: GameScene {
     private var lastWeaponType: WeaponType?
     private var weaponNameTimer: Double = 0
     private static let weaponNameDuration: Double = 2.0
-    public private(set) var shouldRestart = false
     public private(set) var requestedTransition: SceneTransition?
     private var gameOverTimer: Double = 0
     private static let restartDelay: Double = 1.5
@@ -493,42 +492,6 @@ public final class Galaxy1Scene: GameScene {
                     uvRect: uv
                 ))
             }
-        }
-
-        if gameState == .gameOver, let effectSheet {
-            sprites.append(contentsOf: BitmapText.makeSprites(
-                "GAME OVER",
-                at: SIMD2(0, 30),
-                color: SIMD4(0.9, 0.15, 0.15, 0.95),
-                scale: 3.0,
-                effectSheet: effectSheet
-            ))
-            let scoreText = String(format: "%08d", scoreSystem.currentScore)
-            sprites.append(contentsOf: BitmapText.makeSprites(
-                scoreText,
-                at: SIMD2(0, -10),
-                color: SIMD4(1, 1, 1, 0.8),
-                scale: 2.0,
-                effectSheet: effectSheet
-            ))
-        }
-
-        if gameState == .victory, let effectSheet {
-            sprites.append(contentsOf: BitmapText.makeSprites(
-                "VICTORY",
-                at: SIMD2(0, 30),
-                color: SIMD4(GameConfig.Palette.player.x, GameConfig.Palette.player.y, GameConfig.Palette.player.z, 0.95),
-                scale: 3.0,
-                effectSheet: effectSheet
-            ))
-            let scoreText = String(format: "%08d", scoreSystem.currentScore)
-            sprites.append(contentsOf: BitmapText.makeSprites(
-                scoreText,
-                at: SIMD2(0, -10),
-                color: SIMD4(1, 1, 1, 0.8),
-                scale: 2.0,
-                effectSheet: effectSheet
-            ))
         }
 
         appendEffectHUD(to: &sprites, effectSheet: effectSheet)
