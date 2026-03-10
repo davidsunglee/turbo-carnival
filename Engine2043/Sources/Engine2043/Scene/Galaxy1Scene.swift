@@ -477,7 +477,7 @@ public final class Galaxy1Scene: GameScene {
         }
 
         if gameState == .gameOver, let effectSheet {
-            sprites.append(contentsOf: makeTextSprites(
+            sprites.append(contentsOf: BitmapText.makeSprites(
                 "GAME OVER",
                 at: SIMD2(0, 30),
                 color: SIMD4(0.9, 0.15, 0.15, 0.95),
@@ -485,7 +485,7 @@ public final class Galaxy1Scene: GameScene {
                 effectSheet: effectSheet
             ))
             let scoreText = String(format: "%08d", scoreSystem.currentScore)
-            sprites.append(contentsOf: makeTextSprites(
+            sprites.append(contentsOf: BitmapText.makeSprites(
                 scoreText,
                 at: SIMD2(0, -10),
                 color: SIMD4(1, 1, 1, 0.8),
@@ -495,7 +495,7 @@ public final class Galaxy1Scene: GameScene {
         }
 
         if gameState == .victory, let effectSheet {
-            sprites.append(contentsOf: makeTextSprites(
+            sprites.append(contentsOf: BitmapText.makeSprites(
                 "VICTORY",
                 at: SIMD2(0, 30),
                 color: SIMD4(GameConfig.Palette.player.x, GameConfig.Palette.player.y, GameConfig.Palette.player.z, 0.95),
@@ -503,7 +503,7 @@ public final class Galaxy1Scene: GameScene {
                 effectSheet: effectSheet
             ))
             let scoreText = String(format: "%08d", scoreSystem.currentScore)
-            sprites.append(contentsOf: makeTextSprites(
+            sprites.append(contentsOf: BitmapText.makeSprites(
                 scoreText,
                 at: SIMD2(0, -10),
                 color: SIMD4(1, 1, 1, 0.8),
@@ -548,7 +548,7 @@ public final class Galaxy1Scene: GameScene {
 
         // Numeric score (8-digit zero-padded)
         let scoreText = String(format: "%08d", scoreSystem.currentScore)
-        sprites.append(contentsOf: makeTextSprites(
+        sprites.append(contentsOf: BitmapText.makeSprites(
             scoreText,
             at: SIMD2(110, topY),
             color: SIMD4(1, 1, 1, 0.9),
@@ -593,7 +593,7 @@ public final class Galaxy1Scene: GameScene {
         if weaponNameTimer > 0 {
             let fadeAlpha = Float(min(weaponNameTimer / 0.3, 1.0))
             let name = weaponDisplayName(weaponType)
-            sprites.append(contentsOf: makeTextSprites(
+            sprites.append(contentsOf: BitmapText.makeSprites(
                 name,
                 at: SIMD2(0, weaponY + 14),
                 color: SIMD4(weaponColor.x, weaponColor.y, weaponColor.z, fadeAlpha),
@@ -655,35 +655,6 @@ public final class Galaxy1Scene: GameScene {
         case .lightningArc: return "LIGHTNING ARC"
         case .phaseLaser:   return "PHASE LASER"
         }
-    }
-
-    private func makeTextSprites(
-        _ text: String,
-        at position: SIMD2<Float>,
-        color: SIMD4<Float>,
-        scale: Float = 1.0,
-        effectSheet: EffectTextureSheet
-    ) -> [SpriteInstance] {
-        var sprites: [SpriteInstance] = []
-        let glyphW: Float = 6 * scale
-        let glyphH: Float = 8 * scale
-        let totalWidth = Float(text.count) * glyphW
-        var x = position.x - totalWidth / 2 + glyphW / 2
-        for char in text {
-            if char != " " {
-                let key = "glyph_\(char)"
-                if let uv = effectSheet.uvRect(for: key) {
-                    sprites.append(SpriteInstance(
-                        position: SIMD2(x, position.y),
-                        size: SIMD2(glyphW, glyphH),
-                        color: color,
-                        uvRect: uv
-                    ))
-                }
-            }
-            x += glyphW
-        }
-        return sprites
     }
 
     // MARK: - Input
