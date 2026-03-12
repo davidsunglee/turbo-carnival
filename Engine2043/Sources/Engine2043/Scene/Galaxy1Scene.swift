@@ -29,6 +29,7 @@ public final class Galaxy1Scene: GameScene {
     public var inputProvider: (any InputProvider)?
     public var audioProvider: (any AudioProvider)?
     public var sfx: SynthAudioEngine?
+    public var viewportManager: ViewportManager?
 
     // MARK: - Entities
     private var player: GKEntity!
@@ -53,7 +54,7 @@ public final class Galaxy1Scene: GameScene {
     private var blastEffects: [(entity: GKEntity, timer: Double)] = []
     private var slowMoTimer: Double = 0
     private var isSlowMo: Bool = false
-    public var hudInsets: (top: Float, bottom: Float) = (0, 0)
+    public var hudInsets: (top: Float, bottom: Float, left: Float, right: Float) = (0, 0, 0, 0)
     private var lastWeaponType: WeaponType?
     private var weaponNameTimer: Double = 0
     private static let weaponNameDuration: Double = 3.5
@@ -78,12 +79,16 @@ public final class Galaxy1Scene: GameScene {
     }
 
     // MARK: - World
-    private let worldBounds = AABB(min: SIMD2(-200, -340), max: SIMD2(200, 340))
+    private var worldBounds: AABB {
+        let hw = viewportManager?.halfWidth ?? (GameConfig.designWidth / 2)
+        let hh = GameConfig.designHeight / 2
+        return AABB(min: SIMD2(-hw, -hh), max: SIMD2(hw, hh))
+    }
 
     // MARK: - Init
 
     public init() {
-        collisionSystem = CollisionSystem(worldBounds: worldBounds)
+        collisionSystem = CollisionSystem(worldBounds: AABB(min: SIMD2(-200, -340), max: SIMD2(200, 340)))
         setupPlayer()
         lightningArcSystem = LightningArcSystem(player: player)
     }

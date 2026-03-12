@@ -254,11 +254,16 @@ final class MetalView: UIView {
 
     private func updateHudInsets(for scene: Galaxy1Scene) {
         let screenHeight = bounds.height
-        if screenHeight > 0 {
-            let gameUnitsPerPoint = GameConfig.designHeight / Float(screenHeight)
+        let screenWidth = bounds.width
+        if screenHeight > 0 && screenWidth > 0 {
+            let vUnitsPerPt = GameConfig.designHeight / Float(screenHeight)
+            let designWidth = scene.viewportManager?.currentDesignWidth ?? GameConfig.designWidth
+            let hUnitsPerPt = designWidth / Float(screenWidth)
             scene.hudInsets = (
-                top: Float(safeAreaInsets.top) * gameUnitsPerPoint,
-                bottom: Float(safeAreaInsets.bottom) * gameUnitsPerPoint
+                top: Float(safeAreaInsets.top) * vUnitsPerPt,
+                bottom: Float(safeAreaInsets.bottom) * vUnitsPerPt,
+                left: Float(safeAreaInsets.left) * hUnitsPerPt,
+                right: Float(safeAreaInsets.right) * hUnitsPerPt
             )
         }
     }
