@@ -12,6 +12,7 @@ final class MetalView: UIView {
     private var lastTimestamp: CFTimeInterval = 0
     private var touchInput: TouchInputProvider!
     private var sceneManager: SceneManager!
+    private var viewportManager: ViewportManager!
 
     // Control overlays
     private var fireOverlay: UIView!
@@ -45,6 +46,8 @@ final class MetalView: UIView {
         metalLayer.pixelFormat = .bgra8Unorm
 
         let renderer = try! Renderer(device: device)
+        viewportManager = ViewportManager()
+        renderer.viewportManager = viewportManager
         engine = GameEngine(renderer: renderer)
 
         touchInput = TouchInputProvider()
@@ -200,6 +203,10 @@ final class MetalView: UIView {
             height: bounds.height * scale
         )
 
+        if bounds.height > 0 {
+            viewportManager.targetAspectRatio = Float(bounds.width / bounds.height)
+        }
+
         // Update touch provider with screen dimensions and button rects
         touchInput.screenSize = bounds.size
 
@@ -267,6 +274,8 @@ final class MetalView: UIView {
     @objc private func render(_ displayLink: CADisplayLink) {
         let dt = lastTimestamp == 0 ? 1.0 / 60.0 : displayLink.timestamp - lastTimestamp
         lastTimestamp = displayLink.timestamp
+
+        viewportManager.update(dt: Float(dt))
 
         // HUD insets for game scenes
         if let gameScene = engine.currentScene as? Galaxy1Scene {
