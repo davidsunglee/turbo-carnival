@@ -85,6 +85,10 @@ public final class Galaxy1Scene: GameScene {
         return AABB(min: SIMD2(-hw, -hh), max: SIMD2(hw, hh))
     }
 
+    private var currentHalfWidth: Float {
+        viewportManager?.halfWidth ?? (GameConfig.designWidth / 2)
+    }
+
     // MARK: - Init
 
     public init() {
@@ -517,7 +521,8 @@ public final class Galaxy1Scene: GameScene {
             guard let transform = entity.component(ofType: TransformComponent.self),
                   let render = entity.component(ofType: RenderComponent.self) else { continue }
 
-            let isEmp = render.size.x >= GameConfig.designWidth * 0.9
+            let dw = viewportManager?.currentDesignWidth ?? GameConfig.designWidth
+            let isEmp = render.size.x >= dw * 0.9
             let spriteId = isEmp ? "empFlash" : "gravBombBlast"
 
             if let uv = effectSheet?.uvRect(for: spriteId) {
@@ -540,7 +545,7 @@ public final class Galaxy1Scene: GameScene {
         let topY: Float = GameConfig.designHeight / 2 - hudInsets.top - 10
 
         // --- Upper left: Energy bar ---
-        let energyX: Float = -100
+        let energyX: Float = -currentHalfWidth + hudInsets.left + 80
         if let uv = effectSheet.uvRect(for: "hudBarFrame") {
             sprites.append(SpriteInstance(
                 position: SIMD2(energyX, topY),
@@ -574,7 +579,7 @@ public final class Galaxy1Scene: GameScene {
         ))
 
         // --- Upper right: Weapon info (pips + icon) ---
-        let weaponIconX: Float = 130
+        let weaponIconX: Float = currentHalfWidth - hudInsets.right - 50
         let weapon = player.component(ofType: WeaponComponent.self)
         let charges = weapon?.secondaryCharges ?? 0
         if let uv = effectSheet.uvRect(for: "hudChargePip") {
@@ -711,7 +716,7 @@ public final class Galaxy1Scene: GameScene {
         }
 
         if let transform = player.component(ofType: TransformComponent.self) {
-            let halfW = GameConfig.designWidth / 2 - GameConfig.Player.size.x / 2
+            let halfW = currentHalfWidth - GameConfig.Player.size.x / 2
             let halfH = GameConfig.designHeight / 2 - GameConfig.Player.size.y / 2
             transform.position.x = max(-halfW, min(halfW, transform.position.x))
             transform.position.y = max(-halfH, min(halfH, transform.position.y))
@@ -1275,8 +1280,9 @@ public final class Galaxy1Scene: GameScene {
         // Visual flash
         let flash = GKEntity()
         flash.addComponent(TransformComponent(position: .zero))
+        let empWidth = viewportManager?.currentDesignWidth ?? GameConfig.designWidth
         let flashRender = RenderComponent(
-            size: SIMD2(GameConfig.designWidth, GameConfig.designHeight),
+            size: SIMD2(empWidth, GameConfig.designHeight),
             color: GameConfig.Palette.empFlash
         )
         flashRender.isVisible = false  // Rendered via effect pass instead
@@ -1511,8 +1517,8 @@ public final class Galaxy1Scene: GameScene {
         let margin: Float = 50
         let minY = -GameConfig.designHeight / 2 - margin
         let maxY = GameConfig.designHeight / 2 + margin
-        let minX = -GameConfig.designWidth / 2 - margin
-        let maxX = GameConfig.designWidth / 2 + margin
+        let minX = -currentHalfWidth - margin
+        let maxX = currentHalfWidth + margin
 
         for entity in (enemies + projectiles + enemyProjectiles) {
             // Don't cull turrets attached to a hull — they scroll in from above
@@ -1531,18 +1537,20 @@ public final class Galaxy1Scene: GameScene {
 
     private func appendGameOverOverlay(to sprites: inout [SpriteInstance]) {
         // Dim overlay
+        let overlayW = (viewportManager?.currentDesignWidth ?? GameConfig.designWidth) * 2
         sprites.append(SpriteInstance(
             position: .zero,
-            size: SIMD2(GameConfig.designWidth * 2, GameConfig.designHeight * 2),
+            size: SIMD2(overlayW, GameConfig.designHeight * 2),
             color: SIMD4(0, 0, 0, 0.6)
         ))
     }
 
     private func appendVictoryOverlay(to sprites: inout [SpriteInstance]) {
         // Dim overlay (lighter than game over)
+        let overlayW = (viewportManager?.currentDesignWidth ?? GameConfig.designWidth) * 2
         sprites.append(SpriteInstance(
             position: .zero,
-            size: SIMD2(GameConfig.designWidth * 2, GameConfig.designHeight * 2),
+            size: SIMD2(overlayW, GameConfig.designHeight * 2),
             color: SIMD4(0, 0, 0, 0.4)
         ))
     }
