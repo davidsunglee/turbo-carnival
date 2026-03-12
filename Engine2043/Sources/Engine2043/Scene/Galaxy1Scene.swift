@@ -617,7 +617,7 @@ public final class Galaxy1Scene: GameScene {
             let name = weaponDisplayName(weaponType)
             sprites.append(contentsOf: BitmapText.makeSprites(
                 name,
-                at: SIMD2(110, topY - 14),
+                at: SIMD2(weaponIconX, topY - 14),
                 color: SIMD4(weaponColor.x, weaponColor.y, weaponColor.z, fadeAlpha),
                 scale: 1.0,
                 effectSheet: effectSheet
