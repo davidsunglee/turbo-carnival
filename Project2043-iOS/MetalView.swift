@@ -61,12 +61,14 @@ final class MetalView: UIView {
         sceneManager.makeTitleScene = { [weak self] in
             let scene = TitleScene()
             scene.inputProvider = self?.touchInput
+            scene.viewportManager = self?.viewportManager
             return scene
         }
 
         sceneManager.makeGameScene = { [weak self] in
             let scene = Galaxy1Scene()
             scene.inputProvider = self?.touchInput
+            scene.viewportManager = self?.viewportManager
             scene.audioProvider = audio
             scene.sfx = sfxEngine
             audio.stopAll()
@@ -78,18 +80,21 @@ final class MetalView: UIView {
         sceneManager.makeGameOverScene = { [weak self] result in
             let scene = GameOverScene(result: result)
             scene.inputProvider = self?.touchInput
+            scene.viewportManager = self?.viewportManager
             return scene
         }
 
         sceneManager.makeVictoryScene = { [weak self] result in
             let scene = VictoryScene(result: result)
             scene.inputProvider = self?.touchInput
+            scene.viewportManager = self?.viewportManager
             return scene
         }
 
         // Start with title screen
         let titleScene = TitleScene()
         titleScene.inputProvider = touchInput
+        titleScene.viewportManager = viewportManager
         engine.currentScene = titleScene
 
         setupControlOverlays()
