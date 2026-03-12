@@ -272,7 +272,7 @@ public final class Galaxy1Scene: GameScene {
         let playerPos = player.component(ofType: TransformComponent.self)?.position ?? .zero
         steeringSystem.playerPosition = playerPos
         formationSystem.update(deltaTime: time.fixedDeltaTime)
-        steeringSystem.update(deltaTime: time.fixedDeltaTime)
+        steeringSystem.update(deltaTime: time.fixedDeltaTime, viewportHalfWidth: currentHalfWidth)
 
         // Turrets and boss projectiles paused during slow-mo
         if !isSlowMo {
@@ -351,7 +351,7 @@ public final class Galaxy1Scene: GameScene {
         }
 
         // Item system
-        itemSystem.update(deltaTime: time.fixedDeltaTime)
+        itemSystem.update(deltaTime: time.fixedDeltaTime, viewportHalfWidth: currentHalfWidth)
         for entity in itemSystem.pendingDespawns {
             pendingRemovals.append(entity)
         }
