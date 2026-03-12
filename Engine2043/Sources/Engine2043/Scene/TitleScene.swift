@@ -4,6 +4,7 @@ import simd
 public final class TitleScene: GameScene {
     private let backgroundSystem = BackgroundSystem()
     public var inputProvider: (any InputProvider)?
+    public var viewportManager: ViewportManager?
     public var sfx: SynthAudioEngine?
 
     // Attract mode entities — simple scripted sprites (no ECS needed)
@@ -12,6 +13,7 @@ public final class TitleScene: GameScene {
     private var attractEnemies: [(pos: SIMD2<Float>, vel: SIMD2<Float>)] = []
     private var attractProjectiles: [(pos: SIMD2<Float>, vel: SIMD2<Float>, age: Double)] = []
     private var attractFireTimer: Double = 0
+    private var attractSeeded = false
 
     // UI state
     private var blinkTimer: Double = 0
@@ -21,13 +23,10 @@ public final class TitleScene: GameScene {
     // Transition
     public private(set) var requestedTransition: SceneTransition?
 
-    public init() {
-        seedAttractEnemies()
-    }
+    public init() {}
 
     private func seedAttractEnemies() {
-        // Spawn a handful of enemies drifting downward in formation
-        let hw = GameConfig.designWidth / 2 - 40
+        let hw = (viewportManager?.halfWidth ?? (GameConfig.designWidth / 2)) - 40
         for i in 0..<5 {
             let x = -hw + Float(i) * (hw * 2 / 4)
             attractEnemies.append((
@@ -38,13 +37,18 @@ public final class TitleScene: GameScene {
     }
 
     public func fixedUpdate(time: GameTime) {
+        if !attractSeeded {
+            seedAttractEnemies()
+            attractSeeded = true
+        }
+
         let dt = time.fixedDeltaTime
         totalTime += dt
 
         backgroundSystem.update(deltaTime: dt)
 
         // Attract ship — bounce around the lower portion of the screen
-        let hw = GameConfig.designWidth / 2 - 20
+        let hw = (viewportManager?.halfWidth ?? (GameConfig.designWidth / 2)) - 20
         let hh = GameConfig.designHeight / 2 - 20
         attractShipPos += attractShipVel * Float(dt)
         if attractShipPos.x < -hw || attractShipPos.x > hw { attractShipVel.x *= -1 }
