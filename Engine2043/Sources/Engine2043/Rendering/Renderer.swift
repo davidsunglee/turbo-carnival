@@ -14,6 +14,7 @@ public final class Renderer {
     public let effectSheet: EffectTextureSheet
     private let bloomBlurKernel: MPSImageGaussianBlur
     public var transitionProgress: Float = 0
+    public var viewportManager: ViewportManager?
 
     public init(device: MTLDevice) throws {
         self.device = device
@@ -85,7 +86,7 @@ public final class Renderer {
     }
 
     private func makeOrthographicProjection() -> simd_float4x4 {
-        let hw = GameConfig.designWidth / 2
+        let hw = (viewportManager?.halfWidth) ?? (GameConfig.designWidth / 2)
         let hh = GameConfig.designHeight / 2
 
         return simd_float4x4(
