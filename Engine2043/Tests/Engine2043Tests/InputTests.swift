@@ -58,4 +58,49 @@ struct InputTests {
         let movement: SIMD2<Float> = length < deadZone ? .zero : delta / 60.0
         #expect(movement == .zero)
     }
+
+    @Test @MainActor func mockInputProviderPollReturnsMovement() {
+        let provider = MockInputProvider(movement: SIMD2(0.5, -0.3))
+        let input = provider.poll()
+        #expect(input.movement.x == 0.5)
+        #expect(input.movement.y == -0.3)
+    }
+
+    @Test @MainActor func mockInputProviderPollReturnsPrimaryFire() {
+        let provider = MockInputProvider(primary: true)
+        let input = provider.poll()
+        #expect(input.primaryFire == true)
+    }
+
+    @Test @MainActor func mockInputProviderSecondaryFires() {
+        let provider = MockInputProvider()
+        provider.secondary1 = true
+        provider.secondary2 = true
+        let input = provider.poll()
+        #expect(input.secondaryFire1 == true)
+        #expect(input.secondaryFire2 == true)
+        #expect(input.secondaryFire3 == false)
+    }
+
+    @Test @MainActor func mockInputProviderTapPositionConsumedAfterPoll() {
+        let provider = MockInputProvider()
+        provider.tapPos = SIMD2(100, 200)
+
+        let first = provider.poll()
+        #expect(first.tapPosition != nil)
+        #expect(first.tapPosition!.x == 100)
+
+        let second = provider.poll()
+        #expect(second.tapPosition == nil)
+    }
+
+    @Test func playerInputDefaultsAllFalse() {
+        let input = PlayerInput()
+        #expect(input.primaryFire == false)
+        #expect(input.secondaryFire1 == false)
+        #expect(input.secondaryFire2 == false)
+        #expect(input.secondaryFire3 == false)
+        #expect(input.tapPosition == nil)
+        #expect(input.movement == .zero)
+    }
 }
