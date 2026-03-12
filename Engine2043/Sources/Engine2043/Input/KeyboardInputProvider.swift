@@ -17,6 +17,8 @@ public final class KeyboardInputProvider: InputProvider {
         static let c:          UInt16 = 8
     }
 
+    public weak var viewportManager: ViewportManager?
+
     private var pendingClickPosition: SIMD2<Float>?
 
     public init() {}
@@ -30,7 +32,8 @@ public final class KeyboardInputProvider: InputProvider {
     }
 
     public func mouseDown(at point: SIMD2<Float>, viewSize: SIMD2<Float>) {
-        let gameX = (point.x / viewSize.x - 0.5) * GameConfig.designWidth
+        let designWidth = viewportManager?.currentDesignWidth ?? GameConfig.designWidth
+        let gameX = (point.x / viewSize.x - 0.5) * designWidth
         let gameY = (0.5 - point.y / viewSize.y) * GameConfig.designHeight
         pendingClickPosition = SIMD2(gameX, gameY)
     }

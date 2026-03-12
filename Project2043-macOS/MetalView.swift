@@ -39,6 +39,7 @@ class MetalView: NSView {
         engine = GameEngine(renderer: renderer)
 
         inputProvider = KeyboardInputProvider()
+        inputProvider.viewportManager = viewportManager
 
         let audio = AVAudioManager()
         let sfxEngine = SynthAudioEngine()
