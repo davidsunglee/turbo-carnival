@@ -17,6 +17,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         window.center()
         window.makeKeyAndOrderFront(nil)
         window.title = "Project 2043"
+        window.minSize = NSSize(width: 360, height: 640)
         window.makeFirstResponder(metalView)
     }
 
