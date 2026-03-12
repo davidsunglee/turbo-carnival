@@ -21,9 +21,9 @@ public final class SteeringSystem {
         entities.removeAll { $0 === entity }
     }
 
-    public func update(deltaTime: Double) {
+    public func update(deltaTime: Double, viewportHalfWidth: Float = GameConfig.designWidth / 2) {
         accumulatedTime += deltaTime
-        let halfWidth = GameConfig.designWidth / 2
+        let halfWidth = viewportHalfWidth
 
         for entity in entities {
             guard let steering = entity.component(ofType: SteeringComponent.self),

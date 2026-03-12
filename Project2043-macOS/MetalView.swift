@@ -9,6 +9,7 @@ class MetalView: NSView {
     private var inputProvider: KeyboardInputProvider!
     private var sceneManager: SceneManager!
     private var displayLink: CADisplayLink?
+    private var viewportManager: ViewportManager!
     private var lastTimestamp: CFTimeInterval = 0
 
     override init(frame frameRect: NSRect) {
@@ -33,9 +34,12 @@ class MetalView: NSView {
         guard let device = layer.device else { return }
 
         let renderer = try! Renderer(device: device)
+        viewportManager = ViewportManager()
+        renderer.viewportManager = viewportManager
         engine = GameEngine(renderer: renderer)
 
         inputProvider = KeyboardInputProvider()
+        inputProvider.viewportManager = viewportManager
 
         let audio = AVAudioManager()
         let sfxEngine = SynthAudioEngine()
@@ -45,12 +49,14 @@ class MetalView: NSView {
         sceneManager.makeTitleScene = { [weak self] in
             let scene = TitleScene()
             scene.inputProvider = self?.inputProvider
+            scene.viewportManager = self?.viewportManager
             return scene
         }
 
         sceneManager.makeGameScene = { [weak self] in
             let scene = Galaxy1Scene()
             scene.inputProvider = self?.inputProvider
+            scene.viewportManager = self?.viewportManager
             scene.audioProvider = audio
             scene.sfx = sfxEngine
             audio.stopAll()
@@ -62,18 +68,21 @@ class MetalView: NSView {
         sceneManager.makeGameOverScene = { [weak self] result in
             let scene = GameOverScene(result: result)
             scene.inputProvider = self?.inputProvider
+            scene.viewportManager = self?.viewportManager
             return scene
         }
 
         sceneManager.makeVictoryScene = { [weak self] result in
             let scene = VictoryScene(result: result)
             scene.inputProvider = self?.inputProvider
+            scene.viewportManager = self?.viewportManager
             return scene
         }
 
         // Start with title screen
         let titleScene = TitleScene()
         titleScene.inputProvider = inputProvider
+        titleScene.viewportManager = viewportManager
         engine.currentScene = titleScene
     }
 
@@ -96,12 +105,18 @@ class MetalView: NSView {
             width: bounds.width * scale,
             height: bounds.height * scale
         )
+
+        if bounds.height > 0 {
+            viewportManager.targetAspectRatio = Float(bounds.width / bounds.height)
+        }
     }
 
     @objc private func render(_ displayLink: CADisplayLink) {
         let timestamp = displayLink.timestamp
         let dt = lastTimestamp == 0 ? 1.0 / 60.0 : timestamp - lastTimestamp
         lastTimestamp = timestamp
+
+        viewportManager.update(dt: Float(dt))
 
         engine.update(deltaTime: dt)
 

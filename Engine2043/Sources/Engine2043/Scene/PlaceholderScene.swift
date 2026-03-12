@@ -12,6 +12,7 @@ public final class PlaceholderScene: GameScene {
 
     // Input
     public var inputProvider: (any InputProvider)?
+    public var viewportManager: ViewportManager?
 
     // Audio
     public var audioProvider: (any AudioProvider)?
@@ -36,6 +37,10 @@ public final class PlaceholderScene: GameScene {
         min: SIMD2(-200, -340),
         max: SIMD2(200, 340)
     )
+
+    private var currentHalfWidth: Float {
+        viewportManager?.halfWidth ?? (GameConfig.designWidth / 2)
+    }
 
     public init() {
         collisionSystem = CollisionSystem(worldBounds: worldBounds)
@@ -241,7 +246,7 @@ public final class PlaceholderScene: GameScene {
 
         // Clamp player to play area
         if let transform = player.component(ofType: TransformComponent.self) {
-            let halfW = GameConfig.designWidth / 2 - playerSize.x / 2
+            let halfW = currentHalfWidth - playerSize.x / 2
             let halfH = GameConfig.designHeight / 2 - playerSize.y / 2
             transform.position.x = max(-halfW, min(halfW, transform.position.x))
             transform.position.y = max(-halfH, min(halfH, transform.position.y))
@@ -289,10 +294,13 @@ public final class PlaceholderScene: GameScene {
         let margin: Float = 50
         let minY = -GameConfig.designHeight / 2 - margin
         let maxY = GameConfig.designHeight / 2 + margin
+        let minX = -currentHalfWidth - margin
+        let maxX = currentHalfWidth + margin
 
         for entity in (enemies + projectiles) {
             guard let transform = entity.component(ofType: TransformComponent.self) else { continue }
-            if transform.position.y < minY || transform.position.y > maxY {
+            if transform.position.y < minY || transform.position.y > maxY ||
+               transform.position.x < minX || transform.position.x > maxX {
                 pendingRemovals.append(entity)
             }
         }

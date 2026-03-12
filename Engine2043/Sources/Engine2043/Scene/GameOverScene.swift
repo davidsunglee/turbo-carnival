@@ -4,6 +4,7 @@ import simd
 public final class GameOverScene: GameScene {
     private let backgroundSystem = BackgroundSystem()
     public var inputProvider: (any InputProvider)?
+    public var viewportManager: ViewportManager?
 
     private let result: GameResult
     public private(set) var requestedTransition: SceneTransition?

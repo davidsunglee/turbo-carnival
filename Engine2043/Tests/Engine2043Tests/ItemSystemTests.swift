@@ -127,6 +127,25 @@ struct ItemSystemTests {
         #expect(render.spriteId == "shieldDrop")
     }
 
+    @Test @MainActor func itemSystemBouncesAtCustomWidth() {
+        let system = ItemSystem()
+        let customHalfWidth: Float = 500
+
+        let entity = GKEntity()
+        let transform = TransformComponent(position: SIMD2(customHalfWidth - 5, 200))
+        entity.addComponent(transform)
+        entity.addComponent(PhysicsComponent(collisionSize: GameConfig.Item.size, layer: .item, mask: [.playerProjectile, .player]))
+        let item = ItemComponent()
+        item.bounceDirection = 1
+        entity.addComponent(item)
+        entity.addComponent(RenderComponent(size: GameConfig.Item.size, color: SIMD4(1, 1, 0, 1)))
+
+        system.register(entity)
+        system.update(deltaTime: 1.0 / 60.0, viewportHalfWidth: customHalfWidth)
+
+        #expect(item.bounceDirection == Float(-1))
+    }
+
     @Test @MainActor func weaponModuleUpdatesSpriteIdPerWeapon() {
         let system = ItemSystem()
 

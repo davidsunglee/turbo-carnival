@@ -7,11 +7,8 @@ public final class ItemSystem {
     public private(set) var pendingDespawns: [GKEntity] = []
 
     private let bounceSpeed: Float = 30
-    private let halfWidth: Float
 
-    public init() {
-        halfWidth = GameConfig.designWidth / 2
-    }
+    public init() {}
 
     public func register(_ entity: GKEntity) {
         guard entity.component(ofType: ItemComponent.self) != nil,
@@ -25,8 +22,9 @@ public final class ItemSystem {
         entities.removeAll { $0 === entity }
     }
 
-    public func update(deltaTime: Double) {
+    public func update(deltaTime: Double, viewportHalfWidth: Float = GameConfig.designWidth / 2) {
         pendingDespawns.removeAll(keepingCapacity: true)
+        let halfWidth = viewportHalfWidth
 
         for entity in entities {
             guard let item = entity.component(ofType: ItemComponent.self),

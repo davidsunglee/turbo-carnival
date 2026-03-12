@@ -25,6 +25,7 @@ public final class TouchInputProvider: InputProvider {
 
     // Screen dimensions (set by MetalView on layout)
     public var screenSize: CGSize = .zero
+    public weak var viewportManager: ViewportManager?
 
     // Button rects (set by MetalView on layout)
     public var primaryButtonRect: CGRect = .zero
@@ -88,15 +89,17 @@ public final class TouchInputProvider: InputProvider {
             let touchID = ObjectIdentifier(touch)
 
             // Convert screen-space tap to game design coordinates
-            let gameX = (Float(loc.x) / Float(screenSize.width) - 0.5) * GameConfig.designWidth
+            let designWidth = viewportManager?.currentDesignWidth ?? GameConfig.designWidth
+            let gameX = (Float(loc.x) / Float(screenSize.width) - 0.5) * designWidth
             let gameY = (0.5 - Float(loc.y) / Float(screenSize.height)) * GameConfig.designHeight
             pendingTapPosition = SIMD2(gameX, gameY)
 
-            if loc.x < screenSize.width / 2 && joystickTouchID == nil {
+            let zoneWidth = min(180.0, screenSize.width / 2)
+            if loc.x < zoneWidth && joystickTouchID == nil {
                 joystickOrigin = point
                 joystickCurrent = point
                 joystickTouchID = touchID
-            } else if loc.x >= screenSize.width / 2 {
+            } else if loc.x > screenSize.width - zoneWidth {
                 if secondary3ButtonRect.contains(loc) && secondary3TouchID == nil {
                     secondary3Active = true
                     secondary3TouchID = touchID

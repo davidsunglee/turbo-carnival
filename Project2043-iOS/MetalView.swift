@@ -12,6 +12,7 @@ final class MetalView: UIView {
     private var lastTimestamp: CFTimeInterval = 0
     private var touchInput: TouchInputProvider!
     private var sceneManager: SceneManager!
+    private var viewportManager: ViewportManager!
 
     // Control overlays
     private var fireOverlay: UIView!
@@ -45,9 +46,12 @@ final class MetalView: UIView {
         metalLayer.pixelFormat = .bgra8Unorm
 
         let renderer = try! Renderer(device: device)
+        viewportManager = ViewportManager()
+        renderer.viewportManager = viewportManager
         engine = GameEngine(renderer: renderer)
 
         touchInput = TouchInputProvider()
+        touchInput.viewportManager = viewportManager
 
         let audio = AVAudioManager()
         let sfxEngine = SynthAudioEngine()
@@ -57,12 +61,14 @@ final class MetalView: UIView {
         sceneManager.makeTitleScene = { [weak self] in
             let scene = TitleScene()
             scene.inputProvider = self?.touchInput
+            scene.viewportManager = self?.viewportManager
             return scene
         }
 
         sceneManager.makeGameScene = { [weak self] in
             let scene = Galaxy1Scene()
             scene.inputProvider = self?.touchInput
+            scene.viewportManager = self?.viewportManager
             scene.audioProvider = audio
             scene.sfx = sfxEngine
             audio.stopAll()
@@ -74,18 +80,21 @@ final class MetalView: UIView {
         sceneManager.makeGameOverScene = { [weak self] result in
             let scene = GameOverScene(result: result)
             scene.inputProvider = self?.touchInput
+            scene.viewportManager = self?.viewportManager
             return scene
         }
 
         sceneManager.makeVictoryScene = { [weak self] result in
             let scene = VictoryScene(result: result)
             scene.inputProvider = self?.touchInput
+            scene.viewportManager = self?.viewportManager
             return scene
         }
 
         // Start with title screen
         let titleScene = TitleScene()
         titleScene.inputProvider = touchInput
+        titleScene.viewportManager = viewportManager
         engine.currentScene = titleScene
 
         setupControlOverlays()
@@ -200,6 +209,10 @@ final class MetalView: UIView {
             height: bounds.height * scale
         )
 
+        if bounds.height > 0 {
+            viewportManager.targetAspectRatio = Float(bounds.width / bounds.height)
+        }
+
         // Update touch provider with screen dimensions and button rects
         touchInput.screenSize = bounds.size
 
@@ -246,11 +259,16 @@ final class MetalView: UIView {
 
     private func updateHudInsets(for scene: Galaxy1Scene) {
         let screenHeight = bounds.height
-        if screenHeight > 0 {
-            let gameUnitsPerPoint = GameConfig.designHeight / Float(screenHeight)
+        let screenWidth = bounds.width
+        if screenHeight > 0 && screenWidth > 0 {
+            let vUnitsPerPt = GameConfig.designHeight / Float(screenHeight)
+            let designWidth = scene.viewportManager?.currentDesignWidth ?? GameConfig.designWidth
+            let hUnitsPerPt = designWidth / Float(screenWidth)
             scene.hudInsets = (
-                top: Float(safeAreaInsets.top) * gameUnitsPerPoint,
-                bottom: Float(safeAreaInsets.bottom) * gameUnitsPerPoint
+                top: Float(safeAreaInsets.top) * vUnitsPerPt,
+                bottom: Float(safeAreaInsets.bottom) * vUnitsPerPt,
+                left: Float(safeAreaInsets.left) * hUnitsPerPt,
+                right: Float(safeAreaInsets.right) * hUnitsPerPt
             )
         }
     }
@@ -267,6 +285,8 @@ final class MetalView: UIView {
     @objc private func render(_ displayLink: CADisplayLink) {
         let dt = lastTimestamp == 0 ? 1.0 / 60.0 : displayLink.timestamp - lastTimestamp
         lastTimestamp = displayLink.timestamp
+
+        viewportManager.update(dt: Float(dt))
 
         // HUD insets for game scenes
         if let gameScene = engine.currentScene as? Galaxy1Scene {

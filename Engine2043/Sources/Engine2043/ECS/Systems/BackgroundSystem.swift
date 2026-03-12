@@ -16,14 +16,15 @@ public final class BackgroundSystem {
     public var isScrollLocked: Bool = false
 
     public init() {
-        halfWidth = GameConfig.designWidth / 2
+        let maxWidth = ViewportManager.maxDesignWidth
+        halfWidth = maxWidth / 2
         halfHeight = GameConfig.designHeight / 2
         fieldHeight = GameConfig.designHeight + 100
 
         var seed: UInt64 = 42
         for _ in 0..<GameConfig.Background.starCount {
             seed = seed &* 6364136223846793005 &+ 1442695040888963407
-            let x = Float(Int(seed >> 33) % Int(GameConfig.designWidth)) - halfWidth
+            let x = Float(Int(seed >> 33) % Int(maxWidth)) - halfWidth
             seed = seed &* 6364136223846793005 &+ 1442695040888963407
             let y = Float(Int(seed >> 33) % Int(fieldHeight)) - halfHeight
             starPositions.append(SIMD2(x, y))
@@ -33,7 +34,7 @@ public final class BackgroundSystem {
 
         for _ in 0..<GameConfig.Background.nebulaCount {
             seed = seed &* 6364136223846793005 &+ 1442695040888963407
-            let x = Float(Int(seed >> 33) % Int(GameConfig.designWidth)) - halfWidth
+            let x = Float(Int(seed >> 33) % Int(maxWidth)) - halfWidth
             seed = seed &* 6364136223846793005 &+ 1442695040888963407
             let y = Float(Int(seed >> 33) % Int(fieldHeight)) - halfHeight
             nebulaPositions.append(SIMD2(x, y))
