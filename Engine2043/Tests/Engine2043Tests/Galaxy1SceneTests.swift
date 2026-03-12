@@ -3,24 +3,6 @@ import GameplayKit
 import simd
 @testable import Engine2043
 
-@MainActor
-final class MockInputProvider: InputProvider {
-    var movement: SIMD2<Float>
-    var primary: Bool
-
-    init(movement: SIMD2<Float> = .zero, primary: Bool = false) {
-        self.movement = movement
-        self.primary = primary
-    }
-
-    func poll() -> PlayerInput {
-        var input = PlayerInput()
-        input.movement = movement
-        input.primaryFire = primary
-        return input
-    }
-}
-
 struct Galaxy1SceneTests {
     @Test @MainActor func sceneInitializesWithPlayer() {
         let scene = Galaxy1Scene()
