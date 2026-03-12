@@ -49,12 +49,13 @@ public struct PostProcessUniforms: Sendable {
     public var time: Float
     public var bloomIntensity: Float
     public var scanlineIntensity: Float
-    public var _pad: Float = 0
+    public var transitionProgress: Float
 
-    public init(time: Float, bloomIntensity: Float = 0.6, scanlineIntensity: Float = 0.15) {
+    public init(time: Float, bloomIntensity: Float = 0.6, scanlineIntensity: Float = 0.15, transitionProgress: Float = 0) {
         self.time = time
         self.bloomIntensity = bloomIntensity
         self.scanlineIntensity = scanlineIntensity
+        self.transitionProgress = transitionProgress
     }
 }
 

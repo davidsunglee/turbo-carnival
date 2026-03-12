@@ -48,6 +48,8 @@ public final class TouchInputProvider: InputProvider {
     public var isSecondary2Active: Bool { secondary2Active }
     public var isSecondary3Active: Bool { secondary3Active }
 
+    private var pendingTapPosition: SIMD2<Float>?
+
     public init() {}
 
     public func poll() -> PlayerInput {
@@ -71,6 +73,8 @@ public final class TouchInputProvider: InputProvider {
         input.secondaryFire1 = secondary1Active
         input.secondaryFire2 = secondary2Active
         input.secondaryFire3 = secondary3Active
+        input.tapPosition = pendingTapPosition
+        pendingTapPosition = nil
 
         return input
     }
@@ -82,6 +86,11 @@ public final class TouchInputProvider: InputProvider {
             let loc = touch.location(in: view)
             let point = SIMD2<Float>(Float(loc.x), Float(loc.y))
             let touchID = ObjectIdentifier(touch)
+
+            // Convert screen-space tap to game design coordinates
+            let gameX = (Float(loc.x) / Float(screenSize.width) - 0.5) * GameConfig.designWidth
+            let gameY = (0.5 - Float(loc.y) / Float(screenSize.height)) * GameConfig.designHeight
+            pendingTapPosition = SIMD2(gameX, gameY)
 
             if loc.x < screenSize.width / 2 && joystickTouchID == nil {
                 joystickOrigin = point

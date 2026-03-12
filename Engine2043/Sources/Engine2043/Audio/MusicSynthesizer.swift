@@ -35,7 +35,7 @@ enum MusicSynthesizer {
     static func synthesize(track: MusicTrack, time: Float, sampleRate: Float) -> Float {
         let chords: [(root: Float, third: Float, fifth: Float)]
         switch track {
-        case .gameplay: chords = gameplayChords
+        case .gameplay, .title: chords = gameplayChords
         case .boss:     chords = bossChords
         }
 
@@ -57,7 +57,7 @@ enum MusicSynthesizer {
         // Mix levels — keep total under ~0.6 to leave headroom
         let mix: Float
         switch track {
-        case .gameplay:
+        case .gameplay, .title:
             mix = bass * 0.18 + arp * 0.12 + drums * 0.15 + pad * 0.08
         case .boss:
             mix = bass * 0.21 + arp * 0.14 + drums * 0.18 + pad * 0.06
@@ -74,7 +74,7 @@ enum MusicSynthesizer {
         let square = sign(sin(2.0 * .pi * freq * time))
         let wave: Float
         switch track {
-        case .gameplay:
+        case .gameplay, .title:
             wave = saw * 0.6 + square * 0.4
         case .boss:
             // Distorted: clip the sawtooth
@@ -97,7 +97,7 @@ enum MusicSynthesizer {
 
         let wave: Float
         switch track {
-        case .gameplay:
+        case .gameplay, .title:
             wave = sin(2.0 * .pi * freq * time)
         case .boss:
             // Pulse wave for more aggressive feel

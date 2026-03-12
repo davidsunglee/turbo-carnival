@@ -11,7 +11,7 @@ final class MetalView: UIView {
     private var displayLink: CADisplayLink!
     private var lastTimestamp: CFTimeInterval = 0
     private var touchInput: TouchInputProvider!
-    private var scene: Galaxy1Scene!
+    private var sceneManager: SceneManager!
 
     // Control overlays
     private var fireOverlay: UIView!
@@ -48,16 +48,45 @@ final class MetalView: UIView {
         engine = GameEngine(renderer: renderer)
 
         touchInput = TouchInputProvider()
-        scene = Galaxy1Scene()
-        scene.inputProvider = touchInput
 
         let audio = AVAudioManager()
-        scene.audioProvider = audio
-
         let sfxEngine = SynthAudioEngine()
-        scene.sfx = sfxEngine
 
-        engine.currentScene = scene
+        sceneManager = SceneManager(engine: engine)
+
+        sceneManager.makeTitleScene = { [weak self] in
+            let scene = TitleScene()
+            scene.inputProvider = self?.touchInput
+            return scene
+        }
+
+        sceneManager.makeGameScene = { [weak self] in
+            let scene = Galaxy1Scene()
+            scene.inputProvider = self?.touchInput
+            scene.audioProvider = audio
+            scene.sfx = sfxEngine
+            audio.stopAll()
+            sfxEngine.stopLaser()
+            sfxEngine.stopMusic()
+            return scene
+        }
+
+        sceneManager.makeGameOverScene = { [weak self] result in
+            let scene = GameOverScene(result: result)
+            scene.inputProvider = self?.touchInput
+            return scene
+        }
+
+        sceneManager.makeVictoryScene = { [weak self] result in
+            let scene = VictoryScene(result: result)
+            scene.inputProvider = self?.touchInput
+            return scene
+        }
+
+        // Start with title screen
+        let titleScene = TitleScene()
+        titleScene.inputProvider = touchInput
+        engine.currentScene = titleScene
 
         setupControlOverlays()
 
@@ -215,7 +244,7 @@ final class MetalView: UIView {
 
     }
 
-    private func updateHudInsets() {
+    private func updateHudInsets(for scene: Galaxy1Scene) {
         let screenHeight = bounds.height
         if screenHeight > 0 {
             let gameUnitsPerPoint = GameConfig.designHeight / Float(screenHeight)
@@ -226,29 +255,38 @@ final class MetalView: UIView {
         }
     }
 
+    private func setControlOverlaysVisible(_ visible: Bool) {
+        fireOverlay.isHidden = !visible
+        bombOverlay.isHidden = !visible
+        empOverlay.isHidden = !visible
+        ocOverlay.isHidden = !visible
+        joystickBase.isHidden = !visible
+        joystickKnob.isHidden = !visible
+    }
+
     @objc private func render(_ displayLink: CADisplayLink) {
         let dt = lastTimestamp == 0 ? 1.0 / 60.0 : displayLink.timestamp - lastTimestamp
         lastTimestamp = displayLink.timestamp
 
-        updateHudInsets()
-        engine.update(deltaTime: dt)
-
-        // Check for scene restart — reuse existing audio engines
-        if scene.shouldRestart {
-            let audio = scene.audioProvider
-            let sfx = scene.sfx
-            audio?.stopAll()
-            sfx?.stopLaser()
-            sfx?.stopMusic()
-
-            scene = Galaxy1Scene()
-            scene.inputProvider = touchInput
-            scene.audioProvider = audio
-            scene.sfx = sfx
-            engine.currentScene = scene
+        // HUD insets for game scenes
+        if let gameScene = engine.currentScene as? Galaxy1Scene {
+            updateHudInsets(for: gameScene)
         }
 
-        updateControlOverlays()
+        engine.update(deltaTime: dt)
+
+        // Scene transition management
+        sceneManager.checkForTransition()
+        sceneManager.updateTransition(deltaTime: dt)
+        engine.renderer.transitionProgress = sceneManager.transitionProgress
+
+        // Show/hide control overlays based on current scene
+        let isPlaying = engine.currentScene is Galaxy1Scene
+        setControlOverlaysVisible(isPlaying)
+
+        if isPlaying {
+            updateControlOverlays()
+        }
 
         guard let drawable = metalLayer.nextDrawable() else { return }
         engine.render(to: drawable)

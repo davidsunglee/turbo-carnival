@@ -57,10 +57,25 @@ public final class Galaxy1Scene: GameScene {
     private var lastWeaponType: WeaponType?
     private var weaponNameTimer: Double = 0
     private static let weaponNameDuration: Double = 2.0
-    public private(set) var shouldRestart = false
+    public private(set) var requestedTransition: SceneTransition?
     private var gameOverTimer: Double = 0
     private static let restartDelay: Double = 1.5
+    private static let bossFlashDuration: Double = 0.7
+    private static let bossFadeDuration: Double = 3.0
+    private var bossDyingTimer: Double = 0
+    private var isBossDying: Bool = false
     private var musicStarted = false
+    public private(set) var enemiesDestroyed: Int = 0
+    public private(set) var elapsedTime: Double = 0
+
+    public var gameResult: GameResult {
+        GameResult(
+            finalScore: scoreSystem.currentScore,
+            enemiesDestroyed: enemiesDestroyed,
+            elapsedTime: elapsedTime,
+            didWin: gameState == .victory
+        )
+    }
 
     // MARK: - World
     private let worldBounds = AABB(min: SIMD2(-200, -340), max: SIMD2(200, 340))
@@ -162,7 +177,46 @@ public final class Galaxy1Scene: GameScene {
             sfx?.startMusic(.gameplay)
         }
         sfx?.updateMusicFade(deltaTime: Float(time.fixedDeltaTime))
-        guard gameState == .playing else { return }
+        if gameState == .playing {
+            elapsedTime += time.fixedDeltaTime
+        }
+
+        // Game over / victory — transition after delay
+        if gameState != .playing {
+            gameOverTimer += time.fixedDeltaTime
+            if gameOverTimer > Self.restartDelay && requestedTransition == nil {
+                if gameState == .gameOver {
+                    requestedTransition = .toGameOver(gameResult)
+                } else if gameState == .victory {
+                    requestedTransition = .toVictory(gameResult)
+                }
+            }
+            return
+        }
+
+        // Boss dying animation — gameplay continues while boss fades out
+        if isBossDying {
+            bossDyingTimer += time.fixedDeltaTime
+            if let boss = bossEntity,
+               let render = boss.component(ofType: RenderComponent.self) {
+                if bossDyingTimer < Self.bossFlashDuration {
+                    let t = Float(bossDyingTimer / Self.bossFlashDuration)
+                    render.color = SIMD4(1, 1, 1, 1 - t * 0.3)
+                } else {
+                    let fadeElapsed = bossDyingTimer - Self.bossFlashDuration
+                    let alpha = Float(max(0, 1 - fadeElapsed / Self.bossFadeDuration))
+                    render.color = SIMD4(1, 1, 1, alpha)
+                    if alpha <= 0 {
+                        render.isVisible = false
+                    }
+                }
+            }
+            let totalBossDeathDuration = Self.bossFlashDuration + Self.bossFadeDuration
+            if bossDyingTimer >= totalBossDeathDuration {
+                gameState = .victory
+                isBossDying = false
+            }
+        }
 
         // Slow-mo from EMP Sweep
         if isSlowMo {
@@ -222,17 +276,6 @@ public final class Galaxy1Scene: GameScene {
             }
         }
 
-        // Check boss defeat
-        if let boss = bossEntity,
-           let bossPhase = boss.component(ofType: BossPhaseComponent.self),
-           bossPhase.isDefeated {
-            gameState = .victory
-            scoreSystem.addScore(GameConfig.Score.boss)
-            sfx?.play(.victory) // TODO: victory SFX not audible during gameplay — needs debugging
-            sfx?.stopLaser()
-            sfx?.stopMusic()
-        }
-
         // Physics
         physicsSystem.syncFromComponents()
         physicsSystem.update(time: time)
@@ -252,6 +295,7 @@ public final class Galaxy1Scene: GameScene {
                     if let score = entity.component(ofType: ScoreComponent.self) {
                         scoreSystem.addScore(score.points)
                     }
+                    enemiesDestroyed += 1
                     pendingRemovals.append(entity)
                     checkFormationWipe(enemy: entity)
                 }
@@ -316,6 +360,20 @@ public final class Galaxy1Scene: GameScene {
         player.component(ofType: HealthComponent.self)?
             .updateInvulnerability(deltaTime: time.fixedDeltaTime)
 
+        // Check boss defeat (after all damage systems have run)
+        if !isBossDying,
+           let boss = bossEntity,
+           let health = boss.component(ofType: HealthComponent.self),
+           !health.isAlive,
+           gameState == .playing {
+            isBossDying = true
+            bossDyingTimer = 0
+            sfx?.play(.victory)
+            sfx?.stopLaser()
+            sfx?.stopMusic()
+            pendingRemovals.removeAll { $0 === boss }
+        }
+
         // Check game over
         if let health = player.component(ofType: HealthComponent.self), !health.isAlive {
             gameState = .gameOver
@@ -339,15 +397,6 @@ public final class Galaxy1Scene: GameScene {
         }
         pendingRemovals.removeAll()
 
-        // Game over / victory restart timer
-        if gameState != .playing {
-            gameOverTimer += time.fixedDeltaTime
-            if gameOverTimer > Self.restartDelay {
-                if let input = inputProvider?.poll(), input.primaryFire {
-                    shouldRestart = true
-                }
-            }
-        }
     }
 
     public func update(time: GameTime) {
@@ -476,42 +525,6 @@ public final class Galaxy1Scene: GameScene {
             }
         }
 
-        if gameState == .gameOver, let effectSheet {
-            sprites.append(contentsOf: makeTextSprites(
-                "GAME OVER",
-                at: SIMD2(0, 30),
-                color: SIMD4(0.9, 0.15, 0.15, 0.95),
-                scale: 3.0,
-                effectSheet: effectSheet
-            ))
-            let scoreText = String(format: "%08d", scoreSystem.currentScore)
-            sprites.append(contentsOf: makeTextSprites(
-                scoreText,
-                at: SIMD2(0, -10),
-                color: SIMD4(1, 1, 1, 0.8),
-                scale: 2.0,
-                effectSheet: effectSheet
-            ))
-        }
-
-        if gameState == .victory, let effectSheet {
-            sprites.append(contentsOf: makeTextSprites(
-                "VICTORY",
-                at: SIMD2(0, 30),
-                color: SIMD4(GameConfig.Palette.player.x, GameConfig.Palette.player.y, GameConfig.Palette.player.z, 0.95),
-                scale: 3.0,
-                effectSheet: effectSheet
-            ))
-            let scoreText = String(format: "%08d", scoreSystem.currentScore)
-            sprites.append(contentsOf: makeTextSprites(
-                scoreText,
-                at: SIMD2(0, -10),
-                color: SIMD4(1, 1, 1, 0.8),
-                scale: 2.0,
-                effectSheet: effectSheet
-            ))
-        }
-
         appendEffectHUD(to: &sprites, effectSheet: effectSheet)
 
         return sprites
@@ -548,7 +561,7 @@ public final class Galaxy1Scene: GameScene {
 
         // Numeric score (8-digit zero-padded)
         let scoreText = String(format: "%08d", scoreSystem.currentScore)
-        sprites.append(contentsOf: makeTextSprites(
+        sprites.append(contentsOf: BitmapText.makeSprites(
             scoreText,
             at: SIMD2(110, topY),
             color: SIMD4(1, 1, 1, 0.9),
@@ -593,7 +606,7 @@ public final class Galaxy1Scene: GameScene {
         if weaponNameTimer > 0 {
             let fadeAlpha = Float(min(weaponNameTimer / 0.3, 1.0))
             let name = weaponDisplayName(weaponType)
-            sprites.append(contentsOf: makeTextSprites(
+            sprites.append(contentsOf: BitmapText.makeSprites(
                 name,
                 at: SIMD2(0, weaponY + 14),
                 color: SIMD4(weaponColor.x, weaponColor.y, weaponColor.z, fadeAlpha),
@@ -655,35 +668,6 @@ public final class Galaxy1Scene: GameScene {
         case .lightningArc: return "LIGHTNING ARC"
         case .phaseLaser:   return "PHASE LASER"
         }
-    }
-
-    private func makeTextSprites(
-        _ text: String,
-        at position: SIMD2<Float>,
-        color: SIMD4<Float>,
-        scale: Float = 1.0,
-        effectSheet: EffectTextureSheet
-    ) -> [SpriteInstance] {
-        var sprites: [SpriteInstance] = []
-        let glyphW: Float = 6 * scale
-        let glyphH: Float = 8 * scale
-        let totalWidth = Float(text.count) * glyphW
-        var x = position.x - totalWidth / 2 + glyphW / 2
-        for char in text {
-            if char != " " {
-                let key = "glyph_\(char)"
-                if let uv = effectSheet.uvRect(for: key) {
-                    sprites.append(SpriteInstance(
-                        position: SIMD2(x, position.y),
-                        size: SIMD2(glyphW, glyphH),
-                        color: color,
-                        uvRect: uv
-                    ))
-                }
-            }
-            x += glyphW
-        }
-        return sprites
     }
 
     // MARK: - Input
@@ -1249,6 +1233,7 @@ public final class Galaxy1Scene: GameScene {
                     if let score = enemy.component(ofType: ScoreComponent.self) {
                         scoreSystem.addScore(score.points)
                     }
+                    enemiesDestroyed += 1
                     pendingRemovals.append(enemy)
                 }
             }
@@ -1336,6 +1321,7 @@ public final class Galaxy1Scene: GameScene {
                     if let score = enemy.component(ofType: ScoreComponent.self) {
                         scoreSystem.addScore(score.points)
                     }
+                    enemiesDestroyed += 1
                     pendingRemovals.append(enemy)
                     checkFormationWipe(enemy: enemy)
                 } else {
@@ -1422,6 +1408,7 @@ public final class Galaxy1Scene: GameScene {
                 if let score = enemy.component(ofType: ScoreComponent.self) {
                     scoreSystem.addScore(score.points)
                 }
+                enemiesDestroyed += 1
                 pendingRemovals.append(enemy)
                 checkFormationWipe(enemy: enemy)
             } else {
@@ -1440,6 +1427,7 @@ public final class Galaxy1Scene: GameScene {
                 if let score = enemy.component(ofType: ScoreComponent.self) {
                     scoreSystem.addScore(score.points)
                 }
+                enemiesDestroyed += 1
                 pendingRemovals.append(enemy)
             }
         }

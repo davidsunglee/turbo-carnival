@@ -17,6 +17,8 @@ public final class KeyboardInputProvider: InputProvider {
         static let c:          UInt16 = 8
     }
 
+    private var pendingClickPosition: SIMD2<Float>?
+
     public init() {}
 
     public func keyDown(_ keyCode: UInt16) {
@@ -25,6 +27,12 @@ public final class KeyboardInputProvider: InputProvider {
 
     public func keyUp(_ keyCode: UInt16) {
         keysPressed.remove(keyCode)
+    }
+
+    public func mouseDown(at point: SIMD2<Float>, viewSize: SIMD2<Float>) {
+        let gameX = (point.x / viewSize.x - 0.5) * GameConfig.designWidth
+        let gameY = (0.5 - point.y / viewSize.y) * GameConfig.designHeight
+        pendingClickPosition = SIMD2(gameX, gameY)
     }
 
     public func poll() -> PlayerInput {
@@ -44,6 +52,8 @@ public final class KeyboardInputProvider: InputProvider {
         input.secondaryFire1 = keysPressed.contains(KeyCode.z)
         input.secondaryFire2 = keysPressed.contains(KeyCode.x)
         input.secondaryFire3 = keysPressed.contains(KeyCode.c)
+        input.tapPosition = pendingClickPosition
+        pendingClickPosition = nil
 
         return input
     }
