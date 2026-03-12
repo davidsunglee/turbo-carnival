@@ -20,12 +20,17 @@ extension GameScene {
 @MainActor
 public final class GameEngine {
     public private(set) var time = GameTime()
-    public let renderer: Renderer
+    public let renderer: Renderer?
     public var currentScene: (any GameScene)?
     public var audioProvider: (any AudioProvider)?
 
     public init(renderer: Renderer) {
         self.renderer = renderer
+    }
+
+    /// Lightweight init for unit tests that don't need the rendering pipeline.
+    internal init() {
+        self.renderer = nil
     }
 
     public func update(deltaTime: Double) {
@@ -40,6 +45,7 @@ public final class GameEngine {
     }
 
     public func render(to drawable: CAMetalDrawable) {
+        guard let renderer else { return }
         let sprites = currentScene?.collectSprites(atlas: renderer.textureAtlas) ?? []
         let effectSprites = currentScene?.collectEffectSprites(effectSheet: renderer.effectSheet) ?? []
         renderer.render(to: drawable, sprites: sprites, effectSprites: effectSprites, totalTime: Float(time.totalTime))

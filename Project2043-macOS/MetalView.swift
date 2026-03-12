@@ -123,7 +123,7 @@ class MetalView: NSView {
         // Scene transition management
         sceneManager.checkForTransition()
         sceneManager.updateTransition(deltaTime: dt)
-        engine.renderer.transitionProgress = sceneManager.transitionProgress
+        engine.renderer?.transitionProgress = sceneManager.transitionProgress
 
         guard let drawable = metalLayer.nextDrawable() else { return }
         engine.render(to: drawable)
