@@ -17,13 +17,14 @@ public final class Galaxy1Scene: GameScene {
     private let weaponSystem = WeaponSystem()
     private let formationSystem = FormationSystem()
     private let steeringSystem = SteeringSystem()
-    private let itemSystem = ItemSystem()
+    let itemSystem = ItemSystem() // CollisionContext
     private let shieldDroneSystem = ShieldDroneSystem()
-    private let scoreSystem = ScoreSystem()
+    let scoreSystem = ScoreSystem() // CollisionContext
     private let backgroundSystem = BackgroundSystem()
     private let bossSystem = BossSystem()
     private let spawnDirector = SpawnDirector()
     private var lightningArcSystem: LightningArcSystem!
+    private let collisionResponseHandler = CollisionResponseHandler()
 
     // MARK: - Input / Audio
     public var inputProvider: (any InputProvider)?
@@ -32,7 +33,7 @@ public final class Galaxy1Scene: GameScene {
     public var viewportManager: ViewportManager?
 
     // MARK: - Entities
-    private var player: GKEntity!
+    var player: GKEntity! // CollisionContext
     private var enemies: [GKEntity] = []
     private var projectiles: [GKEntity] = []
     private var enemyProjectiles: [GKEntity] = []
@@ -41,7 +42,7 @@ public final class Galaxy1Scene: GameScene {
     private var bossEntity: GKEntity?
     private var shieldEntities: [GKEntity] = []
     private var shieldDrones: [GKEntity] = []
-    private var pendingRemovals: [GKEntity] = []
+    var pendingRemovals: [GKEntity] = [] // CollisionContext
 
     // MARK: - Formation tracking
     private var formationEnemies: [Int: [GKEntity]] = [:]
@@ -66,7 +67,7 @@ public final class Galaxy1Scene: GameScene {
     private var bossDyingTimer: Double = 0
     private var isBossDying: Bool = false
     private var musicStarted = false
-    public private(set) var enemiesDestroyed: Int = 0
+    public var enemiesDestroyed: Int = 0 // CollisionContext
     public private(set) var elapsedTime: Double = 0
 
     public var gameResult: GameResult {
@@ -95,6 +96,7 @@ public final class Galaxy1Scene: GameScene {
         collisionSystem = CollisionSystem(worldBounds: AABB(min: SIMD2(-200, -340), max: SIMD2(200, 340)))
         setupPlayer()
         lightningArcSystem = LightningArcSystem(player: player)
+        collisionResponseHandler.context = self
     }
 
     private func setupPlayer() {
@@ -1132,7 +1134,7 @@ public final class Galaxy1Scene: GameScene {
         sfx?.play(.itemSpawn)
     }
 
-    private func spawnShieldDrones() {
+    func spawnShieldDrones() { // CollisionContext
         guard let playerTransform = player.component(ofType: TransformComponent.self) else { return }
         let maxDrones = GameConfig.ShieldDrone.maxDrones
         let slotsAvailable = maxDrones - shieldDrones.count
@@ -1360,137 +1362,10 @@ public final class Galaxy1Scene: GameScene {
     // MARK: - Collisions
 
     private func processCollisions() {
-        for (entityA, entityB) in collisionSystem.collisionPairs {
-            let layerA = entityA.component(ofType: PhysicsComponent.self)?.collisionLayer ?? []
-            let layerB = entityB.component(ofType: PhysicsComponent.self)?.collisionLayer ?? []
-
-            if layerA.contains(.playerProjectile) && layerB.contains(.enemy) {
-                handleProjectileHitEnemy(projectile: entityA, enemy: entityB)
-            } else if layerB.contains(.playerProjectile) && layerA.contains(.enemy) {
-                handleProjectileHitEnemy(projectile: entityB, enemy: entityA)
-            } else if layerA.contains(.playerProjectile) && layerB.contains(.bossShield) {
-                pendingRemovals.append(entityA)
-                sfx?.play(.bossShieldDeflect)
-            } else if layerB.contains(.playerProjectile) && layerA.contains(.bossShield) {
-                pendingRemovals.append(entityB)
-                sfx?.play(.bossShieldDeflect)
-            } else if layerA.contains(.playerProjectile) && layerB.contains(.item) {
-                itemSystem.handleProjectileHit(on: entityB)
-                sfx?.play(.itemCycle)
-                pendingRemovals.append(entityA)
-            } else if layerB.contains(.playerProjectile) && layerA.contains(.item) {
-                itemSystem.handleProjectileHit(on: entityA)
-                sfx?.play(.itemCycle)
-                pendingRemovals.append(entityB)
-            } else if layerA.contains(.player) && layerB.contains(.enemy) {
-                handlePlayerEnemyCollision(enemy: entityB)
-            } else if layerB.contains(.player) && layerA.contains(.enemy) {
-                handlePlayerEnemyCollision(enemy: entityA)
-            } else if layerA.contains(.shieldDrone) && layerB.contains(.enemyProjectile) {
-                if let drone = entityA.component(ofType: ShieldDroneComponent.self) {
-                    drone.takeHit()
-                    sfx?.play(.bossShieldDeflect)
-                    pendingRemovals.append(entityB)
-                }
-            } else if layerB.contains(.shieldDrone) && layerA.contains(.enemyProjectile) {
-                if let drone = entityB.component(ofType: ShieldDroneComponent.self) {
-                    drone.takeHit()
-                    sfx?.play(.bossShieldDeflect)
-                    pendingRemovals.append(entityA)
-                }
-            } else if layerA.contains(.player) && layerB.contains(.enemyProjectile) {
-                handlePlayerHitByProjectile(projectile: entityB)
-            } else if layerB.contains(.player) && layerA.contains(.enemyProjectile) {
-                handlePlayerHitByProjectile(projectile: entityA)
-            } else if layerA.contains(.player) && layerB.contains(.item) {
-                handlePlayerCollectsItem(item: entityB)
-            } else if layerB.contains(.player) && layerA.contains(.item) {
-                handlePlayerCollectsItem(item: entityA)
-            }
-        }
+        collisionResponseHandler.processCollisions(pairs: collisionSystem.collisionPairs)
     }
 
-    private func handleProjectileHitEnemy(projectile: GKEntity, enemy: GKEntity) {
-        if let health = enemy.component(ofType: HealthComponent.self) {
-            health.takeDamage(GameConfig.Player.damage)
-            if !health.isAlive {
-                sfx?.play(.enemyDestroyed)
-                if let score = enemy.component(ofType: ScoreComponent.self) {
-                    scoreSystem.addScore(score.points)
-                }
-                enemiesDestroyed += 1
-                pendingRemovals.append(enemy)
-                checkFormationWipe(enemy: enemy)
-            } else {
-                sfx?.play(.enemyHit)
-            }
-        }
-        pendingRemovals.append(projectile)
-    }
-
-    private func handlePlayerEnemyCollision(enemy: GKEntity) {
-        player.component(ofType: HealthComponent.self)?.takeDamage(GameConfig.Player.collisionDamage)
-        sfx?.play(.playerDamaged)
-        if let health = enemy.component(ofType: HealthComponent.self) {
-            health.takeDamage(health.currentHealth)
-            if !health.isAlive {
-                if let score = enemy.component(ofType: ScoreComponent.self) {
-                    scoreSystem.addScore(score.points)
-                }
-                enemiesDestroyed += 1
-                pendingRemovals.append(enemy)
-            }
-        }
-    }
-
-    private func handlePlayerHitByProjectile(projectile: GKEntity) {
-        player.component(ofType: HealthComponent.self)?.takeDamage(5)
-        sfx?.play(.playerDamaged)
-        pendingRemovals.append(projectile)
-    }
-
-    private func handlePlayerCollectsItem(item: GKEntity) {
-        sfx?.play(.itemPickup)
-        guard let itemComp = item.component(ofType: ItemComponent.self) else { return }
-
-        if itemComp.isWeaponModule {
-            if let weapon = player.component(ofType: WeaponComponent.self) {
-                weapon.weaponType = itemComp.displayedWeapon
-                // Reset weapon-specific state
-                weapon.laserHeat = 0
-                weapon.isLaserOverheated = false
-                weapon.laserOverheatTimer = 0
-                // Update damage for weapon type
-                switch weapon.weaponType {
-                case .doubleCannon:
-                    weapon.damage = GameConfig.Player.damage
-                case .lightningArc:
-                    weapon.damage = GameConfig.Weapon.lightningArcDamagePerTick
-                case .triSpread:
-                    weapon.damage = GameConfig.Weapon.triSpreadDamage
-                case .phaseLaser:
-                    weapon.damage = GameConfig.Weapon.laserDamagePerTick
-                }
-            }
-        } else {
-            switch itemComp.utilityItemType {
-            case .energyCell:
-                if let health = player.component(ofType: HealthComponent.self) {
-                    health.currentHealth = min(health.maxHealth, health.currentHealth + GameConfig.Item.energyRestoreAmount)
-                }
-            case .chargeCell:
-                if let weapon = player.component(ofType: WeaponComponent.self) {
-                    weapon.secondaryCharges = min(GameConfig.Weapon.gravBombMaxCharges, weapon.secondaryCharges + GameConfig.Item.chargeRestoreAmount)
-                }
-            case .orbitingShield:
-                spawnShieldDrones()
-            }
-        }
-
-        pendingRemovals.append(item)
-    }
-
-    private func checkFormationWipe(enemy: GKEntity) {
+    func checkFormationWipe(enemy: GKEntity) { // CollisionContext
         for (id, members) in formationEnemies {
             if members.contains(where: { $0 === enemy }) {
                 let alive = members.filter { member in
@@ -1555,3 +1430,5 @@ public final class Galaxy1Scene: GameScene {
         ))
     }
 }
+
+extension Galaxy1Scene: CollisionContext {}

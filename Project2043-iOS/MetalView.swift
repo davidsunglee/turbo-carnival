@@ -298,7 +298,7 @@ final class MetalView: UIView {
         // Scene transition management
         sceneManager.checkForTransition()
         sceneManager.updateTransition(deltaTime: dt)
-        engine.renderer.transitionProgress = sceneManager.transitionProgress
+        engine.renderer?.transitionProgress = sceneManager.transitionProgress
 
         // Show/hide control overlays based on current scene
         let isPlaying = engine.currentScene is Galaxy1Scene

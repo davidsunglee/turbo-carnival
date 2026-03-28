@@ -2,26 +2,10 @@ import Testing
 import simd
 @testable import Engine2043
 
-@MainActor
-final class MockInputForMenu: InputProvider {
-    var tapPos: SIMD2<Float>?
-    var fire: Bool = false
-
-    func poll() -> PlayerInput {
-        var input = PlayerInput()
-        input.tapPosition = tapPos
-        input.primaryFire = fire
-        tapPos = nil  // consume after one poll
-        fire = false
-        return input
-    }
-}
-
 struct SceneTransitionTests {
     @Test @MainActor func titleSceneRequestsGameOnInput() {
         let scene = TitleScene()
-        let input = MockInputForMenu()
-        input.fire = true
+        let input = MockInputProvider(primary: true)
         scene.inputProvider = input
 
         var time = GameTime()
