@@ -1,3 +1,4 @@
+import AVFoundation
 import Testing
 @testable import Engine2043
 
@@ -55,42 +56,23 @@ struct AudioEngineTests {
         }
     }
 
-    @Test func musicStateDefaultValues() {
-        let state = MusicState()
-        state.amplitude.withLock { #expect($0 == 0.0) }
-        state.track.withLock { #expect($0 == .gameplay) }
-        state.samplePosition.withLock { #expect($0 == 0) }
+    @Test func musicMP3FilesExistInBundle() {
+        let gameplayURL = Bundle.module.url(forResource: "gameplay", withExtension: "mp3")
+        let bossURL = Bundle.module.url(forResource: "boss", withExtension: "mp3")
+        #expect(gameplayURL != nil, "gameplay.mp3 should be bundled")
+        #expect(bossURL != nil, "boss.mp3 should be bundled")
     }
 
-    @Test func musicSynthesizerProducesNonSilentOutput() {
-        let sampleRate: Float = 44100
-        var hasNonZero = false
-        for i in 0..<Int(sampleRate) {
-            let t = Float(i) / sampleRate
-            let sample = MusicSynthesizer.synthesize(track: .gameplay, time: t, sampleRate: sampleRate)
-            if abs(sample) > 0.001 { hasNonZero = true; break }
-        }
-        #expect(hasNonZero, "Gameplay track should produce audible output")
-    }
+    @Test func musicMP3FilesLoadAsAudioBuffers() throws {
+        let gameplayURL = try #require(Bundle.module.url(forResource: "gameplay", withExtension: "mp3"))
+        let file = try AVAudioFile(forReading: gameplayURL)
+        let frameCount = AVAudioFrameCount(file.length)
+        #expect(frameCount > 0, "gameplay.mp3 should have audio frames")
 
-    @Test func musicSynthesizerBossTrackProducesOutput() {
-        let sampleRate: Float = 44100
-        var hasNonZero = false
-        for i in 0..<Int(sampleRate) {
-            let t = Float(i) / sampleRate
-            let sample = MusicSynthesizer.synthesize(track: .boss, time: t, sampleRate: sampleRate)
-            if abs(sample) > 0.001 { hasNonZero = true; break }
-        }
-        #expect(hasNonZero, "Boss track should produce audible output")
-    }
-
-    @Test func musicSynthesizerOutputInRange() {
-        let sampleRate: Float = 44100
-        for i in 0..<Int(sampleRate * 2) {
-            let t = Float(i) / sampleRate
-            let sample = MusicSynthesizer.synthesize(track: .gameplay, time: t, sampleRate: sampleRate)
-            #expect(sample >= -1.5 && sample <= 1.5, "Sample \(sample) at t=\(t) out of range")
-        }
+        let bossURL = try #require(Bundle.module.url(forResource: "boss", withExtension: "mp3"))
+        let bossFile = try AVAudioFile(forReading: bossURL)
+        let bossFrameCount = AVAudioFrameCount(bossFile.length)
+        #expect(bossFrameCount > 0, "boss.mp3 should have audio frames")
     }
 
     @Test @MainActor func musicStartStopDoesNotCrash() {
