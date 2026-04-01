@@ -1,21 +1,21 @@
 import Testing
 @testable import Engine2043
 
-struct SynthAudioTests {
+struct AudioEngineTests {
     @Test @MainActor func synthEngineInitializesWithoutCrash() {
-        let engine = SynthAudioEngine()
+        let engine = AudioEngine()
         #expect(engine.volume >= 0)
     }
 
     @Test @MainActor func synthEnginePlayDoesNotCrash() {
-        let engine = SynthAudioEngine()
+        let engine = AudioEngine()
         engine.play(.doubleCannonFire)
         engine.play(.enemyHit)
         engine.play(.itemPickup)
     }
 
     @Test @MainActor func synthEngineVolumeClamps() {
-        let engine = SynthAudioEngine()
+        let engine = AudioEngine()
         engine.volume = 1.5
         #expect(engine.volume == 1.0)
         engine.volume = -0.5
@@ -23,14 +23,14 @@ struct SynthAudioTests {
     }
 
     @Test @MainActor func laserStartStopDoesNotCrash() {
-        let engine = SynthAudioEngine()
+        let engine = AudioEngine()
         engine.startLaser()
         engine.setLaserHeat(0.5)
         engine.stopLaser()
     }
 
     @Test @MainActor func laserHeatClampsTo01() {
-        let engine = SynthAudioEngine()
+        let engine = AudioEngine()
         engine.startLaser()
         engine.setLaserHeat(-1.0)
         engine.setLaserHeat(2.0)
@@ -39,7 +39,7 @@ struct SynthAudioTests {
     }
 
     @Test @MainActor func lightningArcCooldownPreventsRapidFire() {
-        let engine = SynthAudioEngine()
+        let engine = AudioEngine()
         // First play should succeed, rapid second should be rate-limited
         // (We can't directly observe skipped plays, but verify no crash under rapid fire)
         for _ in 0..<100 {
@@ -49,7 +49,7 @@ struct SynthAudioTests {
     }
 
     @Test @MainActor func allSFXTypesPlayWithoutCrash() {
-        let engine = SynthAudioEngine()
+        let engine = AudioEngine()
         for sfx in SFXType.allCases {
             engine.play(sfx)
         }
@@ -94,33 +94,33 @@ struct SynthAudioTests {
     }
 
     @Test @MainActor func musicStartStopDoesNotCrash() {
-        let engine = SynthAudioEngine()
+        let engine = AudioEngine()
         engine.startMusic(.gameplay)
         engine.stopMusic()
     }
 
     @Test @MainActor func musicStartBossDoesNotCrash() {
-        let engine = SynthAudioEngine()
+        let engine = AudioEngine()
         engine.startMusic(.boss)
         engine.stopMusic()
     }
 
     @Test @MainActor func musicDoubleStartDoesNotCrash() {
-        let engine = SynthAudioEngine()
+        let engine = AudioEngine()
         engine.startMusic(.gameplay)
         engine.startMusic(.boss)
         engine.stopMusic()
     }
 
     @Test @MainActor func musicFadeDoesNotCrash() {
-        let engine = SynthAudioEngine()
+        let engine = AudioEngine()
         engine.startMusic(.gameplay)
         engine.fadeToTrack(.boss, fadeOut: 1.0, silence: 0.5, fadeIn: 1.0)
         engine.stopMusic()
     }
 
     @Test @MainActor func musicUpdateFadeAdvancesFade() {
-        let engine = SynthAudioEngine()
+        let engine = AudioEngine()
         engine.startMusic(.gameplay)
         engine.fadeToTrack(.boss, fadeOut: 1.0, silence: 0.5, fadeIn: 1.0)
         // Simulate several update ticks

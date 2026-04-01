@@ -5,7 +5,7 @@ public final class TitleScene: GameScene {
     private let backgroundSystem = BackgroundSystem()
     public var inputProvider: (any InputProvider)?
     public var viewportManager: ViewportManager?
-    public var sfx: SynthAudioEngine?
+    public var sfx: AudioEngine?
 
     // Attract mode entities — simple scripted sprites (no ECS needed)
     private var attractShipPos = SIMD2<Float>(0, -100)

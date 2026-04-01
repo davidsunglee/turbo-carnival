@@ -54,7 +54,7 @@ final class MetalView: UIView {
         touchInput.viewportManager = viewportManager
 
         let audio = AVAudioManager()
-        let sfxEngine = SynthAudioEngine()
+        let sfxEngine = AudioEngine()
 
         sceneManager = SceneManager(engine: engine)
 

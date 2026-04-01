@@ -37,7 +37,7 @@ final class LaserState: Sendable {
 }
 
 @MainActor
-public final class SynthAudioEngine {
+public final class AudioEngine {
     private let audioEngine = AVAudioEngine()
     private var playerNodes: [AVAudioPlayerNode] = []
     private var buffers: [SFXType: AVAudioPCMBuffer] = [:]
@@ -92,7 +92,7 @@ public final class SynthAudioEngine {
         do {
             try audioEngine.start()
         } catch {
-            print("SynthAudioEngine failed to start: \(error)")
+            print("AudioEngine failed to start: \(error)")
         }
 
         synthesizeAllBuffers()
