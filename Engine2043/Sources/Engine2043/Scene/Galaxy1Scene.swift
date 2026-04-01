@@ -29,7 +29,7 @@ public final class Galaxy1Scene: GameScene {
     // MARK: - Input / Audio
     public var inputProvider: (any InputProvider)?
     public var audioProvider: (any AudioProvider)?
-    public var sfx: SynthAudioEngine?
+    public var sfx: AudioEngine?
     public var viewportManager: ViewportManager?
 
     // MARK: - Entities

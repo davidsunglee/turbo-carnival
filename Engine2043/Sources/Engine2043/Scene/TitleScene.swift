@@ -5,7 +5,7 @@ public final class TitleScene: GameScene {
     private let backgroundSystem = BackgroundSystem()
     public var inputProvider: (any InputProvider)?
     public var viewportManager: ViewportManager?
-    public var sfx: SynthAudioEngine?
+    public var sfx: AudioEngine?
 
     // Attract mode entities — simple scripted sprites (no ECS needed)
     private var attractShipPos = SIMD2<Float>(0, -100)
@@ -14,6 +14,7 @@ public final class TitleScene: GameScene {
     private var attractProjectiles: [(pos: SIMD2<Float>, vel: SIMD2<Float>, age: Double)] = []
     private var attractFireTimer: Double = 0
     private var attractSeeded = false
+    private var musicStarted = false
 
     // UI state
     private var blinkTimer: Double = 0
@@ -37,6 +38,10 @@ public final class TitleScene: GameScene {
     }
 
     public func fixedUpdate(time: GameTime) {
+        if !musicStarted {
+            musicStarted = true
+            sfx?.startMusic(.title)
+        }
         if !attractSeeded {
             seedAttractEnemies()
             attractSeeded = true

@@ -1,21 +1,22 @@
+import AVFoundation
 import Testing
 @testable import Engine2043
 
-struct SynthAudioTests {
+struct AudioEngineTests {
     @Test @MainActor func synthEngineInitializesWithoutCrash() {
-        let engine = SynthAudioEngine()
+        let engine = AudioEngine()
         #expect(engine.volume >= 0)
     }
 
     @Test @MainActor func synthEnginePlayDoesNotCrash() {
-        let engine = SynthAudioEngine()
+        let engine = AudioEngine()
         engine.play(.doubleCannonFire)
         engine.play(.enemyHit)
         engine.play(.itemPickup)
     }
 
     @Test @MainActor func synthEngineVolumeClamps() {
-        let engine = SynthAudioEngine()
+        let engine = AudioEngine()
         engine.volume = 1.5
         #expect(engine.volume == 1.0)
         engine.volume = -0.5
@@ -23,14 +24,14 @@ struct SynthAudioTests {
     }
 
     @Test @MainActor func laserStartStopDoesNotCrash() {
-        let engine = SynthAudioEngine()
+        let engine = AudioEngine()
         engine.startLaser()
         engine.setLaserHeat(0.5)
         engine.stopLaser()
     }
 
     @Test @MainActor func laserHeatClampsTo01() {
-        let engine = SynthAudioEngine()
+        let engine = AudioEngine()
         engine.startLaser()
         engine.setLaserHeat(-1.0)
         engine.setLaserHeat(2.0)
@@ -39,7 +40,7 @@ struct SynthAudioTests {
     }
 
     @Test @MainActor func lightningArcCooldownPreventsRapidFire() {
-        let engine = SynthAudioEngine()
+        let engine = AudioEngine()
         // First play should succeed, rapid second should be rate-limited
         // (We can't directly observe skipped plays, but verify no crash under rapid fire)
         for _ in 0..<100 {
@@ -49,78 +50,57 @@ struct SynthAudioTests {
     }
 
     @Test @MainActor func allSFXTypesPlayWithoutCrash() {
-        let engine = SynthAudioEngine()
+        let engine = AudioEngine()
         for sfx in SFXType.allCases {
             engine.play(sfx)
         }
     }
 
-    @Test func musicStateDefaultValues() {
-        let state = MusicState()
-        state.amplitude.withLock { #expect($0 == 0.0) }
-        state.track.withLock { #expect($0 == .gameplay) }
-        state.samplePosition.withLock { #expect($0 == 0) }
+    @Test func musicMP3FilesExistInBundle() {
+        let gameplayURL = Bundle.module.url(forResource: "gameplay", withExtension: "mp3")
+        let bossURL = Bundle.module.url(forResource: "boss", withExtension: "mp3")
+        #expect(gameplayURL != nil, "gameplay.mp3 should be bundled")
+        #expect(bossURL != nil, "boss.mp3 should be bundled")
     }
 
-    @Test func musicSynthesizerProducesNonSilentOutput() {
-        let sampleRate: Float = 44100
-        var hasNonZero = false
-        for i in 0..<Int(sampleRate) {
-            let t = Float(i) / sampleRate
-            let sample = MusicSynthesizer.synthesize(track: .gameplay, time: t, sampleRate: sampleRate)
-            if abs(sample) > 0.001 { hasNonZero = true; break }
-        }
-        #expect(hasNonZero, "Gameplay track should produce audible output")
-    }
+    @Test func musicMP3FilesAreNonEmpty() throws {
+        let gameplayURL = try #require(Bundle.module.url(forResource: "gameplay", withExtension: "mp3"))
+        let gameplayData = try Data(contentsOf: gameplayURL)
+        #expect(gameplayData.count > 0, "gameplay.mp3 should not be empty")
 
-    @Test func musicSynthesizerBossTrackProducesOutput() {
-        let sampleRate: Float = 44100
-        var hasNonZero = false
-        for i in 0..<Int(sampleRate) {
-            let t = Float(i) / sampleRate
-            let sample = MusicSynthesizer.synthesize(track: .boss, time: t, sampleRate: sampleRate)
-            if abs(sample) > 0.001 { hasNonZero = true; break }
-        }
-        #expect(hasNonZero, "Boss track should produce audible output")
-    }
-
-    @Test func musicSynthesizerOutputInRange() {
-        let sampleRate: Float = 44100
-        for i in 0..<Int(sampleRate * 2) {
-            let t = Float(i) / sampleRate
-            let sample = MusicSynthesizer.synthesize(track: .gameplay, time: t, sampleRate: sampleRate)
-            #expect(sample >= -1.5 && sample <= 1.5, "Sample \(sample) at t=\(t) out of range")
-        }
+        let bossURL = try #require(Bundle.module.url(forResource: "boss", withExtension: "mp3"))
+        let bossData = try Data(contentsOf: bossURL)
+        #expect(bossData.count > 0, "boss.mp3 should not be empty")
     }
 
     @Test @MainActor func musicStartStopDoesNotCrash() {
-        let engine = SynthAudioEngine()
+        let engine = AudioEngine()
         engine.startMusic(.gameplay)
         engine.stopMusic()
     }
 
     @Test @MainActor func musicStartBossDoesNotCrash() {
-        let engine = SynthAudioEngine()
+        let engine = AudioEngine()
         engine.startMusic(.boss)
         engine.stopMusic()
     }
 
     @Test @MainActor func musicDoubleStartDoesNotCrash() {
-        let engine = SynthAudioEngine()
+        let engine = AudioEngine()
         engine.startMusic(.gameplay)
         engine.startMusic(.boss)
         engine.stopMusic()
     }
 
     @Test @MainActor func musicFadeDoesNotCrash() {
-        let engine = SynthAudioEngine()
+        let engine = AudioEngine()
         engine.startMusic(.gameplay)
         engine.fadeToTrack(.boss, fadeOut: 1.0, silence: 0.5, fadeIn: 1.0)
         engine.stopMusic()
     }
 
     @Test @MainActor func musicUpdateFadeAdvancesFade() {
-        let engine = SynthAudioEngine()
+        let engine = AudioEngine()
         engine.startMusic(.gameplay)
         engine.fadeToTrack(.boss, fadeOut: 1.0, silence: 0.5, fadeIn: 1.0)
         // Simulate several update ticks
@@ -149,5 +129,11 @@ struct SynthAudioTests {
         #expect(allCases.contains(.bossShieldDeflect))
         #expect(allCases.contains(.playerDeath))
         #expect(allCases.contains(.victory))
+    }
+
+    @Test func musicTrackFilenameMapping() {
+        #expect(MusicTrack.gameplay.filename == "gameplay")
+        #expect(MusicTrack.boss.filename == "boss")
+        #expect(MusicTrack.title.filename == "gameplay")
     }
 }

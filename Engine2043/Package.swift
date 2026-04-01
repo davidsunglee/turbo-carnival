@@ -15,7 +15,8 @@ let package = Package(
         .target(
             name: "Engine2043",
             resources: [
-                .process("Rendering/Shaders")
+                .process("Rendering/Shaders"),
+                .process("Audio/Music")
             ]
         ),
         .testTarget(
