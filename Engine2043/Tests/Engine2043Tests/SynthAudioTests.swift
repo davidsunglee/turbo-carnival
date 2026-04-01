@@ -150,4 +150,10 @@ struct SynthAudioTests {
         #expect(allCases.contains(.playerDeath))
         #expect(allCases.contains(.victory))
     }
+
+    @Test func musicTrackFilenameMapping() {
+        #expect(MusicTrack.gameplay.filename == "gameplay")
+        #expect(MusicTrack.boss.filename == "boss")
+        #expect(MusicTrack.title.filename == "gameplay")
+    }
 }
