@@ -56,10 +56,11 @@ public final class AudioEngine {
     private let laser = LaserState()
     private var isLaserActive = false
 
-    // Background music real-time synthesis
-    private var musicNode: AVAudioSourceNode?
-    private let music = MusicState()
+    // Background music (MP3 playback)
+    private let musicPlayerNode = AVAudioPlayerNode()
+    private var musicBuffers: [MusicTrack: AVAudioPCMBuffer] = [:]
     private var isMusicActive = false
+    private var currentMusicTrack: MusicTrack?
 
     // Fade state (main thread only)
     private enum FadePhase {
@@ -87,6 +88,9 @@ public final class AudioEngine {
             playerNodes.append(node)
         }
 
+        audioEngine.attach(musicPlayerNode)
+        audioEngine.connect(musicPlayerNode, to: audioEngine.mainMixerNode, format: nil)
+
         audioEngine.mainMixerNode.outputVolume = volume
 
         do {
@@ -96,6 +100,7 @@ public final class AudioEngine {
         }
 
         synthesizeAllBuffers()
+        loadMusicBuffers()
     }
 
     public func shutdown() {
@@ -152,6 +157,34 @@ public final class AudioEngine {
         buffers[.bossShieldDeflect] = synthesize(duration: 0.04, generator: squareSweep(from: 1200, to: 1400))
         buffers[.playerDeath] = synthesize(duration: 0.50, generator: deathGroan())
         buffers[.victory] = synthesize(duration: 1.0, generator: victoryFanfare())
+    }
+
+    private func loadMusicBuffer(for track: MusicTrack) -> AVAudioPCMBuffer? {
+        guard let url = Bundle.module.url(forResource: track.filename, withExtension: "mp3") else {
+            print("AudioEngine: missing music file \(track.filename).mp3")
+            return nil
+        }
+        do {
+            let file = try AVAudioFile(forReading: url)
+            let format = file.processingFormat
+            let frameCount = AVAudioFrameCount(file.length)
+            guard let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: frameCount) else {
+                return nil
+            }
+            try file.read(into: buffer)
+            return buffer
+        } catch {
+            print("AudioEngine: failed to load \(track.filename).mp3 — \(error)")
+            return nil
+        }
+    }
+
+    private func loadMusicBuffers() {
+        for track in [MusicTrack.gameplay, .boss] {
+            if let buffer = loadMusicBuffer(for: track) {
+                musicBuffers[track] = buffer
+            }
+        }
     }
 
     private func synthesize(duration: Double, generator: (Float, Float) -> Float) -> AVAudioPCMBuffer {
@@ -322,18 +355,15 @@ public final class AudioEngine {
     // MARK: - Background Music
 
     public func startMusic(_ track: MusicTrack) {
-        music.track.withLock { $0 = track }
-        music.amplitude.withLock { $0 = 1.0 }
-        music.samplePosition.withLock { $0 = 0 }
+        let resolvedTrack = (track == .title) ? MusicTrack.gameplay : track
+        guard let buffer = musicBuffers[resolvedTrack] else { return }
 
-        if !isMusicActive {
-            isMusicActive = true
-            let node = music.makeSourceNode(format: format, sampleRate: Float(sampleRate))
-            audioEngine.attach(node)
-            audioEngine.connect(node, to: audioEngine.mainMixerNode, format: format)
-            musicNode = node
-        }
-
+        musicPlayerNode.stop()
+        musicPlayerNode.scheduleBuffer(buffer, at: nil, options: .loops)
+        musicPlayerNode.volume = 1.0
+        musicPlayerNode.play()
+        currentMusicTrack = resolvedTrack
+        isMusicActive = true
         fadePhase = .none
     }
 
@@ -341,14 +371,8 @@ public final class AudioEngine {
         guard isMusicActive else { return }
         isMusicActive = false
         fadePhase = .none
-
-        music.amplitude.withLock { $0 = 0 }
-
-        if let node = musicNode {
-            audioEngine.detach(node)
-            musicNode = nil
-        }
-        music.samplePosition.withLock { $0 = 0 }
+        musicPlayerNode.stop()
+        currentMusicTrack = nil
     }
 
     public func fadeToTrack(_ track: MusicTrack, fadeOut: Float, silence: Float, fadeIn: Float) {
@@ -357,8 +381,6 @@ public final class AudioEngine {
     }
 
     public func updateMusicFade(deltaTime: Float) {
-        let musicVolume: Float = 1.0
-
         switch fadePhase {
         case .none:
             return
@@ -366,7 +388,7 @@ public final class AudioEngine {
         case .fadingOut(let target, let fadeOut, let silence, let fadeIn):
             fadeTimer += deltaTime
             let progress = min(fadeTimer / fadeOut, 1.0)
-            music.amplitude.withLock { $0 = musicVolume * (1.0 - progress) }
+            musicPlayerNode.volume = 1.0 - progress
             if progress >= 1.0 {
                 fadeTimer = 0
                 fadePhase = .silence(targetTrack: target, remaining: silence, fadeIn: fadeIn)
@@ -374,11 +396,15 @@ public final class AudioEngine {
 
         case .silence(let target, let remaining, let fadeIn):
             fadeTimer += deltaTime
-            music.amplitude.withLock { $0 = 0 }
+            musicPlayerNode.volume = 0
             if fadeTimer >= remaining {
-                // Switch track and start fading in
-                music.track.withLock { $0 = target }
-                music.samplePosition.withLock { $0 = 0 }
+                let resolvedTrack = (target == .title) ? MusicTrack.gameplay : target
+                if let buffer = musicBuffers[resolvedTrack] {
+                    musicPlayerNode.stop()
+                    musicPlayerNode.scheduleBuffer(buffer, at: nil, options: .loops)
+                    musicPlayerNode.play()
+                    currentMusicTrack = resolvedTrack
+                }
                 fadeTimer = 0
                 fadePhase = .fadingIn(fadeIn: fadeIn)
             }
@@ -386,7 +412,7 @@ public final class AudioEngine {
         case .fadingIn(let fadeIn):
             fadeTimer += deltaTime
             let progress = min(fadeTimer / fadeIn, 1.0)
-            music.amplitude.withLock { $0 = musicVolume * progress }
+            musicPlayerNode.volume = progress
             if progress >= 1.0 {
                 fadePhase = .none
             }
