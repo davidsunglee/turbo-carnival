@@ -8,6 +8,9 @@ let package = Package(
         .macOS(.v15),
         .iOS(.v18)
     ],
+    dependencies: [
+        .package(url: "https://github.com/apple/swift-testing.git", from: "0.0.0")
+    ],
     products: [
         .library(name: "Engine2043", targets: ["Engine2043"])
     ],
@@ -15,12 +18,13 @@ let package = Package(
         .target(
             name: "Engine2043",
             resources: [
-                .process("Rendering/Shaders")
+                .process("Rendering/Shaders"),
+                .process("Audio/Music")
             ]
         ),
         .testTarget(
             name: "Engine2043Tests",
-            dependencies: ["Engine2043"]
+            dependencies: ["Engine2043", .product(name: "Testing", package: "swift-testing")]
         )
     ]
 )
