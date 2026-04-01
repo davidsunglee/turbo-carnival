@@ -62,6 +62,7 @@ final class MetalView: UIView {
             let scene = TitleScene()
             scene.inputProvider = self?.touchInput
             scene.viewportManager = self?.viewportManager
+            scene.sfx = sfxEngine
             return scene
         }
 
@@ -95,6 +96,7 @@ final class MetalView: UIView {
         let titleScene = TitleScene()
         titleScene.inputProvider = touchInput
         titleScene.viewportManager = viewportManager
+        titleScene.sfx = sfxEngine
         engine.currentScene = titleScene
 
         setupControlOverlays()

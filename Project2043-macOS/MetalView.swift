@@ -50,6 +50,7 @@ class MetalView: NSView {
             let scene = TitleScene()
             scene.inputProvider = self?.inputProvider
             scene.viewportManager = self?.viewportManager
+            scene.sfx = sfxEngine
             return scene
         }
 
@@ -83,6 +84,7 @@ class MetalView: NSView {
         let titleScene = TitleScene()
         titleScene.inputProvider = inputProvider
         titleScene.viewportManager = viewportManager
+        titleScene.sfx = sfxEngine
         engine.currentScene = titleScene
     }
 

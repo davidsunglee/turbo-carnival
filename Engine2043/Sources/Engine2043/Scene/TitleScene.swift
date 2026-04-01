@@ -14,6 +14,7 @@ public final class TitleScene: GameScene {
     private var attractProjectiles: [(pos: SIMD2<Float>, vel: SIMD2<Float>, age: Double)] = []
     private var attractFireTimer: Double = 0
     private var attractSeeded = false
+    private var musicStarted = false
 
     // UI state
     private var blinkTimer: Double = 0
@@ -37,6 +38,10 @@ public final class TitleScene: GameScene {
     }
 
     public func fixedUpdate(time: GameTime) {
+        if !musicStarted {
+            musicStarted = true
+            sfx?.startMusic(.title)
+        }
         if !attractSeeded {
             seedAttractEnemies()
             attractSeeded = true
