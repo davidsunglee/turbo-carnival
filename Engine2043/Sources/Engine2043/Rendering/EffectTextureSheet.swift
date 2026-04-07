@@ -12,7 +12,8 @@ public final class EffectTextureSheet {
         var names: Set<String> = [
             "gravBombBlast", "empFlash", "overchargeGlow",
             "hudBarFrame", "hudBarFill", "hudChargePip",
-            "hudWeaponIcon", "hudHeatFrame", "hudHeatFill"
+            "hudWeaponIcon", "hudHeatFrame", "hudHeatFill",
+            "tractorBeamGlow"
         ]
         for char in EffectTextureSheet.glyphChars {
             names.insert("glyph_\(char)")
@@ -35,8 +36,9 @@ public final class EffectTextureSheet {
             // Row 0: Effects
             SpriteEntry(name: "gravBombBlast",  x: 0,   y: 0,   width: 128, height: 128),
             SpriteEntry(name: "empFlash",       x: 128, y: 0,   width: 128, height: 128),
-            // Row 128: Overcharge
-            SpriteEntry(name: "overchargeGlow", x: 0,   y: 128, width: 64,  height: 64),
+            // Row 128: Overcharge and tractor beam glow
+            SpriteEntry(name: "overchargeGlow",   x: 0,  y: 128, width: 64, height: 64),
+            SpriteEntry(name: "tractorBeamGlow",  x: 64, y: 128, width: 32, height: 64),
             // Row 192: HUD elements
             SpriteEntry(name: "hudBarFrame",    x: 0,   y: 192, width: 64,  height: 8),
             SpriteEntry(name: "hudBarFill",     x: 64,  y: 192, width: 32,  height: 4),
@@ -83,15 +85,16 @@ public final class EffectTextureSheet {
         )
 
         var generators: [(String, () -> (pixels: [UInt8], width: Int, height: Int))] = [
-            ("gravBombBlast",  SpriteFactory.makeGravBombBlast),
-            ("empFlash",       SpriteFactory.makeEmpFlash),
-            ("overchargeGlow", SpriteFactory.makeOverchargeGlow),
-            ("hudBarFrame",    SpriteFactory.makeHudBarFrame),
-            ("hudBarFill",     SpriteFactory.makeHudBarFill),
-            ("hudChargePip",   SpriteFactory.makeHudChargePip),
-            ("hudWeaponIcon",  SpriteFactory.makeHudWeaponIcon),
-            ("hudHeatFrame",   SpriteFactory.makeHudHeatFrame),
-            ("hudHeatFill",    SpriteFactory.makeHudHeatFill),
+            ("gravBombBlast",   SpriteFactory.makeGravBombBlast),
+            ("empFlash",        SpriteFactory.makeEmpFlash),
+            ("overchargeGlow",  SpriteFactory.makeOverchargeGlow),
+            ("tractorBeamGlow", SpriteFactory.makeTractorBeamGlow),
+            ("hudBarFrame",     SpriteFactory.makeHudBarFrame),
+            ("hudBarFill",      SpriteFactory.makeHudBarFill),
+            ("hudChargePip",    SpriteFactory.makeHudChargePip),
+            ("hudWeaponIcon",   SpriteFactory.makeHudWeaponIcon),
+            ("hudHeatFrame",    SpriteFactory.makeHudHeatFrame),
+            ("hudHeatFill",     SpriteFactory.makeHudHeatFill),
         ]
         for char in Self.glyphChars {
             generators.append(("glyph_\(char)", { SpriteFactory.makeBitmapGlyph(char) }))

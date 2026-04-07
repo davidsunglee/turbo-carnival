@@ -12,6 +12,8 @@ final class RenderPassPipeline {
     private var offscreenTexture: MTLTexture?
     private var bloomExtractTexture: MTLTexture?
     private var bloomBlurTexture: MTLTexture?
+    
+    public var clearColor: SIMD4<Float> = GameConfig.Palette.background
 
     private static let offscreenPixelFormat: MTLPixelFormat = .bgra8Unorm
 
@@ -122,10 +124,10 @@ final class RenderPassPipeline {
         passDesc.colorAttachments[0].loadAction = .clear
         passDesc.colorAttachments[0].storeAction = .store
         passDesc.colorAttachments[0].clearColor = MTLClearColor(
-            red: Double(GameConfig.Palette.background.x),
-            green: Double(GameConfig.Palette.background.y),
-            blue: Double(GameConfig.Palette.background.z),
-            alpha: Double(GameConfig.Palette.background.w)
+            red: Double(clearColor.x),
+            green: Double(clearColor.y),
+            blue: Double(clearColor.z),
+            alpha: Double(clearColor.w)
         )
 
         guard let encoder = commandBuffer.makeRenderCommandEncoder(descriptor: passDesc) else { return }

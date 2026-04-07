@@ -12,7 +12,9 @@ public final class TextureAtlas {
         "player", "swarmer", "bruiser", "capitalHull", "turret", "bossCore", "bossShield",
         "playerBullet", "triSpreadBullet", "lightningArcIcon", "enemyBullet", "gravBombSprite",
         "energyDrop", "chargeCell", "shieldDrop", "shieldDrone",
-        "weaponDoubleCannon", "weaponTriSpread", "weaponLightningArc", "weaponPhaseLaser"
+        "weaponDoubleCannon", "weaponTriSpread", "weaponLightningArc", "weaponPhaseLaser",
+        "asteroidSmall", "asteroidLarge", "miningBargeHull", "miningBargeTurret",
+        "lithicHarvesterCore", "tractorBeamSegment", "g2Interceptor", "g2Fighter"
     ]
 
     struct SpriteEntry {
@@ -46,6 +48,17 @@ public final class TextureAtlas {
         SpriteEntry(name: "weaponPhaseLaser",    x: 120, y: 188, width: 24, height: 24),
         SpriteEntry(name: "shieldDrop",          x: 144, y: 188, width: 24, height: 24),
         SpriteEntry(name: "shieldDrone",         x: 168, y: 188, width: 10, height: 10),
+        // Row 212: Galaxy 2 small enemies and asteroids
+        SpriteEntry(name: "asteroidSmall",        x: 0,   y: 212, width: 16, height: 16),
+        SpriteEntry(name: "asteroidLarge",        x: 16,  y: 212, width: 40, height: 40),
+        SpriteEntry(name: "g2Interceptor",        x: 56,  y: 212, width: 20, height: 20),
+        SpriteEntry(name: "g2Fighter",            x: 76,  y: 212, width: 40, height: 40),
+        // Row 252: Mining barge
+        SpriteEntry(name: "miningBargeHull",      x: 0,   y: 252, width: 108, height: 50),
+        SpriteEntry(name: "miningBargeTurret",    x: 108, y: 252, width: 24,  height: 24),
+        // Row 302: Lithic Harvester boss
+        SpriteEntry(name: "lithicHarvesterCore",  x: 0,   y: 302, width: 80,  height: 80),
+        SpriteEntry(name: "tractorBeamSegment",   x: 80,  y: 302, width: 4,   height: 32),
     ]
 
     public var defaultTexture: MTLTexture { texture }
@@ -97,8 +110,16 @@ public final class TextureAtlas {
             ("weaponTriSpread",     SpriteFactory.makeTriSpreadDrop),
             ("weaponLightningArc",  SpriteFactory.makeLightningArcDrop),
             ("weaponPhaseLaser",    SpriteFactory.makePhaseLaserDrop),
-            ("shieldDrop",      SpriteFactory.makeShieldDrop),
-            ("shieldDrone",     SpriteFactory.makeShieldDrone),
+            ("shieldDrop",           SpriteFactory.makeShieldDrop),
+            ("shieldDrone",          SpriteFactory.makeShieldDrone),
+            ("asteroidSmall",        SpriteFactory.makeAsteroidSmall),
+            ("asteroidLarge",        SpriteFactory.makeAsteroidLarge),
+            ("g2Interceptor",        SpriteFactory.makeG2Interceptor),
+            ("g2Fighter",            SpriteFactory.makeG2Fighter),
+            ("miningBargeHull",      SpriteFactory.makeMiningBargeHull),
+            ("miningBargeTurret",    SpriteFactory.makeMiningBargeTurret),
+            ("lithicHarvesterCore",  SpriteFactory.makeLithicHarvesterCore),
+            ("tractorBeamSegment",   SpriteFactory.makeTractorBeamSegment),
         ]
 
         for entry in Self.layout {

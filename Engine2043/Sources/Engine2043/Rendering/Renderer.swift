@@ -10,6 +10,11 @@ public final class Renderer {
     private let spriteBatcher: SpriteBatcher
     private let effectBatcher: SpriteBatcher
     private let renderPassPipeline: RenderPassPipeline
+    
+    public var clearColor: SIMD4<Float> {
+        get { renderPassPipeline.clearColor }
+        set { renderPassPipeline.clearColor = newValue }
+    }
     public let textureAtlas: TextureAtlas
     public let effectSheet: EffectTextureSheet
     private let bloomBlurKernel: MPSImageGaussianBlur

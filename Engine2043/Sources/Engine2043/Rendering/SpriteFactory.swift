@@ -1264,6 +1264,441 @@ public enum SpriteFactory {
         " ": [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00],
     ]
 
+    // MARK: - Galaxy 2: Asteroid Small (16x16)
+    // Irregular 6-sided polygon, gray-brown fill, lighter edge highlights.
+
+    public static func makeAsteroidSmall() -> (pixels: [UInt8], width: Int, height: Int) {
+        let w = 16, h = 16
+        guard let ctx = makeContext(width: w, height: h) else {
+            return (Array(repeating: 0, count: w * h * 4), w, h)
+        }
+
+        // Deterministic irregular hexagon — hardcoded offsets
+        let pts: [CGPoint] = [
+            CGPoint(x: 8, y: 1),
+            CGPoint(x: 14, y: 4),
+            CGPoint(x: 15, y: 9),
+            CGPoint(x: 11, y: 14),
+            CGPoint(x: 4, y: 13),
+            CGPoint(x: 1, y: 7),
+        ]
+
+        // Gray-brown fill
+        ctx.setFillColor(cgColor(110, 95, 80))
+        ctx.beginPath()
+        ctx.move(to: pts[0])
+        for pt in pts.dropFirst() { ctx.addLine(to: pt) }
+        ctx.closePath()
+        ctx.fillPath()
+
+        // Slightly lighter edge highlight
+        ctx.setStrokeColor(cgColor(145, 130, 110))
+        ctx.setLineWidth(1)
+        ctx.beginPath()
+        ctx.move(to: pts[0])
+        for pt in pts.dropFirst() { ctx.addLine(to: pt) }
+        ctx.closePath()
+        ctx.strokePath()
+
+        return (extractPixels(from: ctx, width: w, height: h), w, h)
+    }
+
+    // MARK: - Galaxy 2: Asteroid Large (40x40)
+    // Bigger, darker, more angular irregular polygon with heavier outlines.
+
+    public static func makeAsteroidLarge() -> (pixels: [UInt8], width: Int, height: Int) {
+        let w = 40, h = 40
+        guard let ctx = makeContext(width: w, height: h) else {
+            return (Array(repeating: 0, count: w * h * 4), w, h)
+        }
+
+        // Deterministic irregular 7-sided polygon — hardcoded
+        let pts: [CGPoint] = [
+            CGPoint(x: 20, y: 2),
+            CGPoint(x: 35, y: 6),
+            CGPoint(x: 38, y: 18),
+            CGPoint(x: 32, y: 34),
+            CGPoint(x: 18, y: 38),
+            CGPoint(x: 5, y: 30),
+            CGPoint(x: 2, y: 14),
+        ]
+
+        // Darker gray-brown fill
+        ctx.setFillColor(cgColor(80, 68, 55))
+        ctx.beginPath()
+        ctx.move(to: pts[0])
+        for pt in pts.dropFirst() { ctx.addLine(to: pt) }
+        ctx.closePath()
+        ctx.fillPath()
+
+        // Interior surface detail — lighter mid-band
+        ctx.setFillColor(cgColor(95, 82, 68))
+        let innerPts: [CGPoint] = [
+            CGPoint(x: 20, y: 8),
+            CGPoint(x: 30, y: 12),
+            CGPoint(x: 28, y: 22),
+            CGPoint(x: 18, y: 28),
+            CGPoint(x: 10, y: 22),
+            CGPoint(x: 12, y: 12),
+        ]
+        ctx.beginPath()
+        ctx.move(to: innerPts[0])
+        for pt in innerPts.dropFirst() { ctx.addLine(to: pt) }
+        ctx.closePath()
+        ctx.fillPath()
+
+        // Heavier outline
+        ctx.setStrokeColor(cgColor(130, 115, 96))
+        ctx.setLineWidth(2)
+        ctx.beginPath()
+        ctx.move(to: pts[0])
+        for pt in pts.dropFirst() { ctx.addLine(to: pt) }
+        ctx.closePath()
+        ctx.strokePath()
+
+        return (extractPixels(from: ctx, width: w, height: h), w, h)
+    }
+
+    // MARK: - Galaxy 2: Mining Barge Hull (108x50)
+    // Dark industrial gray-purple with panel lines and structural detail.
+
+    public static func makeMiningBargeHull() -> (pixels: [UInt8], width: Int, height: Int) {
+        let w = 108, h = 50
+        guard let ctx = makeContext(width: w, height: h) else {
+            return (Array(repeating: 0, count: w * h * 4), w, h)
+        }
+
+        let cw = CGFloat(w)
+        let ch = CGFloat(h)
+
+        // Main hull — dark gray-purple
+        ctx.setFillColor(cgColor(45, 38, 58))
+        ctx.beginPath()
+        ctx.move(to: CGPoint(x: 8, y: 4))
+        ctx.addLine(to: CGPoint(x: cw - 8, y: 4))
+        ctx.addLine(to: CGPoint(x: cw - 2, y: 14))
+        ctx.addLine(to: CGPoint(x: cw - 2, y: ch - 14))
+        ctx.addLine(to: CGPoint(x: cw - 8, y: ch - 4))
+        ctx.addLine(to: CGPoint(x: 8, y: ch - 4))
+        ctx.addLine(to: CGPoint(x: 2, y: ch - 14))
+        ctx.addLine(to: CGPoint(x: 2, y: 14))
+        ctx.closePath()
+        ctx.fillPath()
+
+        // Panel lines — darker recesses
+        ctx.setStrokeColor(cgColor(30, 24, 42))
+        ctx.setLineWidth(1)
+        ctx.beginPath()
+        ctx.move(to: CGPoint(x: 10, y: 16)); ctx.addLine(to: CGPoint(x: cw - 10, y: 16))
+        ctx.move(to: CGPoint(x: 10, y: ch - 16)); ctx.addLine(to: CGPoint(x: cw - 10, y: ch - 16))
+        ctx.move(to: CGPoint(x: 28, y: 6)); ctx.addLine(to: CGPoint(x: 28, y: ch - 6))
+        ctx.move(to: CGPoint(x: 54, y: 6)); ctx.addLine(to: CGPoint(x: 54, y: ch - 6))
+        ctx.move(to: CGPoint(x: 80, y: 6)); ctx.addLine(to: CGPoint(x: 80, y: ch - 6))
+        ctx.strokePath()
+
+        // Mining arm recesses — dark rectangular bays
+        ctx.setFillColor(cgColor(28, 22, 38))
+        ctx.fill(CGRect(x: 4, y: 18, width: 16, height: 14))
+        ctx.fill(CGRect(x: cw - 20, y: 18, width: 16, height: 14))
+
+        // Bridge — slightly lighter purple
+        ctx.setFillColor(cgColor(62, 50, 78))
+        ctx.fill(CGRect(x: 42, y: 18, width: 24, height: 14))
+
+        // Outer edge highlight
+        ctx.setStrokeColor(cgColor(78, 65, 98))
+        ctx.setLineWidth(1)
+        ctx.beginPath()
+        ctx.move(to: CGPoint(x: 8, y: 4))
+        ctx.addLine(to: CGPoint(x: cw - 8, y: 4))
+        ctx.addLine(to: CGPoint(x: cw - 2, y: 14))
+        ctx.addLine(to: CGPoint(x: cw - 2, y: ch - 14))
+        ctx.addLine(to: CGPoint(x: cw - 8, y: ch - 4))
+        ctx.addLine(to: CGPoint(x: 8, y: ch - 4))
+        ctx.addLine(to: CGPoint(x: 2, y: ch - 14))
+        ctx.addLine(to: CGPoint(x: 2, y: 14))
+        ctx.closePath()
+        ctx.strokePath()
+
+        return (extractPixels(from: ctx, width: w, height: h), w, h)
+    }
+
+    // MARK: - Galaxy 2: Mining Barge Turret (24x24)
+    // Octagonal ring, purple-tinted.
+
+    public static func makeMiningBargeTurret() -> (pixels: [UInt8], width: Int, height: Int) {
+        let w = 24, h = 24
+        guard let ctx = makeContext(width: w, height: h) else {
+            return (Array(repeating: 0, count: w * h * 4), w, h)
+        }
+
+        let cx = CGFloat(w) / 2
+        let cy = CGFloat(h) / 2
+        let outerR: CGFloat = 10
+        let innerR: CGFloat = 6
+        var outerPts: [CGPoint] = []
+        var innerPts: [CGPoint] = []
+        for i in 0..<8 {
+            let angle = CGFloat(i) * .pi / 4
+            outerPts.append(CGPoint(x: cx + outerR * cos(angle), y: cy + outerR * sin(angle)))
+            innerPts.append(CGPoint(x: cx + innerR * cos(angle), y: cy + innerR * sin(angle)))
+        }
+
+        // Purple-tinted outer fill
+        ctx.setFillColor(cgColor(140, 80, 180))
+        ctx.beginPath()
+        ctx.move(to: outerPts[0])
+        for pt in outerPts.dropFirst() { ctx.addLine(to: pt) }
+        ctx.closePath()
+        ctx.fillPath()
+
+        // Dark inner cutout
+        ctx.setFillColor(cgColor(30, 18, 45))
+        ctx.beginPath()
+        ctx.move(to: innerPts[0])
+        for pt in innerPts.dropFirst() { ctx.addLine(to: pt) }
+        ctx.closePath()
+        ctx.fillPath()
+
+        // Bright purple barrel dot
+        ctx.setFillColor(cgColor(210, 170, 255))
+        ctx.fillEllipse(in: CGRect(x: cx - 2, y: cy - 2, width: 4, height: 4))
+
+        return (extractPixels(from: ctx, width: w, height: h), w, h)
+    }
+
+    // MARK: - Galaxy 2: Lithic Harvester Core (80x80)
+    // Octagonal core with purple-magenta tones. Heavy armor plating.
+
+    public static func makeLithicHarvesterCore() -> (pixels: [UInt8], width: Int, height: Int) {
+        let w = 80, h = 80
+        guard let ctx = makeContext(width: w, height: h) else {
+            return (Array(repeating: 0, count: w * h * 4), w, h)
+        }
+
+        let cx = CGFloat(w) / 2
+        let cy = CGFloat(h) / 2
+
+        func octagon(center: CGPoint, radius: CGFloat) -> [CGPoint] {
+            (0..<8).map { i in
+                let angle = CGFloat(i) * .pi / 4
+                return CGPoint(x: center.x + radius * cos(angle), y: center.y + radius * sin(angle))
+            }
+        }
+
+        let center = CGPoint(x: cx, y: cy)
+
+        // Outer armor ring — dark purple
+        let outerPts = octagon(center: center, radius: 36)
+        ctx.setFillColor(cgColor(55, 28, 70))
+        ctx.beginPath()
+        ctx.move(to: outerPts[0])
+        for pt in outerPts.dropFirst() { ctx.addLine(to: pt) }
+        ctx.closePath()
+        ctx.fillPath()
+
+        // Outer stroke — bright magenta
+        ctx.setStrokeColor(cgColor(200, 60, 180))
+        ctx.setLineWidth(3)
+        ctx.beginPath()
+        ctx.move(to: outerPts[0])
+        for pt in outerPts.dropFirst() { ctx.addLine(to: pt) }
+        ctx.closePath()
+        ctx.strokePath()
+
+        // Armor plating detail lines
+        ctx.setStrokeColor(cgColor(80, 40, 100))
+        ctx.setLineWidth(1.5)
+        for i in 0..<8 {
+            let angle = CGFloat(i) * .pi / 4
+            let inner = CGPoint(x: cx + 24 * cos(angle), y: cy + 24 * sin(angle))
+            let outer2 = CGPoint(x: cx + 34 * cos(angle), y: cy + 34 * sin(angle))
+            ctx.beginPath()
+            ctx.move(to: inner)
+            ctx.addLine(to: outer2)
+            ctx.strokePath()
+        }
+
+        // Mid ring
+        let midPts = octagon(center: center, radius: 22)
+        ctx.setFillColor(cgColor(40, 20, 55))
+        ctx.beginPath()
+        ctx.move(to: midPts[0])
+        for pt in midPts.dropFirst() { ctx.addLine(to: pt) }
+        ctx.closePath()
+        ctx.fillPath()
+
+        ctx.setStrokeColor(cgColor(160, 80, 200))
+        ctx.setLineWidth(2)
+        ctx.beginPath()
+        ctx.move(to: midPts[0])
+        for pt in midPts.dropFirst() { ctx.addLine(to: pt) }
+        ctx.closePath()
+        ctx.strokePath()
+
+        // Inner core — bright magenta-purple
+        let innerPts = octagon(center: center, radius: 10)
+        ctx.setFillColor(cgColor(200, 120, 220))
+        ctx.beginPath()
+        ctx.move(to: innerPts[0])
+        for pt in innerPts.dropFirst() { ctx.addLine(to: pt) }
+        ctx.closePath()
+        ctx.fillPath()
+
+        // Bright center dot
+        ctx.setFillColor(cgColor(240, 210, 255))
+        ctx.fillEllipse(in: CGRect(x: cx - 4, y: cy - 4, width: 8, height: 8))
+
+        return (extractPixels(from: ctx, width: w, height: h), w, h)
+    }
+
+    // MARK: - Galaxy 2: Tractor Beam Segment (4x32)
+    // Thin cyan-white beam segment.
+
+    public static func makeTractorBeamSegment() -> (pixels: [UInt8], width: Int, height: Int) {
+        let w = 4, h = 32
+        guard let ctx = makeContext(width: w, height: h) else {
+            return (Array(repeating: 0, count: w * h * 4), w, h)
+        }
+
+        let cw = CGFloat(w)
+
+        // Cyan-white vertical beam — bright center, fades at edges
+        for x in 0..<w {
+            let t = abs(CGFloat(x) - cw / 2 + 0.5) / (cw / 2)
+            let alpha = UInt8(min(255, Int((1.0 - t * 0.6) * 220)))
+            let brightness = UInt8(min(255, Int(200 + (1.0 - t) * 55)))
+            ctx.setFillColor(cgColor(brightness, 255, 255, alpha))
+            ctx.fill(CGRect(x: CGFloat(x), y: 0, width: 1, height: CGFloat(h)))
+        }
+
+        return (extractPixels(from: ctx, width: w, height: h), w, h)
+    }
+
+    // MARK: - Galaxy 2: G2 Interceptor (20x20)
+    // Sleek downward dart, muted pink/violet tones.
+
+    public static func makeG2Interceptor() -> (pixels: [UInt8], width: Int, height: Int) {
+        let w = 20, h = 20
+        guard let ctx = makeContext(width: w, height: h) else {
+            return (Array(repeating: 0, count: w * h * 4), w, h)
+        }
+
+        let cx = CGFloat(w) / 2
+
+        // Muted pink-violet fill
+        ctx.setFillColor(cgColor(90, 50, 100))
+        ctx.beginPath()
+        ctx.move(to: CGPoint(x: cx, y: 2))
+        ctx.addLine(to: CGPoint(x: 3, y: CGFloat(h) - 3))
+        ctx.addLine(to: CGPoint(x: cx, y: CGFloat(h) - 8))
+        ctx.addLine(to: CGPoint(x: CGFloat(w) - 3, y: CGFloat(h) - 3))
+        ctx.closePath()
+        ctx.fillPath()
+
+        // Pink-violet outline
+        ctx.setStrokeColor(cgColor(180, 120, 200))
+        ctx.setLineWidth(1.5)
+        ctx.beginPath()
+        ctx.move(to: CGPoint(x: cx, y: 2))
+        ctx.addLine(to: CGPoint(x: 3, y: CGFloat(h) - 3))
+        ctx.addLine(to: CGPoint(x: cx, y: CGFloat(h) - 8))
+        ctx.addLine(to: CGPoint(x: CGFloat(w) - 3, y: CGFloat(h) - 3))
+        ctx.closePath()
+        ctx.strokePath()
+
+        // Bright energy core
+        ctx.setFillColor(cgColor(230, 200, 240))
+        ctx.fillEllipse(in: CGRect(x: cx - 2, y: 8, width: 4, height: 4))
+
+        return (extractPixels(from: ctx, width: w, height: h), w, h)
+    }
+
+    // MARK: - Galaxy 2: G2 Fighter (40x40)
+    // Hexagonal body, violet/magenta tones with extra detail.
+
+    public static func makeG2Fighter() -> (pixels: [UInt8], width: Int, height: Int) {
+        let w = 40, h = 40
+        guard let ctx = makeContext(width: w, height: h) else {
+            return (Array(repeating: 0, count: w * h * 4), w, h)
+        }
+
+        let cx = CGFloat(w) / 2
+        let cy = CGFloat(h) / 2
+
+        // Hexagon vertices (flat-top orientation)
+        let r: CGFloat = 17
+        var hexPoints: [CGPoint] = []
+        for i in 0..<6 {
+            let angle = CGFloat(i) * .pi / 3 - .pi / 6
+            hexPoints.append(CGPoint(x: cx + r * cos(angle), y: cy + r * sin(angle)))
+        }
+
+        // Dark violet fill
+        ctx.setFillColor(cgColor(45, 22, 65))
+        ctx.beginPath()
+        ctx.move(to: hexPoints[0])
+        for pt in hexPoints.dropFirst() { ctx.addLine(to: pt) }
+        ctx.closePath()
+        ctx.fillPath()
+
+        // Violet-magenta outline (thick)
+        ctx.setStrokeColor(cgColor(180, 80, 200))
+        ctx.setLineWidth(3)
+        ctx.beginPath()
+        ctx.move(to: hexPoints[0])
+        for pt in hexPoints.dropFirst() { ctx.addLine(to: pt) }
+        ctx.closePath()
+        ctx.strokePath()
+
+        // Inner panel detail lines
+        ctx.setStrokeColor(cgColor(80, 40, 110))
+        ctx.setLineWidth(1)
+        ctx.beginPath()
+        ctx.move(to: CGPoint(x: cx - 8, y: cy - 6)); ctx.addLine(to: CGPoint(x: cx + 8, y: cy - 6))
+        ctx.move(to: CGPoint(x: cx - 8, y: cy + 6)); ctx.addLine(to: CGPoint(x: cx + 8, y: cy + 6))
+        ctx.strokePath()
+
+        // Turret dots on sides
+        ctx.setFillColor(cgColor(210, 160, 240))
+        ctx.fillEllipse(in: CGRect(x: 4, y: cy - 2, width: 4, height: 4))
+        ctx.fillEllipse(in: CGRect(x: CGFloat(w) - 8, y: cy - 2, width: 4, height: 4))
+
+        // Bright magenta core
+        ctx.setFillColor(cgColor(230, 180, 255))
+        ctx.fillEllipse(in: CGRect(x: cx - 3, y: cy - 3, width: 6, height: 6))
+
+        return (extractPixels(from: ctx, width: w, height: h), w, h)
+    }
+
+    // MARK: - Tractor Beam Glow Effect (32x64)
+    // Soft cyan gradient glow strip, fading from center outward.
+
+    public static func makeTractorBeamGlow() -> (pixels: [UInt8], width: Int, height: Int) {
+        let w = 32, h = 64
+        guard let ctx = makeSoftContext(width: w, height: h) else {
+            return (Array(repeating: 0, count: w * h * 4), w, h)
+        }
+
+        let cw = CGFloat(w)
+
+        // Horizontal gradient — bright at center, transparent at edges
+        for x in 0..<w {
+            let t = abs(CGFloat(x) - cw / 2 + 0.5) / (cw / 2)  // 0 at center, 1 at edge
+            let alpha = UInt8(min(255, Int((1.0 - t * t) * 180)))
+            let greenBlue = UInt8(min(255, Int(200 + (1.0 - t) * 55)))
+            ctx.setFillColor(cgColor(0, greenBlue, 255, alpha))
+            ctx.fill(CGRect(x: CGFloat(x), y: 0, width: 1, height: CGFloat(h)))
+        }
+
+        // Bright center line
+        ctx.setFillColor(cgColor(180, 255, 255, 200))
+        ctx.fill(CGRect(x: cw / 2 - 1, y: 0, width: 2, height: CGFloat(h)))
+
+        return (extractPixels(from: ctx, width: w, height: h), w, h)
+    }
+
+    // MARK: - Bitmap Font Glyphs (6x8 each)
     public static func makeBitmapGlyph(_ char: Character) -> (pixels: [UInt8], width: Int, height: Int) {
         let w = 6, h = 8
         let pattern = glyphPatterns[char] ?? [UInt8](repeating: 0, count: 7)
