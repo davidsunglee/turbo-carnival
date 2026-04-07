@@ -38,6 +38,9 @@ public final class PhysicsSystem {
 
     public func syncFromComponents() {
         for i in entities.indices {
+            if let transform = entities[i].component(ofType: TransformComponent.self) {
+                positions[i] = transform.position
+            }
             if let physics = entities[i].component(ofType: PhysicsComponent.self) {
                 velocities[i] = physics.velocity
             }

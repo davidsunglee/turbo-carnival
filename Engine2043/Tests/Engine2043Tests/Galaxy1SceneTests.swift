@@ -64,4 +64,119 @@ struct Galaxy1SceneTests {
         #expect(result.enemiesDestroyed == 0)
         #expect(result.didWin == false)
     }
+
+    // MARK: - Boundary Clamping
+
+    @Test @MainActor func playerStaysWithinRightBoundaryAtFullSpeed() {
+        let scene = Galaxy1Scene()
+        let mockInput = MockInputProvider(movement: SIMD2(1, 0))
+        scene.inputProvider = mockInput
+
+        let halfW = GameConfig.designWidth / 2 - GameConfig.Player.size.x / 2
+
+        var time = GameTime()
+        // Run enough frames for player to reach and exceed the boundary
+        for _ in 0..<300 {
+            time.advance(by: GameConfig.fixedTimeStep)
+            while time.shouldPerformFixedUpdate() {
+                scene.fixedUpdate(time: time)
+                time.consumeFixedUpdate()
+            }
+        }
+
+        let playerPos = scene.player.component(ofType: TransformComponent.self)!.position
+        #expect(playerPos.x <= halfW, "Player x (\(playerPos.x)) exceeded right boundary (\(halfW))")
+    }
+
+    @Test @MainActor func playerStaysWithinLeftBoundaryAtFullSpeed() {
+        let scene = Galaxy1Scene()
+        let mockInput = MockInputProvider(movement: SIMD2(-1, 0))
+        scene.inputProvider = mockInput
+
+        let halfW = GameConfig.designWidth / 2 - GameConfig.Player.size.x / 2
+
+        var time = GameTime()
+        for _ in 0..<300 {
+            time.advance(by: GameConfig.fixedTimeStep)
+            while time.shouldPerformFixedUpdate() {
+                scene.fixedUpdate(time: time)
+                time.consumeFixedUpdate()
+            }
+        }
+
+        let playerPos = scene.player.component(ofType: TransformComponent.self)!.position
+        #expect(playerPos.x >= -halfW, "Player x (\(playerPos.x)) exceeded left boundary (\(-halfW))")
+    }
+
+    @Test @MainActor func playerStaysWithinTopBoundaryAtFullSpeed() {
+        let scene = Galaxy1Scene()
+        let mockInput = MockInputProvider(movement: SIMD2(0, 1))
+        scene.inputProvider = mockInput
+
+        let halfH = GameConfig.designHeight / 2 - GameConfig.Player.size.y / 2
+
+        var time = GameTime()
+        for _ in 0..<300 {
+            time.advance(by: GameConfig.fixedTimeStep)
+            while time.shouldPerformFixedUpdate() {
+                scene.fixedUpdate(time: time)
+                time.consumeFixedUpdate()
+            }
+        }
+
+        let playerPos = scene.player.component(ofType: TransformComponent.self)!.position
+        #expect(playerPos.y <= halfH, "Player y (\(playerPos.y)) exceeded top boundary (\(halfH))")
+    }
+
+    @Test @MainActor func playerStaysWithinBottomBoundaryAtFullSpeed() {
+        let scene = Galaxy1Scene()
+        let mockInput = MockInputProvider(movement: SIMD2(0, -1))
+        scene.inputProvider = mockInput
+
+        let halfH = GameConfig.designHeight / 2 - GameConfig.Player.size.y / 2
+
+        var time = GameTime()
+        for _ in 0..<300 {
+            time.advance(by: GameConfig.fixedTimeStep)
+            while time.shouldPerformFixedUpdate() {
+                scene.fixedUpdate(time: time)
+                time.consumeFixedUpdate()
+            }
+        }
+
+        let playerPos = scene.player.component(ofType: TransformComponent.self)!.position
+        #expect(playerPos.y >= -halfH, "Player y (\(playerPos.y)) exceeded bottom boundary (\(-halfH))")
+    }
+
+    @Test @MainActor func playerRespondsImmediatelyAfterHittingBoundary() {
+        let scene = Galaxy1Scene()
+        let mockInput = MockInputProvider(movement: SIMD2(-1, 0))
+        scene.inputProvider = mockInput
+
+        let halfW = GameConfig.designWidth / 2 - GameConfig.Player.size.x / 2
+
+        var time = GameTime()
+        // Drive into the left wall for 120 frames
+        for _ in 0..<120 {
+            time.advance(by: GameConfig.fixedTimeStep)
+            while time.shouldPerformFixedUpdate() {
+                scene.fixedUpdate(time: time)
+                time.consumeFixedUpdate()
+            }
+        }
+
+        let posAtWall = scene.player.component(ofType: TransformComponent.self)!.position.x
+        #expect(posAtWall == -halfW, "Player should be at left boundary")
+
+        // Now reverse direction for 1 frame
+        mockInput.movement = SIMD2(1, 0)
+        time.advance(by: GameConfig.fixedTimeStep)
+        while time.shouldPerformFixedUpdate() {
+            scene.fixedUpdate(time: time)
+            time.consumeFixedUpdate()
+        }
+
+        let posAfterReverse = scene.player.component(ofType: TransformComponent.self)!.position.x
+        #expect(posAfterReverse > posAtWall, "Player should move right immediately after reversing (was \(posAtWall), now \(posAfterReverse))")
+    }
 }

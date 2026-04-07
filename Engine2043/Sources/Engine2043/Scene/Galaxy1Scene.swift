@@ -290,6 +290,15 @@ public final class Galaxy1Scene: GameScene {
         // Physics
         physicsSystem.syncFromComponents()
         physicsSystem.update(time: time)
+
+        // Clamp player position to screen boundaries (must run after physics)
+        if let transform = player.component(ofType: TransformComponent.self) {
+            let halfW = currentHalfWidth - GameConfig.Player.size.x / 2
+            let halfH = GameConfig.designHeight / 2 - GameConfig.Player.size.y / 2
+            transform.position.x = max(-halfW, min(halfW, transform.position.x))
+            transform.position.y = max(-halfH, min(halfH, transform.position.y))
+        }
+
         collisionSystem.update(time: time)
         weaponSystem.update(time: time)
 
@@ -717,12 +726,6 @@ public final class Galaxy1Scene: GameScene {
             }
         }
 
-        if let transform = player.component(ofType: TransformComponent.self) {
-            let halfW = currentHalfWidth - GameConfig.Player.size.x / 2
-            let halfH = GameConfig.designHeight / 2 - GameConfig.Player.size.y / 2
-            transform.position.x = max(-halfW, min(halfW, transform.position.x))
-            transform.position.y = max(-halfH, min(halfH, transform.position.y))
-        }
     }
 
     // MARK: - Spawning
