@@ -15,4 +15,7 @@ public enum SFXType: CaseIterable, Sendable {
     case bossShieldDeflect
     case playerDeath
     case victory
+    case asteroidHit
+    case asteroidDestroyed
+    case tractorBeam
 }

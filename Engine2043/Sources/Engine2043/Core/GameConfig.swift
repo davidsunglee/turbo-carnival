@@ -130,4 +130,51 @@ public enum GameConfig {
         public static let weaponLightningArc = SIMD4<Float>(1.0, 1.0, 0.0, 1.0)
         public static let weaponPhaseLaser = SIMD4<Float>(0.0, 1.0, 0.2, 1.0)
     }
+
+    public enum Galaxy2 {
+        public enum Enemy {
+            public static let tier1HP: Float = 1.0
+            public static let tier1Size = SIMD2<Float>(20, 20)
+            public static let tier2HP: Float = 2.5
+            public static let tier2Size = SIMD2<Float>(32, 32)
+            public static let tier2Speed: Float = 70
+            public static let tier3HullSize = SIMD2<Float>(216, 100)
+            public static let tier3TurretHP: Float = 3.5
+            public static let tier3TurretSize = SIMD2<Float>(20, 20)
+            public static let bossHP: Float = 100
+            public static let bossSize = SIMD2<Float>(100, 100)
+            public static let bossArmorSlots: Int = 6
+            public static let bossArmorSlotHP: Float = 4.0
+        }
+
+        public enum Asteroid {
+            public static let smallSize = SIMD2<Float>(16, 16)
+            public static let largeSize = SIMD2<Float>(40, 40)
+            public static let smallHP: Float = 2.5
+            public static let scrollSpeed: Float = 30
+            public static let collisionDamage: Float = 18
+            public static let sparseCount: Int = 8
+            public static let denseFieldCount: Int = 12
+            public static let denseFieldLargeFraction: Float = 0.3
+        }
+
+        public enum Score {
+            public static let g2Tier1 = 15
+            public static let g2Tier2 = 75
+            public static let g2Tier3Turret = 150
+            public static let g2Boss = 1000
+            public static let asteroidSmall = 5
+        }
+
+        public enum Palette {
+            public static let g2Background = SIMD4<Float>(30.0 / 255.0, 10.0 / 255.0, 50.0 / 255.0, 1.0)
+            public static let g2Midground = SIMD4<Float>(80.0 / 255.0, 20.0 / 255.0, 60.0 / 255.0, 1.0)
+            public static let g2AsteroidSmall = SIMD4<Float>(0.5, 0.4, 0.35, 1.0)
+            public static let g2AsteroidLarge = SIMD4<Float>(0.35, 0.3, 0.25, 1.0)
+            public static let g2Tier1 = SIMD4<Float>(0.8, 0.5, 0.6, 1.0)
+            public static let g2Tier2 = SIMD4<Float>(0.7, 0.4, 0.8, 1.0)
+            public static let g2BossCore = SIMD4<Float>(0.9, 0.3, 0.5, 1.0)
+            public static let g2TractorBeam = SIMD4<Float>(0.4, 0.8, 1.0, 0.6)
+        }
+    }
 }

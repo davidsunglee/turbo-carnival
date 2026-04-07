@@ -157,6 +157,9 @@ public final class AudioEngine {
         buffers[.bossShieldDeflect] = synthesize(duration: 0.04, generator: squareSweep(from: 1200, to: 1400))
         buffers[.playerDeath] = synthesize(duration: 0.50, generator: deathGroan())
         buffers[.victory] = synthesize(duration: 1.0, generator: victoryFanfare())
+        buffers[.asteroidHit] = synthesize(duration: 0.04, generator: asteroidHit())
+        buffers[.asteroidDestroyed] = synthesize(duration: 0.15, generator: explosion(squareFrom: 100, squareTo: 40))
+        buffers[.tractorBeam] = synthesize(duration: 0.08, generator: sineSweep(from: 200, to: 400))
     }
 
     private func loadMusicBuffer(for track: MusicTrack) -> AVAudioPCMBuffer? {
@@ -180,7 +183,7 @@ public final class AudioEngine {
     }
 
     private func loadMusicBuffers() {
-        for track in [MusicTrack.gameplay, .boss] {
+        for track in [MusicTrack.gameplay, .boss, .galaxy2, .galaxy2Boss] {
             if let buffer = loadMusicBuffer(for: track) {
                 musicBuffers[track] = buffer
             }
@@ -251,6 +254,14 @@ public final class AudioEngine {
         let noise = noiseBurst()
         return { t, progress in
             sq(t, progress) * (1.0 - noiseMix) + noise(t, progress) * noiseMix
+        }
+    }
+
+    private func asteroidHit() -> (Float, Float) -> Float {
+        let sq = squareSweep(from: 100, to: 80)
+        let noise = noiseBurst()
+        return { t, progress in
+            sq(t, progress) * 0.5 + noise(t, progress) * 0.5
         }
     }
 
