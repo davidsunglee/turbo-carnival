@@ -7,7 +7,7 @@ protocol CollisionContext: AnyObject {
     var player: GKEntity! { get }
     var scoreSystem: ScoreSystem { get }
     var itemSystem: ItemSystem { get }
-    var sfx: SynthAudioEngine? { get }
+    var sfx: AudioEngine? { get }
     var pendingRemovals: [GKEntity] { get set }
     var enemiesDestroyed: Int { get set }
 

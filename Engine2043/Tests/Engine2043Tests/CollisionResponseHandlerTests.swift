@@ -8,7 +8,7 @@ private final class MockCollisionContext: CollisionContext {
     var player: GKEntity!
     let scoreSystem = ScoreSystem()
     let itemSystem = ItemSystem()
-    var sfx: SynthAudioEngine? = nil
+    var sfx: AudioEngine? = nil
     var pendingRemovals: [GKEntity] = []
     var enemiesDestroyed: Int = 0
     var formationWipeChecked: [GKEntity] = []
