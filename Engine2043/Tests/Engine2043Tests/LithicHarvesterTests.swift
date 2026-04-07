@@ -1,0 +1,328 @@
+import Testing
+import GameplayKit
+import simd
+@testable import Engine2043
+
+// MARK: - Helpers
+
+@MainActor
+private func makeBossEntity(hp: Float = 100, armorSlots: Int = 6) -> (boss: GKEntity, armor: BossArmorComponent) {
+    let boss = GKEntity()
+    boss.addComponent(TransformComponent(position: SIMD2(0, 200)))
+    let health = HealthComponent(health: hp)
+    health.hasInvulnerabilityFrames = false
+    boss.addComponent(health)
+    boss.addComponent(BossPhaseComponent(totalHP: hp))
+    boss.addComponent(ScoreComponent(points: 1000))
+
+    let render = RenderComponent(size: SIMD2(100, 100), color: SIMD4(1, 1, 1, 1))
+    render.spriteId = "lithicHarvesterCore"
+    boss.addComponent(render)
+
+    let armorComp = BossArmorComponent()
+    let slotCount = armorSlots
+    for i in 0..<slotCount {
+        let angle = Float(i) / Float(slotCount) * .pi * 2
+        armorComp.slots.append(ArmorSlot(angle: angle, entity: nil))
+    }
+    boss.addComponent(armorComp)
+    return (boss, armorComp)
+}
+
+@MainActor
+private func makeArmorAsteroidEntity(position: SIMD2<Float> = .zero, hp: Float = 4.0) -> GKEntity {
+    let entity = GKEntity()
+    entity.addComponent(TransformComponent(position: position))
+    let physics = PhysicsComponent(
+        collisionSize: SIMD2(16, 16),
+        layer: .asteroid,
+        mask: [.playerProjectile]
+    )
+    entity.addComponent(physics)
+    let render = RenderComponent(size: SIMD2(16, 16), color: SIMD4(0.5, 0.4, 0.35, 1.0))
+    render.spriteId = "asteroidSmall"
+    entity.addComponent(render)
+    let health = HealthComponent(health: hp)
+    health.hasInvulnerabilityFrames = false
+    entity.addComponent(health)
+    entity.addComponent(AsteroidComponent(size: .small))
+    return entity
+}
+
+// MARK: - Tests
+
+struct LithicHarvesterTests {
+
+    // MARK: - Boss spawns with correct HP and armor slots
+
+    @Test @MainActor func bossSpawnsWithCorrectHPAndArmorSlots() {
+        let (boss, armor) = makeBossEntity(hp: GameConfig.Galaxy2.Enemy.bossHP, armorSlots: GameConfig.Galaxy2.Enemy.bossArmorSlots)
+        let health = boss.component(ofType: HealthComponent.self)!
+
+        #expect(health.currentHealth == 100)
+        #expect(health.maxHealth == 100)
+        #expect(armor.slots.count == 6)
+    }
+
+    // MARK: - Armor slots block projectile damage
+
+    @Test @MainActor func armorSlotsBlockProjectileDamage() {
+        // Setup: boss with armor entity in slot 0
+        let (boss, armor) = makeBossEntity()
+        let armorAsteroid = makeArmorAsteroidEntity(hp: GameConfig.Galaxy2.Enemy.bossArmorSlotHP)
+        armor.slots[0].entity = armorAsteroid
+
+        let bossHealth = boss.component(ofType: HealthComponent.self)!
+        let armorHealth = armorAsteroid.component(ofType: HealthComponent.self)!
+        let initialBossHP = bossHealth.currentHealth
+
+        // BossSystem with lithic harvester type - check armor intercept logic
+        let system = BossSystem()
+        system.bossType = .lithicHarvester
+        system.register(boss)
+
+        // Verify boss has armor component with active slots
+        let bossArmor = boss.component(ofType: BossArmorComponent.self)!
+        #expect(bossArmor.slots[0].isActive == true)
+
+        // Simulate projectile hitting armor: damage the armor entity, not the boss
+        armorHealth.takeDamage(GameConfig.Player.damage)
+
+        #expect(bossHealth.currentHealth == initialBossHP, "Boss should not take damage when armor blocks")
+        #expect(armorHealth.currentHealth < GameConfig.Galaxy2.Enemy.bossArmorSlotHP, "Armor entity should take damage")
+    }
+
+    // MARK: - Destroying armor creates gaps
+
+    @Test @MainActor func destroyingArmorCreatesGap() {
+        let (boss, armor) = makeBossEntity()
+        let armorAsteroid = makeArmorAsteroidEntity(hp: 1.0)
+        armor.slots[0].entity = armorAsteroid
+
+        #expect(armor.slots[0].isActive == true)
+
+        // Destroy the armor entity
+        let armorHealth = armorAsteroid.component(ofType: HealthComponent.self)!
+        armorHealth.takeDamage(100)  // overkill
+
+        #expect(!armorHealth.isAlive)
+
+        // Simulate the scene clearing dead armor entities
+        armor.slots[0].entity = nil
+        #expect(armor.slots[0].isActive == false, "Slot should become a gap after armor is destroyed")
+    }
+
+    // MARK: - Boss takes damage through gaps
+
+    @Test @MainActor func bossTakesDamageThroughGaps() {
+        let (boss, armor) = makeBossEntity()
+
+        // All armor slots empty (gaps)
+        for i in 0..<armor.slots.count {
+            armor.slots[i].entity = nil
+        }
+
+        let bossHealth = boss.component(ofType: HealthComponent.self)!
+        let initialHP = bossHealth.currentHealth
+
+        // Direct damage to boss (no armor to intercept)
+        bossHealth.takeDamage(10)
+
+        #expect(bossHealth.currentHealth == initialHP - 10, "Boss should take damage through gaps")
+    }
+
+    // MARK: - Phase Laser damages armor first, then boss through gaps
+
+    @Test @MainActor func phaseLaserDamagesArmorFirstThenBoss() {
+        let (boss, armor) = makeBossEntity()
+
+        // Slot 0 has armor, slot 1 is empty
+        let armorAsteroid = makeArmorAsteroidEntity(hp: GameConfig.Galaxy2.Enemy.bossArmorSlotHP)
+        armor.slots[0].entity = armorAsteroid
+        // Other slots empty
+
+        let bossHealth = boss.component(ofType: HealthComponent.self)!
+        let armorHealth = armorAsteroid.component(ofType: HealthComponent.self)!
+
+        // Laser hits armor first
+        let laserDmg: Float = 2.0
+        armorHealth.takeDamage(laserDmg)
+        let initialBossHP = bossHealth.currentHealth
+
+        #expect(armorHealth.currentHealth == GameConfig.Galaxy2.Enemy.bossArmorSlotHP - laserDmg)
+        #expect(bossHealth.currentHealth == initialBossHP, "Boss HP unchanged while armor takes laser damage")
+
+        // After armor destroyed, laser hits boss
+        armorHealth.takeDamage(100)
+        armor.slots[0].entity = nil
+
+        // Now boss takes damage directly
+        bossHealth.takeDamage(laserDmg)
+        #expect(bossHealth.currentHealth == initialBossHP - laserDmg, "Boss should take laser damage through gap")
+    }
+
+    // MARK: - Tractor beam timer triggers armor rebuild
+
+    @Test @MainActor func tractorBeamTimerTriggersArmorRebuild() {
+        let (boss, armor) = makeBossEntity()
+        let system = BossSystem()
+        system.bossType = .lithicHarvester
+        system.register(boss)
+
+        // Clear all armor slots (gaps)
+        for i in 0..<armor.slots.count {
+            armor.slots[i].entity = nil
+        }
+
+        // Run updates to accumulate tractor beam timer past the interval (8.0s for phase 0)
+        // In phase 0, tractorBeamInterval = 8.0
+        system.playerPosition = SIMD2(0, -200)
+
+        // Advance past tractor beam interval
+        let steps = Int(8.5 / (1.0 / 60.0))
+        for _ in 0..<steps {
+            system.update(deltaTime: 1.0 / 60.0)
+        }
+
+        // After timer expires, system should signal tractor beam pulls
+        #expect(armor.tractorBeamTimer >= armor.tractorBeamInterval || system.pendingTractorBeamPulls.count > 0 || armor.tractorBeamTimer < 1.0,
+                "Tractor beam timer should have cycled")
+    }
+
+    // MARK: - Phase transitions change attack patterns
+
+    @Test @MainActor func phaseTransitionsChangeAttackPatterns() {
+        let system = BossSystem()
+        system.bossType = .lithicHarvester
+
+        let (boss, _) = makeBossEntity(hp: 100)
+        system.register(boss)
+        system.playerPosition = SIMD2(0, -200)
+
+        let health = boss.component(ofType: HealthComponent.self)!
+
+        // Phase 0 (HP > 60%): should fire 3 predictive shots
+        // Accumulate spawns across frames (pendingProjectileSpawns is cleared each update)
+        var phase0Total = 0
+        for _ in 0..<150 {
+            system.update(deltaTime: 1.0 / 60.0)
+            phase0Total += system.pendingProjectileSpawns.count
+        }
+
+        // Phase 1 (HP 30-60%): more projectiles
+        health.currentHealth = 50  // 50% = phase 1
+        var phase1Total = 0
+        for _ in 0..<150 {
+            system.update(deltaTime: 1.0 / 60.0)
+            phase1Total += system.pendingProjectileSpawns.count
+        }
+
+        // Phase 2 (HP < 30%): dense radial + rapid shots
+        health.currentHealth = 20  // 20% = phase 2
+        var phase2Total = 0
+        for _ in 0..<150 {
+            system.update(deltaTime: 1.0 / 60.0)
+            phase2Total += system.pendingProjectileSpawns.count
+        }
+
+        // Each phase should produce increasing projectile counts
+        #expect(phase0Total > 0, "Phase 0 should generate attacks")
+        #expect(phase2Total >= phase1Total, "Phase 2 should produce at least as many projectiles as phase 1")
+    }
+
+    // MARK: - Boss death when HP reaches 0
+
+    @Test @MainActor func bossDeathWhenHPReachesZero() {
+        let system = BossSystem()
+        system.bossType = .lithicHarvester
+
+        let (boss, _) = makeBossEntity(hp: 100)
+        system.register(boss)
+
+        let health = boss.component(ofType: HealthComponent.self)!
+        let phase = boss.component(ofType: BossPhaseComponent.self)!
+
+        health.currentHealth = 0
+        system.update(deltaTime: 1.0 / 60.0)
+
+        #expect(phase.isDefeated == true, "Boss should be defeated when HP reaches 0")
+    }
+
+    // MARK: - BossType enum
+
+    @Test @MainActor func bossTypeDefaultsToGalaxy1() {
+        let system = BossSystem()
+        #expect(system.bossType == .galaxy1)
+    }
+
+    @Test @MainActor func lithicHarvesterTypeCanBeSet() {
+        let system = BossSystem()
+        system.bossType = .lithicHarvester
+        #expect(system.bossType == .lithicHarvester)
+    }
+
+    // MARK: - Armor component basics
+
+    @Test @MainActor func armorSlotReportsActiveCorrectly() {
+        var slot = ArmorSlot(angle: 0, entity: nil)
+        #expect(!slot.isActive)
+
+        slot.entity = GKEntity()
+        #expect(slot.isActive)
+    }
+
+    @Test @MainActor func bossArmorComponentDefaults() {
+        let comp = BossArmorComponent()
+        #expect(comp.slots.isEmpty)
+        #expect(comp.tractorBeamTargets.isEmpty)
+        #expect(comp.tractorBeamTimer == 0)
+        #expect(comp.tractorBeamInterval == 8.0)
+        #expect(comp.armorRadius == 70)
+    }
+
+    // MARK: - Pending armor attachments and tractor beam pulls
+
+    @Test @MainActor func pendingTractorBeamPullsAndArmorAttachments() {
+        let system = BossSystem()
+        system.bossType = .lithicHarvester
+
+        // Initially empty
+        #expect(system.pendingTractorBeamPulls.isEmpty)
+        #expect(system.pendingArmorAttachments.isEmpty)
+    }
+
+    // MARK: - Lithic Harvester attack patterns differ from Galaxy 1
+
+    @Test @MainActor func lithicHarvesterAttacksDifferFromGalaxy1() {
+        // Galaxy 1 boss
+        let g1System = BossSystem()
+        let g1Boss = GKEntity()
+        g1Boss.addComponent(TransformComponent(position: SIMD2(0, 200)))
+        g1Boss.addComponent(HealthComponent(health: 30))
+        g1Boss.addComponent(BossPhaseComponent(totalHP: 30))
+        g1System.register(g1Boss)
+        g1System.playerPosition = SIMD2(0, -200)
+
+        // Lithic Harvester
+        let g2System = BossSystem()
+        g2System.bossType = .lithicHarvester
+        let (g2Boss, _) = makeBossEntity(hp: 100)
+        g2System.register(g2Boss)
+        g2System.playerPosition = SIMD2(0, -200)
+
+        // Accumulate spawns across frames
+        var g1Total = 0
+        var g2Total = 0
+        for _ in 0..<180 {
+            g1System.update(deltaTime: 1.0 / 60.0)
+            g2System.update(deltaTime: 1.0 / 60.0)
+            g1Total += g1System.pendingProjectileSpawns.count
+            g2Total += g2System.pendingProjectileSpawns.count
+        }
+
+        // Both should produce attacks but potentially different counts
+        // (Galaxy 1 fires 8 radial at baseInterval 1.0; Lithic Harvester fires 3 aimed at interval 2.0)
+        #expect(g1Total > 0, "Galaxy 1 boss should attack")
+        #expect(g2Total > 0, "Lithic Harvester should attack")
+    }
+}

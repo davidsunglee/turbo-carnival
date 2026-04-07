@@ -122,6 +122,26 @@ final class CollisionResponseHandler {
     }
 
     private func handleProjectileHitEnemy(projectile: GKEntity, enemy: GKEntity, ctx: any CollisionContext) {
+        // Boss armor interception: if enemy has BossArmorComponent with active armor,
+        // damage a random active armor piece instead of the boss.
+        if let armor = enemy.component(ofType: BossArmorComponent.self) {
+            let activeIndices = armor.slots.enumerated().compactMap { $0.element.isActive ? $0.offset : nil }
+            if let idx = activeIndices.first,
+               let armorEntity = armor.slots[idx].entity,
+               let armorHealth = armorEntity.component(ofType: HealthComponent.self) {
+                armorHealth.takeDamage(GameConfig.Player.damage)
+                if !armorHealth.isAlive {
+                    ctx.sfx?.play(.asteroidDestroyed)
+                    armor.slots[idx].entity = nil
+                    ctx.pendingRemovals.append(armorEntity)
+                } else {
+                    ctx.sfx?.play(.asteroidHit)
+                }
+                ctx.pendingRemovals.append(projectile)
+                return
+            }
+        }
+
         if let health = enemy.component(ofType: HealthComponent.self) {
             health.takeDamage(GameConfig.Player.damage)
             if !health.isAlive {
