@@ -8,6 +8,7 @@ public protocol GameScene: AnyObject {
     func collectSprites(atlas: TextureAtlas?) -> [SpriteInstance]
     func collectEffectSprites(effectSheet: EffectTextureSheet?) -> [SpriteInstance]
     var requestedTransition: SceneTransition? { get }
+    var backgroundColor: SIMD4<Float> { get }
 }
 
 extension GameScene {
@@ -15,6 +16,7 @@ extension GameScene {
         []
     }
     public var requestedTransition: SceneTransition? { nil }
+    public var backgroundColor: SIMD4<Float> { GameConfig.Palette.background }
 }
 
 @MainActor
@@ -46,6 +48,7 @@ public final class GameEngine {
 
     public func render(to drawable: CAMetalDrawable) {
         guard let renderer else { return }
+        renderer.clearColor = currentScene?.backgroundColor ?? GameConfig.Palette.background
         let sprites = currentScene?.collectSprites(atlas: renderer.textureAtlas) ?? []
         let effectSprites = currentScene?.collectEffectSprites(effectSheet: renderer.effectSheet) ?? []
         renderer.render(to: drawable, sprites: sprites, effectSprites: effectSprites, totalTime: Float(time.totalTime))

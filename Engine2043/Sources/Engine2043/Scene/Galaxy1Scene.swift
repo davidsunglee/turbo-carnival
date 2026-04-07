@@ -25,6 +25,7 @@ public final class Galaxy1Scene: GameScene {
     private let spawnDirector = SpawnDirector()
     private var lightningArcSystem: LightningArcSystem!
     private let collisionResponseHandler = CollisionResponseHandler()
+    private let titleCard = GalaxyTitleCard(title: "GALAXY 1: NGC-2043 PERIMETER")
 
     // MARK: - Input / Audio
     public var inputProvider: (any InputProvider)?
@@ -39,7 +40,7 @@ public final class Galaxy1Scene: GameScene {
     private var enemyProjectiles: [GKEntity] = []
     private var items: [GKEntity] = []
     private var capitalShipHulls: [GKEntity] = []
-    private var bossEntity: GKEntity?
+    var bossEntity: GKEntity? // @testable access for integration tests
     private var shieldEntities: [GKEntity] = []
     private var shieldDrones: [GKEntity] = []
     var pendingRemovals: [GKEntity] = [] // CollisionContext
@@ -188,6 +189,13 @@ public final class Galaxy1Scene: GameScene {
             sfx?.startMusic(.gameplay)
         }
         sfx?.updateMusicFade(deltaTime: Float(time.fixedDeltaTime))
+
+        // Title card plays before gameplay begins
+        if !titleCard.isDone {
+            titleCard.update(deltaTime: time.fixedDeltaTime)
+            return
+        }
+
         if gameState == .playing {
             elapsedTime += time.fixedDeltaTime
         }
@@ -224,7 +232,16 @@ public final class Galaxy1Scene: GameScene {
             }
             let totalBossDeathDuration = Self.bossFlashDuration + Self.bossFadeDuration
             if bossDyingTimer >= totalBossDeathDuration {
-                gameState = .victory
+                let weapon = player.component(ofType: WeaponComponent.self)
+                let carryover = PlayerCarryover(
+                    weaponType: weapon?.weaponType ?? .doubleCannon,
+                    score: scoreSystem.currentScore,
+                    secondaryCharges: max(1, weapon?.secondaryCharges ?? 1),
+                    shieldDroneCount: shieldDrones.count,
+                    enemiesDestroyed: enemiesDestroyed,
+                    elapsedTime: elapsedTime
+                )
+                requestedTransition = .toGalaxy2(carryover)
                 isBossDying = false
             }
         }
@@ -547,6 +564,7 @@ public final class Galaxy1Scene: GameScene {
         }
 
         appendEffectHUD(to: &sprites, effectSheet: effectSheet)
+        sprites.append(contentsOf: titleCard.collectSprites(effectSheet: effectSheet))
 
         return sprites
     }

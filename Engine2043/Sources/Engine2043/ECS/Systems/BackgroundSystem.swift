@@ -1,8 +1,34 @@
 import simd
 
+public struct BackgroundPalette: Sendable {
+    public let starColor: SIMD4<Float>
+    public let nebulaColor: SIMD4<Float>
+
+    public static let galaxy1 = BackgroundPalette(
+        starColor: SIMD4<Float>(0.6, 0.7, 0.9, 0.5),
+        nebulaColor: SIMD4<Float>(
+            GameConfig.Palette.midground.x,
+            GameConfig.Palette.midground.y,
+            GameConfig.Palette.midground.z,
+            0.15
+        )
+    )
+
+    public static let galaxy2 = BackgroundPalette(
+        starColor: SIMD4<Float>(0.7, 0.5, 0.6, 0.4),
+        nebulaColor: SIMD4<Float>(
+            GameConfig.Galaxy2.Palette.g2Midground.x,
+            GameConfig.Galaxy2.Palette.g2Midground.y,
+            GameConfig.Galaxy2.Palette.g2Midground.z,
+            0.2
+        )
+    )
+}
+
 @MainActor
 public final class BackgroundSystem {
     public private(set) var scrollDistance: Float = 0
+    public var palette: BackgroundPalette = .galaxy1
 
     private var starPositions: [SIMD2<Float>] = []
     private var starSizes: [SIMD2<Float>] = []
@@ -67,26 +93,19 @@ public final class BackgroundSystem {
         var sprites: [SpriteInstance] = []
         sprites.reserveCapacity(starPositions.count + nebulaPositions.count)
 
-        let starColor = SIMD4<Float>(0.6, 0.7, 0.9, 0.5)
         for i in starPositions.indices {
             sprites.append(SpriteInstance(
                 position: starPositions[i],
                 size: starSizes[i],
-                color: starColor
+                color: palette.starColor
             ))
         }
 
-        let nebulaColor = SIMD4<Float>(
-            GameConfig.Palette.midground.x,
-            GameConfig.Palette.midground.y,
-            GameConfig.Palette.midground.z,
-            0.15
-        )
         for i in nebulaPositions.indices {
             sprites.append(SpriteInstance(
                 position: nebulaPositions[i],
                 size: nebulaSizes[i],
-                color: nebulaColor
+                color: palette.nebulaColor
             ))
         }
 

@@ -34,6 +34,17 @@ public struct ScriptedDrop: Sendable {
     }
 }
 
+public struct AsteroidFieldDefinition: Sendable {
+    public let triggerDistance: Float
+    public let count: Int
+    public let largeFraction: Float
+}
+
+public enum GalaxyConfig: Sendable {
+    case galaxy1
+    case galaxy2
+}
+
 @MainActor
 public final class SpawnDirector {
     private let waves: [WaveDefinition]
@@ -45,14 +56,31 @@ public final class SpawnDirector {
     private var nextDropIndex: Int = 0
     public private(set) var pendingDrops: [ScriptedDrop] = []
 
-    public init() {
-        waves = Self.galaxy1Waves()
-        scriptedDrops = Self.galaxy1ScriptedDrops()
+    private let asteroidFields: [AsteroidFieldDefinition]
+    private var nextAsteroidFieldIndex: Int = 0
+    public private(set) var pendingAsteroidFields: [AsteroidFieldDefinition] = []
+
+    public init(galaxy: GalaxyConfig) {
+        switch galaxy {
+        case .galaxy1:
+            waves = Self.galaxy1Waves()
+            scriptedDrops = Self.galaxy1ScriptedDrops()
+            asteroidFields = []
+        case .galaxy2:
+            waves = Self.galaxy2Waves()
+            scriptedDrops = Self.galaxy2ScriptedDrops()
+            asteroidFields = Self.galaxy2AsteroidFields()
+        }
+    }
+
+    public convenience init() {
+        self.init(galaxy: .galaxy1)
     }
 
     public func update(scrollDistance: Float) {
         pendingWaves.removeAll(keepingCapacity: true)
         pendingDrops.removeAll(keepingCapacity: true)
+        pendingAsteroidFields.removeAll(keepingCapacity: true)
 
         while nextWaveIndex < waves.count {
             let wave = waves[nextWaveIndex]
@@ -72,11 +100,19 @@ public final class SpawnDirector {
             pendingDrops.append(scriptedDrops[nextDropIndex])
             nextDropIndex += 1
         }
+
+        while nextAsteroidFieldIndex < asteroidFields.count,
+              scrollDistance >= asteroidFields[nextAsteroidFieldIndex].triggerDistance {
+            pendingAsteroidFields.append(asteroidFields[nextAsteroidFieldIndex])
+            nextAsteroidFieldIndex += 1
+        }
     }
 
     public func unlockScroll() {
         shouldLockScroll = false
     }
+
+    // MARK: - Galaxy 1
 
     private static func galaxy1ScriptedDrops() -> [ScriptedDrop] {
         return [
@@ -121,6 +157,67 @@ public final class SpawnDirector {
 
             // -- Boss (was 3500, now 2150)
             WaveDefinition(trigger: 2150, tier: .boss,  pattern: .vShape,        count: 1),
+        ]
+    }
+
+    // MARK: - Galaxy 2
+
+    private static func galaxy2Waves() -> [WaveDefinition] {
+        return [
+            // -- Tier 1 opener: sine waves and V-shapes (50–500)
+            WaveDefinition(trigger: 50,   tier: .tier1, pattern: .sineWave,      count: 5),
+            WaveDefinition(trigger: 150,  tier: .tier1, pattern: .vShape,        count: 5),
+            WaveDefinition(trigger: 260,  tier: .tier1, pattern: .sineWave,      count: 5),
+            WaveDefinition(trigger: 370,  tier: .tier1, pattern: .staggeredLine, count: 5),
+            WaveDefinition(trigger: 480,  tier: .tier1, pattern: .vShape,        count: 5),
+
+            // -- Tier 1 + Tier 2 mix (500–1200)
+            WaveDefinition(trigger: 530,  tier: .tier2, pattern: .vShape,        count: 2, spawnX: -50),
+            WaveDefinition(trigger: 600,  tier: .tier1, pattern: .sineWave,      count: 5),
+            WaveDefinition(trigger: 680,  tier: .tier1, pattern: .staggeredLine, count: 5),
+            WaveDefinition(trigger: 750,  tier: .tier2, pattern: .vShape,        count: 3, spawnX: 40),
+            WaveDefinition(trigger: 840,  tier: .tier1, pattern: .vShape,        count: 5),
+            WaveDefinition(trigger: 920,  tier: .tier2, pattern: .sineWave,      count: 3),
+            WaveDefinition(trigger: 1000, tier: .tier1, pattern: .staggeredLine, count: 5),
+            WaveDefinition(trigger: 1080, tier: .tier2, pattern: .vShape,        count: 2, spawnX: -60),
+            WaveDefinition(trigger: 1150, tier: .tier1, pattern: .sineWave,      count: 5),
+
+            // -- Tier 3 mining barges + Tier 1 escort (1200–1600)
+            WaveDefinition(trigger: 1200, tier: .tier3, pattern: .vShape,        count: 2),
+            WaveDefinition(trigger: 1260, tier: .tier1, pattern: .vShape,        count: 5),
+            WaveDefinition(trigger: 1340, tier: .tier3, pattern: .staggeredLine, count: 2),
+            WaveDefinition(trigger: 1400, tier: .tier1, pattern: .sineWave,      count: 5),
+            WaveDefinition(trigger: 1480, tier: .tier3, pattern: .vShape,        count: 2),
+            WaveDefinition(trigger: 1540, tier: .tier1, pattern: .staggeredLine, count: 5),
+
+            // -- Final gauntlet: Tier 1 + Tier 2 (1700–2200)
+            WaveDefinition(trigger: 1700, tier: .tier2, pattern: .vShape,        count: 3),
+            WaveDefinition(trigger: 1780, tier: .tier1, pattern: .sineWave,      count: 5),
+            WaveDefinition(trigger: 1860, tier: .tier2, pattern: .staggeredLine, count: 3),
+            WaveDefinition(trigger: 1950, tier: .tier1, pattern: .vShape,        count: 5),
+            WaveDefinition(trigger: 2040, tier: .tier2, pattern: .vShape,        count: 3, spawnX: -70),
+            WaveDefinition(trigger: 2130, tier: .tier1, pattern: .sineWave,      count: 5),
+            WaveDefinition(trigger: 2200, tier: .tier2, pattern: .vShape,        count: 2, spawnX: 50),
+
+            // -- Boss
+            WaveDefinition(trigger: 2400, tier: .boss,  pattern: .vShape,        count: 1),
+        ]
+    }
+
+    private static func galaxy2ScriptedDrops() -> [ScriptedDrop] {
+        return [
+            ScriptedDrop(triggerDistance: 600,  type: .weaponModule),
+            ScriptedDrop(triggerDistance: 1400, type: .weaponModule),
+        ]
+    }
+
+    private static func galaxy2AsteroidFields() -> [AsteroidFieldDefinition] {
+        return [
+            AsteroidFieldDefinition(triggerDistance: 200,  count: 12, largeFraction: 0.3),
+            AsteroidFieldDefinition(triggerDistance: 600,  count: 12, largeFraction: 0.3),
+            AsteroidFieldDefinition(triggerDistance: 1000, count: 12, largeFraction: 0.3),
+            AsteroidFieldDefinition(triggerDistance: 1500, count: 12, largeFraction: 0.3),
+            AsteroidFieldDefinition(triggerDistance: 1900, count: 12, largeFraction: 0.3),
         ]
     }
 }

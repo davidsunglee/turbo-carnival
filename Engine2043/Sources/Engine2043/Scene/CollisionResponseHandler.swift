@@ -10,9 +10,15 @@ protocol CollisionContext: AnyObject {
     var sfx: AudioEngine? { get }
     var pendingRemovals: [GKEntity] { get set }
     var enemiesDestroyed: Int { get set }
+    /// Galaxy2Scene provides an AsteroidSystem; Galaxy1Scene returns nil via default extension.
+    var asteroidSystem: AsteroidSystem? { get }
 
     func checkFormationWipe(enemy: GKEntity)
     func spawnShieldDrones()
+}
+
+extension CollisionContext {
+    var asteroidSystem: AsteroidSystem? { nil }
 }
 
 /// Handles collision pair dispatch and response logic.
@@ -32,7 +38,20 @@ final class CollisionResponseHandler {
             let layerA = entityA.component(ofType: PhysicsComponent.self)?.collisionLayer ?? []
             let layerB = entityB.component(ofType: PhysicsComponent.self)?.collisionLayer ?? []
 
-            if layerA.contains(.playerProjectile) && layerB.contains(.enemy) {
+            // NOTE: Phase Laser (hitscan) vs asteroid is handled by the scene's
+            // processLaserHitscan method, not by collision pairs here.
+
+            // Asteroid branches — checked before enemy/projectile branches since
+            // .asteroid is a distinct layer that does not overlap with .enemy.
+            if layerA.contains(.playerProjectile) && layerB.contains(.asteroid) {
+                handleProjectileHitAsteroid(projectile: entityA, asteroid: entityB, ctx: ctx)
+            } else if layerB.contains(.playerProjectile) && layerA.contains(.asteroid) {
+                handleProjectileHitAsteroid(projectile: entityB, asteroid: entityA, ctx: ctx)
+            } else if layerA.contains(.player) && layerB.contains(.asteroid) {
+                handlePlayerHitAsteroid(asteroid: entityB, ctx: ctx)
+            } else if layerB.contains(.player) && layerA.contains(.asteroid) {
+                handlePlayerHitAsteroid(asteroid: entityA, ctx: ctx)
+            } else if layerA.contains(.playerProjectile) && layerB.contains(.enemy) {
                 handleProjectileHitEnemy(projectile: entityA, enemy: entityB, ctx: ctx)
             } else if layerB.contains(.playerProjectile) && layerA.contains(.enemy) {
                 handleProjectileHitEnemy(projectile: entityB, enemy: entityA, ctx: ctx)
@@ -78,7 +97,71 @@ final class CollisionResponseHandler {
         }
     }
 
+    private func handleProjectileHitAsteroid(projectile: GKEntity, asteroid: GKEntity, ctx: any CollisionContext) {
+        // Small (destructible) asteroids have a HealthComponent; large ones do not.
+        if let health = asteroid.component(ofType: HealthComponent.self) {
+            health.takeDamage(GameConfig.Player.damage)
+            if !health.isAlive {
+                ctx.sfx?.play(.asteroidDestroyed)
+                if let score = asteroid.component(ofType: ScoreComponent.self) {
+                    ctx.scoreSystem.addScore(score.points)
+                }
+                ctx.pendingRemovals.append(asteroid)
+            } else {
+                ctx.sfx?.play(.asteroidHit)
+            }
+        }
+        // Always remove the projectile — asteroids block player projectiles regardless of size.
+        ctx.pendingRemovals.append(projectile)
+    }
+
+    private func handlePlayerHitAsteroid(asteroid: GKEntity, ctx: any CollisionContext) {
+        // Player takes kinetic damage. Asteroid is NOT destroyed — player bounces off.
+        ctx.player.component(ofType: HealthComponent.self)?.takeDamage(GameConfig.Galaxy2.Asteroid.collisionDamage)
+        ctx.sfx?.play(.playerDamaged)
+    }
+
+    /// Half-arc that an armor slot covers on each side of its angle (±30°).
+    static let armorSlotHalfArc: Float = .pi / 6  // 30°
+
+    /// Returns the index of the armor slot (if any) that covers the given approach angle.
+    private func armorSlotCovering(angle: Float, armor: BossArmorComponent) -> Int? {
+        for (i, slot) in armor.slots.enumerated() where slot.isActive {
+            var diff = angle - slot.angle
+            // Normalize to [-π, π]
+            while diff > .pi  { diff -= 2 * .pi }
+            while diff < -.pi { diff += 2 * .pi }
+            if abs(diff) <= Self.armorSlotHalfArc {
+                return i
+            }
+        }
+        return nil
+    }
+
     private func handleProjectileHitEnemy(projectile: GKEntity, enemy: GKEntity, ctx: any CollisionContext) {
+        // Boss armor interception: geometric angle-based check.
+        // Compute approach angle from projectile to boss; only the armor slot
+        // covering that angle can block the hit.
+        if let armor = enemy.component(ofType: BossArmorComponent.self),
+           let projPos = projectile.component(ofType: TransformComponent.self)?.position,
+           let bossPos = enemy.component(ofType: TransformComponent.self)?.position {
+            let approachAngle = atan2(bossPos.y - projPos.y, bossPos.x - projPos.x)
+            if let idx = armorSlotCovering(angle: approachAngle, armor: armor),
+               let armorEntity = armor.slots[idx].entity,
+               let armorHealth = armorEntity.component(ofType: HealthComponent.self) {
+                armorHealth.takeDamage(GameConfig.Player.damage)
+                if !armorHealth.isAlive {
+                    ctx.sfx?.play(.asteroidDestroyed)
+                    armor.slots[idx].entity = nil
+                    ctx.pendingRemovals.append(armorEntity)
+                } else {
+                    ctx.sfx?.play(.bossShieldDeflect) // armor deflects the projectile
+                }
+                ctx.pendingRemovals.append(projectile)
+                return
+            }
+        }
+
         if let health = enemy.component(ofType: HealthComponent.self) {
             health.takeDamage(GameConfig.Player.damage)
             if !health.isAlive {

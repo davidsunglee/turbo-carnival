@@ -80,6 +80,18 @@ class MetalView: NSView {
             return scene
         }
 
+        sceneManager.makeGalaxy2Scene = { [weak self] carryover in
+            let scene = Galaxy2Scene(carryover: carryover)
+            scene.inputProvider = self?.inputProvider
+            scene.viewportManager = self?.viewportManager
+            scene.audioProvider = audio
+            scene.sfx = sfxEngine
+            audio.stopAll()
+            sfxEngine.stopLaser()
+            sfxEngine.stopMusic()
+            return scene
+        }
+
         // Start with title screen
         let titleScene = TitleScene()
         titleScene.inputProvider = inputProvider

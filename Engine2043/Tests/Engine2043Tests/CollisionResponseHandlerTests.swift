@@ -239,4 +239,73 @@ struct CollisionResponseHandlerTests {
         #expect(ctx.shieldDronesSpawned == 1)
         #expect(ctx.pendingRemovals.contains(where: { $0 === item }))
     }
+
+    // MARK: - Asteroid Collision Tests
+
+    @Test @MainActor func projectileHitSmallAsteroidDamagesItAndRemovesProjectile() {
+        let player = TestEntityFactory.makePlayerEntity()
+        let ctx = MockCollisionContext(player: player)
+        let handler = CollisionResponseHandler(context: ctx)
+
+        let projectile = TestEntityFactory.makeProjectileEntity()
+        // Small asteroid with full health (2.5) — survives one hit from Player.damage (1.0)
+        let asteroid = TestEntityFactory.makeAsteroidEntity(size: .small)
+        let healthBefore = asteroid.component(ofType: HealthComponent.self)!.currentHealth
+
+        handler.processCollisions(pairs: [(projectile, asteroid)])
+
+        let healthAfter = asteroid.component(ofType: HealthComponent.self)!.currentHealth
+        #expect(healthAfter < healthBefore)
+        #expect(ctx.pendingRemovals.contains(where: { $0 === projectile }))
+        #expect(!ctx.pendingRemovals.contains(where: { $0 === asteroid }))
+    }
+
+    @Test @MainActor func projectileDestroysSmallAsteroidAddsScoreAndSFX() {
+        let player = TestEntityFactory.makePlayerEntity()
+        let ctx = MockCollisionContext(player: player)
+        let handler = CollisionResponseHandler(context: ctx)
+
+        let projectile = TestEntityFactory.makeProjectileEntity()
+        // Give the asteroid health below Player.damage so one hit destroys it
+        let asteroid = TestEntityFactory.makeAsteroidEntity(size: .small, health: 0.5)
+
+        handler.processCollisions(pairs: [(projectile, asteroid)])
+
+        #expect(ctx.pendingRemovals.contains(where: { $0 === asteroid }))
+        #expect(ctx.pendingRemovals.contains(where: { $0 === projectile }))
+        #expect(ctx.scoreSystem.currentScore == GameConfig.Galaxy2.Score.asteroidSmall)
+    }
+
+    @Test @MainActor func playerCollidesWithAsteroidTakesCollisionDamage() {
+        let player = TestEntityFactory.makePlayerEntity()
+        // Disable invulnerability frames so we get an exact health check
+        player.component(ofType: HealthComponent.self)!.hasInvulnerabilityFrames = false
+        let ctx = MockCollisionContext(player: player)
+        let handler = CollisionResponseHandler(context: ctx)
+
+        let asteroid = TestEntityFactory.makeAsteroidEntity(size: .large)
+        let healthBefore = player.component(ofType: HealthComponent.self)!.currentHealth
+
+        handler.processCollisions(pairs: [(player, asteroid)])
+
+        let healthAfter = player.component(ofType: HealthComponent.self)!.currentHealth
+        #expect(healthAfter == healthBefore - GameConfig.Galaxy2.Asteroid.collisionDamage)
+        // Asteroid is NOT removed — player bounces off
+        #expect(!ctx.pendingRemovals.contains(where: { $0 === asteroid }))
+    }
+
+    @Test @MainActor func projectileHitsLargeAsteroidProjectileRemovedAsteroidSurvives() {
+        let player = TestEntityFactory.makePlayerEntity()
+        let ctx = MockCollisionContext(player: player)
+        let handler = CollisionResponseHandler(context: ctx)
+
+        let projectile = TestEntityFactory.makeProjectileEntity()
+        // Large asteroid has no HealthComponent — indestructible
+        let asteroid = TestEntityFactory.makeAsteroidEntity(size: .large)
+
+        handler.processCollisions(pairs: [(projectile, asteroid)])
+
+        #expect(ctx.pendingRemovals.contains(where: { $0 === projectile }))
+        #expect(!ctx.pendingRemovals.contains(where: { $0 === asteroid }))
+    }
 }

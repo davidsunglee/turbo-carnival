@@ -4,8 +4,8 @@ import simd
 public typealias Entity = GKEntity
 
 public struct CollisionLayer: OptionSet, Sendable {
-    public let rawValue: UInt8
-    public init(rawValue: UInt8) { self.rawValue = rawValue }
+    public let rawValue: UInt16
+    public init(rawValue: UInt16) { self.rawValue = rawValue }
 
     public static let player            = CollisionLayer(rawValue: 1 << 0)
     public static let playerProjectile  = CollisionLayer(rawValue: 1 << 1)
@@ -15,6 +15,7 @@ public struct CollisionLayer: OptionSet, Sendable {
     public static let bossShield        = CollisionLayer(rawValue: 1 << 5)
     public static let blast             = CollisionLayer(rawValue: 1 << 6)
     public static let shieldDrone       = CollisionLayer(rawValue: 1 << 7)
+    public static let asteroid          = CollisionLayer(rawValue: 1 << 8)
 }
 
 public struct AABB: Sendable {

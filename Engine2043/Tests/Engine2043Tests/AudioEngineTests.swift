@@ -112,7 +112,7 @@ struct AudioEngineTests {
 
     @Test func sfxTypeHasAllExpectedCases() {
         let allCases = SFXType.allCases
-        #expect(allCases.count == 16)
+        #expect(allCases.count == 19)
         #expect(allCases.contains(.doubleCannonFire))
         #expect(allCases.contains(.triSpreadFire))
         #expect(allCases.contains(.lightningArcZap))

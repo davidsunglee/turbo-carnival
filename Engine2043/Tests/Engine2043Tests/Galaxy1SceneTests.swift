@@ -48,11 +48,14 @@ struct Galaxy1SceneTests {
 
     @Test @MainActor func sceneTracksElapsedTime() {
         let scene = Galaxy1Scene()
+        // Title card runs for ~3.1s (186 frames) before gameplay; use 200 frames to be safe
         var time = GameTime()
-        time.advance(by: 1.0 / 60.0)
-        while time.shouldPerformFixedUpdate() {
-            scene.fixedUpdate(time: time)
-            time.consumeFixedUpdate()
+        for _ in 0..<200 {
+            time.advance(by: 1.0 / 60.0)
+            while time.shouldPerformFixedUpdate() {
+                scene.fixedUpdate(time: time)
+                time.consumeFixedUpdate()
+            }
         }
         #expect(scene.elapsedTime > 0)
     }
@@ -156,8 +159,9 @@ struct Galaxy1SceneTests {
         let halfW = GameConfig.designWidth / 2 - GameConfig.Player.size.x / 2
 
         var time = GameTime()
-        // Drive into the left wall for 120 frames
-        for _ in 0..<120 {
+        // Title card runs ~3.1s (186 frames); drive left for 200+120=320 frames total
+        // so that we get 120 frames of actual gameplay after the title card
+        for _ in 0..<320 {
             time.advance(by: GameConfig.fixedTimeStep)
             while time.shouldPerformFixedUpdate() {
                 scene.fixedUpdate(time: time)

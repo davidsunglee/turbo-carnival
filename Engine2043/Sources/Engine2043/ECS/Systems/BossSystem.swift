@@ -1,12 +1,21 @@
 import GameplayKit
 import simd
 
+public enum BossType: Sendable {
+    case galaxy1
+    case lithicHarvester
+}
+
 @MainActor
 public final class BossSystem {
     private var bossEntity: GKEntity?
     private var shieldEntities: [GKEntity] = []
     public private(set) var pendingProjectileSpawns: [ProjectileSpawnRequest] = []
     public var playerPosition: SIMD2<Float> = .zero
+    public var bossType: BossType = .galaxy1
+
+    public private(set) var pendingTractorBeamPulls: [(source: SIMD2<Float>, target: GKEntity)] = []
+    public private(set) var pendingArmorAttachments: [(slot: Int, entity: GKEntity)] = []
 
     private var attackTimer: Double = 0
     private let baseAttackInterval: Double = 1.0
@@ -31,6 +40,8 @@ public final class BossSystem {
 
     public func update(deltaTime: Double) {
         pendingProjectileSpawns.removeAll(keepingCapacity: true)
+        pendingTractorBeamPulls.removeAll(keepingCapacity: true)
+        pendingArmorAttachments.removeAll(keepingCapacity: true)
 
         guard let boss = bossEntity,
               let bossPhase = boss.component(ofType: BossPhaseComponent.self),
@@ -48,6 +59,17 @@ public final class BossSystem {
             return
         }
 
+        switch bossType {
+        case .galaxy1:
+            updateGalaxy1Boss(boss: boss, bossPhase: bossPhase, health: health, transform: transform, deltaTime: deltaTime)
+        case .lithicHarvester:
+            updateLithicHarvester(boss: boss, bossPhase: bossPhase, health: health, transform: transform, deltaTime: deltaTime)
+        }
+    }
+
+    // MARK: - Galaxy 1 Boss (Orbital Bulwark Alpha)
+
+    private func updateGalaxy1Boss(boss: GKEntity, bossPhase: BossPhaseComponent, health: HealthComponent, transform: TransformComponent, deltaTime: Double) {
         let speedMultiplier: Float = Float(bossPhase.currentPhase + 1)
         bossPhase.shieldRotation += bossPhase.shieldSpeed * speedMultiplier * Float(deltaTime)
 
@@ -58,7 +80,7 @@ public final class BossSystem {
 
         if attackTimer >= attackInterval {
             attackTimer -= attackInterval
-            generateAttack(from: transform.position, phase: bossPhase.currentPhase, rotation: bossPhase.shieldRotation)
+            generateGalaxy1Attack(from: transform.position, phase: bossPhase.currentPhase, rotation: bossPhase.shieldRotation)
         }
     }
 
@@ -81,7 +103,7 @@ public final class BossSystem {
         }
     }
 
-    private func generateAttack(from position: SIMD2<Float>, phase: Int, rotation: Float) {
+    private func generateGalaxy1Attack(from position: SIMD2<Float>, phase: Int, rotation: Float) {
         let speed: Float = 200
 
         switch phase {
@@ -127,6 +149,145 @@ public final class BossSystem {
                 velocity: dir * speed * 2,
                 damage: 8
             ))
+        }
+    }
+
+    // MARK: - Lithic Harvester Boss
+
+    private func updateLithicHarvester(boss: GKEntity, bossPhase: BossPhaseComponent, health: HealthComponent, transform: TransformComponent, deltaTime: Double) {
+        let phase = bossPhase.currentPhase
+
+        // Determine fire interval based on phase
+        let fireInterval: Double
+        switch phase {
+        case 0: fireInterval = 2.0
+        case 1: fireInterval = 1.5
+        default: fireInterval = 1.0
+        }
+
+        attackTimer += deltaTime
+
+        if attackTimer >= fireInterval {
+            attackTimer -= fireInterval
+            generateLithicHarvesterAttack(from: transform.position, phase: phase)
+        }
+
+        // Tractor beam logic
+        if let armor = boss.component(ofType: BossArmorComponent.self) {
+            // Update tractor beam interval based on phase
+            switch phase {
+            case 0: armor.tractorBeamInterval = 8.0
+            case 1: armor.tractorBeamInterval = 5.0
+            default: armor.tractorBeamInterval = 3.0
+            }
+
+            armor.tractorBeamTimer += deltaTime
+
+            if armor.tractorBeamTimer >= armor.tractorBeamInterval {
+                armor.tractorBeamTimer -= armor.tractorBeamInterval
+
+                // Check for empty slots
+                let hasEmptySlot = armor.slots.contains { !$0.isActive }
+                if hasEmptySlot {
+                    // Signal the scene to start pulling nearby asteroids
+                    // The scene will handle finding actual asteroid targets
+                    for target in armor.tractorBeamTargets {
+                        pendingTractorBeamPulls.append((source: transform.position, target: target))
+                    }
+                }
+            }
+
+            // Update armor slot positions around boss
+            let bossPos = transform.position
+            for i in 0..<armor.slots.count {
+                if let armorEntity = armor.slots[i].entity,
+                   let armorTransform = armorEntity.component(ofType: TransformComponent.self) {
+                    let angle = armor.slots[i].angle
+                    armorTransform.position = bossPos + SIMD2(cos(angle), sin(angle)) * armor.armorRadius
+                }
+            }
+        }
+    }
+
+    private func generateLithicHarvesterAttack(from position: SIMD2<Float>, phase: Int) {
+        let dir = playerPosition == position ? SIMD2<Float>(0, -1) : simd_normalize(playerPosition - position)
+        let speed: Float = 250
+
+        switch phase {
+        case 0:
+            // Phase 0: 3 predictive aimed shots
+            let spread: Float = 0.15
+            for i in -1...1 {
+                let offset = Float(i) * spread
+                let vel = SIMD2(dir.x + offset, dir.y) * speed
+                pendingProjectileSpawns.append(ProjectileSpawnRequest(
+                    position: position,
+                    velocity: vel,
+                    damage: 5
+                ))
+            }
+
+        case 1:
+            // Phase 1: 3 aimed shots + asteroid fragment launches (higher speed)
+            let spread: Float = 0.15
+            for i in -1...1 {
+                let offset = Float(i) * spread
+                let vel = SIMD2(dir.x + offset, dir.y) * speed
+                pendingProjectileSpawns.append(ProjectileSpawnRequest(
+                    position: position,
+                    velocity: vel,
+                    damage: 5
+                ))
+            }
+
+            // Asteroid fragment launches
+            let fragmentSpeed: Float = 400
+            for i in -1...1 {
+                let offset = Float(i) * 0.1
+                let vel = SIMD2(dir.x + offset, dir.y) * fragmentSpeed
+                pendingProjectileSpawns.append(ProjectileSpawnRequest(
+                    position: position,
+                    velocity: vel,
+                    damage: 8
+                ))
+            }
+
+        default:
+            // Phase 2: 12 radial burst + rapid predictive shots + fragments
+            let radialCount = 12
+            for i in 0..<radialCount {
+                let angle = Float(i) / Float(radialCount) * .pi * 2
+                let vel = SIMD2<Float>(cos(angle), sin(angle)) * speed * 1.2
+                pendingProjectileSpawns.append(ProjectileSpawnRequest(
+                    position: position,
+                    velocity: vel,
+                    damage: 5
+                ))
+            }
+
+            // Rapid predictive shots
+            let spread: Float = 0.1
+            for i in -2...2 {
+                let offset = Float(i) * spread
+                let vel = SIMD2(dir.x + offset, dir.y) * speed * 1.5
+                pendingProjectileSpawns.append(ProjectileSpawnRequest(
+                    position: position,
+                    velocity: vel,
+                    damage: 5
+                ))
+            }
+
+            // Fragment launches
+            let fragmentSpeed: Float = 400
+            for i in -1...1 {
+                let offset = Float(i) * 0.1
+                let vel = SIMD2(dir.x + offset, dir.y) * fragmentSpeed
+                pendingProjectileSpawns.append(ProjectileSpawnRequest(
+                    position: position,
+                    velocity: vel,
+                    damage: 8
+                ))
+            }
         }
     }
 }
