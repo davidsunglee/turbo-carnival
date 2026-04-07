@@ -92,6 +92,18 @@ final class MetalView: UIView {
             return scene
         }
 
+        sceneManager.makeGalaxy2Scene = { [weak self] carryover in
+            let scene = Galaxy2Scene(carryover: carryover)
+            scene.inputProvider = self?.touchInput
+            scene.viewportManager = self?.viewportManager
+            scene.audioProvider = audio
+            scene.sfx = sfxEngine
+            audio.stopAll()
+            sfxEngine.stopLaser()
+            sfxEngine.stopMusic()
+            return scene
+        }
+
         // Start with title screen
         let titleScene = TitleScene()
         titleScene.inputProvider = touchInput
@@ -275,6 +287,22 @@ final class MetalView: UIView {
         }
     }
 
+    private func updateHudInsets(for scene: Galaxy2Scene) {
+        let screenHeight = bounds.height
+        let screenWidth = bounds.width
+        if screenHeight > 0 && screenWidth > 0 {
+            let vUnitsPerPt = GameConfig.designHeight / Float(screenHeight)
+            let designWidth = scene.viewportManager?.currentDesignWidth ?? GameConfig.designWidth
+            let hUnitsPerPt = designWidth / Float(screenWidth)
+            scene.hudInsets = (
+                top: Float(safeAreaInsets.top) * vUnitsPerPt,
+                bottom: Float(safeAreaInsets.bottom) * vUnitsPerPt,
+                left: Float(safeAreaInsets.left) * hUnitsPerPt,
+                right: Float(safeAreaInsets.right) * hUnitsPerPt
+            )
+        }
+    }
+
     private func setControlOverlaysVisible(_ visible: Bool) {
         fireOverlay.isHidden = !visible
         bombOverlay.isHidden = !visible
@@ -293,6 +321,8 @@ final class MetalView: UIView {
         // HUD insets for game scenes
         if let gameScene = engine.currentScene as? Galaxy1Scene {
             updateHudInsets(for: gameScene)
+        } else if let gameScene = engine.currentScene as? Galaxy2Scene {
+            updateHudInsets(for: gameScene)
         }
 
         engine.update(deltaTime: dt)
@@ -303,7 +333,7 @@ final class MetalView: UIView {
         engine.renderer?.transitionProgress = sceneManager.transitionProgress
 
         // Show/hide control overlays based on current scene
-        let isPlaying = engine.currentScene is Galaxy1Scene
+        let isPlaying = engine.currentScene is Galaxy1Scene || engine.currentScene is Galaxy2Scene
         setControlOverlaysVisible(isPlaying)
 
         if isPlaying {

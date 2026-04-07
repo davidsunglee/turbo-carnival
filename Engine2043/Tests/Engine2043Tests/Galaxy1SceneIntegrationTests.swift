@@ -34,7 +34,8 @@ struct Galaxy1SceneIntegrationTests {
         let noFireInput = MockInputProvider()
         scene.inputProvider = noFireInput
 
-        runFrames(scene, count: 10)
+        // Run past the title card (~186 frames) first, then baseline
+        runFrames(scene, count: 200)
         let baselineCount = scene.collectSprites(atlas: nil).count
 
         let fireInput = MockInputProvider(primary: true)
@@ -53,7 +54,8 @@ struct Galaxy1SceneIntegrationTests {
 
     @Test @MainActor func elapsedTimeAdvancesWithFrames() {
         let scene = Galaxy1Scene()
-        runFrames(scene, count: 60)
+        // Title card takes ~3.1s (186 frames); run 250 frames to be well past it
+        runFrames(scene, count: 250)
         #expect(scene.elapsedTime > 0.5)
     }
 
@@ -71,7 +73,8 @@ struct Galaxy1SceneIntegrationTests {
 
     @Test @MainActor func gameResultReflectsCurrentState() {
         let scene = Galaxy1Scene()
-        runFrames(scene, count: 10)
+        // Run past title card (~186 frames) before checking elapsed time
+        runFrames(scene, count: 200)
 
         let result = scene.gameResult
         #expect(result.finalScore >= 0)

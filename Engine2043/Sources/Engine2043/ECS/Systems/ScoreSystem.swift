@@ -11,4 +11,8 @@ public final class ScoreSystem {
     public func reset() {
         currentScore = 0
     }
+
+    public func setScore(_ score: Int) {
+        currentScore = score
+    }
 }
