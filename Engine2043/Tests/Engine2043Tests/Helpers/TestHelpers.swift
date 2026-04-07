@@ -154,6 +154,34 @@ enum TestEntityFactory {
             collisionMask: [.player, .shieldDrone]
         )
     }
+
+    /// Makes an asteroid entity matching AsteroidSystem's layout.
+    /// Small asteroids include HealthComponent + ScoreComponent; large ones do not.
+    static func makeAsteroidEntity(
+        size: AsteroidSize = .small,
+        health: Float? = nil,
+        position: SIMD2<Float> = .zero
+    ) -> GKEntity {
+        let collisionSize = size == .large
+            ? GameConfig.Galaxy2.Asteroid.largeSize
+            : GameConfig.Galaxy2.Asteroid.smallSize
+        let actualHealth: Float
+        if size == .small {
+            actualHealth = health ?? GameConfig.Galaxy2.Asteroid.smallHP
+        } else {
+            actualHealth = 0  // large asteroids have no HealthComponent
+        }
+        let entity = makeEntity(
+            position: position,
+            size: collisionSize,
+            collisionLayer: .asteroid,
+            collisionMask: [.player, .playerProjectile],
+            health: actualHealth,
+            scorePoints: size == .small ? GameConfig.Galaxy2.Score.asteroidSmall : 0
+        )
+        entity.addComponent(AsteroidComponent(size: size))
+        return entity
+    }
 }
 
 // MARK: - GameTime Helpers

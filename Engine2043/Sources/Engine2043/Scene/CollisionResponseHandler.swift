@@ -10,9 +10,15 @@ protocol CollisionContext: AnyObject {
     var sfx: AudioEngine? { get }
     var pendingRemovals: [GKEntity] { get set }
     var enemiesDestroyed: Int { get set }
+    /// Galaxy2Scene provides an AsteroidSystem; Galaxy1Scene returns nil via default extension.
+    var asteroidSystem: AsteroidSystem? { get }
 
     func checkFormationWipe(enemy: GKEntity)
     func spawnShieldDrones()
+}
+
+extension CollisionContext {
+    var asteroidSystem: AsteroidSystem? { nil }
 }
 
 /// Handles collision pair dispatch and response logic.
@@ -32,7 +38,20 @@ final class CollisionResponseHandler {
             let layerA = entityA.component(ofType: PhysicsComponent.self)?.collisionLayer ?? []
             let layerB = entityB.component(ofType: PhysicsComponent.self)?.collisionLayer ?? []
 
-            if layerA.contains(.playerProjectile) && layerB.contains(.enemy) {
+            // NOTE: Phase Laser (hitscan) vs asteroid is handled by the scene's
+            // processLaserHitscan method, not by collision pairs here.
+
+            // Asteroid branches — checked before enemy/projectile branches since
+            // .asteroid is a distinct layer that does not overlap with .enemy.
+            if layerA.contains(.playerProjectile) && layerB.contains(.asteroid) {
+                handleProjectileHitAsteroid(projectile: entityA, asteroid: entityB, ctx: ctx)
+            } else if layerB.contains(.playerProjectile) && layerA.contains(.asteroid) {
+                handleProjectileHitAsteroid(projectile: entityB, asteroid: entityA, ctx: ctx)
+            } else if layerA.contains(.player) && layerB.contains(.asteroid) {
+                handlePlayerHitAsteroid(asteroid: entityB, ctx: ctx)
+            } else if layerB.contains(.player) && layerA.contains(.asteroid) {
+                handlePlayerHitAsteroid(asteroid: entityA, ctx: ctx)
+            } else if layerA.contains(.playerProjectile) && layerB.contains(.enemy) {
                 handleProjectileHitEnemy(projectile: entityA, enemy: entityB, ctx: ctx)
             } else if layerB.contains(.playerProjectile) && layerA.contains(.enemy) {
                 handleProjectileHitEnemy(projectile: entityB, enemy: entityA, ctx: ctx)
@@ -76,6 +95,30 @@ final class CollisionResponseHandler {
                 handlePlayerCollectsItem(item: entityA, ctx: ctx)
             }
         }
+    }
+
+    private func handleProjectileHitAsteroid(projectile: GKEntity, asteroid: GKEntity, ctx: any CollisionContext) {
+        // Small (destructible) asteroids have a HealthComponent; large ones do not.
+        if let health = asteroid.component(ofType: HealthComponent.self) {
+            health.takeDamage(GameConfig.Player.damage)
+            if !health.isAlive {
+                ctx.sfx?.play(.asteroidDestroyed)
+                if let score = asteroid.component(ofType: ScoreComponent.self) {
+                    ctx.scoreSystem.addScore(score.points)
+                }
+                ctx.pendingRemovals.append(asteroid)
+            } else {
+                ctx.sfx?.play(.asteroidHit)
+            }
+        }
+        // Always remove the projectile — asteroids block player projectiles regardless of size.
+        ctx.pendingRemovals.append(projectile)
+    }
+
+    private func handlePlayerHitAsteroid(asteroid: GKEntity, ctx: any CollisionContext) {
+        // Player takes kinetic damage. Asteroid is NOT destroyed — player bounces off.
+        ctx.player.component(ofType: HealthComponent.self)?.takeDamage(GameConfig.Galaxy2.Asteroid.collisionDamage)
+        ctx.sfx?.play(.playerDamaged)
     }
 
     private func handleProjectileHitEnemy(projectile: GKEntity, enemy: GKEntity, ctx: any CollisionContext) {
