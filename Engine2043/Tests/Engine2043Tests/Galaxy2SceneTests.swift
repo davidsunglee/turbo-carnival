@@ -41,6 +41,15 @@ private func runFrames(_ scene: Galaxy2Scene, count: Int) {
 
 struct Galaxy2SceneTests {
 
+    // MARK: - Rendering
+
+    @Test @MainActor func sceneHasGalaxy2BackgroundColor() {
+        let carryover = makeCarryover()
+        let scene = Galaxy2Scene(carryover: carryover)
+        
+        #expect(scene.backgroundColor == GameConfig.Galaxy2.Palette.g2Background)
+    }
+
     // MARK: - Carryover / Initialization
 
     @Test @MainActor func sceneInitializesWithPlayerWeaponFromCarryover() {
@@ -237,6 +246,72 @@ struct Galaxy2SceneTests {
 
         // Projectile should have been removed, and asteroid should have taken damage
         #expect(ctx.pendingRemovals.contains { $0 === projectile }, "Projectile should be removed after hitting asteroid")
+    }
+
+    @Test @MainActor func phaseLaserDoesNotDamageEnemyBehindLargeAsteroid() {
+        // Regression test: large asteroid must block the Phase Laser from reaching
+        // enemies positioned behind it (higher Y), even after several ticks.
+        let carryover = makeCarryover(weaponType: .phaseLaser)
+        let scene = Galaxy2Scene(carryover: carryover)
+
+        let playerPos = scene.player.component(ofType: TransformComponent.self)!.position
+
+        // Large asteroid placed directly in the laser beam path, above the player
+        let asteroidY: Float = playerPos.y + 80
+        let largeAsteroid = TestEntityFactory.makeAsteroidEntity(
+            size: .large,
+            position: SIMD2(playerPos.x, asteroidY)
+        )
+        scene.addAsteroidForTesting(largeAsteroid)
+
+        // Enemy placed above the large asteroid — behind it from the player's perspective
+        let enemy = GKEntity()
+        let enemyY: Float = asteroidY + 60
+        enemy.addComponent(TransformComponent(position: SIMD2(playerPos.x, enemyY)))
+        let enemyRender = RenderComponent(
+            size: GameConfig.Galaxy2.Enemy.tier1Size,
+            color: GameConfig.Galaxy2.Palette.g2Tier1
+        )
+        enemy.addComponent(enemyRender)
+        enemy.addComponent(PhysicsComponent(
+            collisionSize: GameConfig.Galaxy2.Enemy.tier1Size,
+            layer: .enemy,
+            mask: [.player, .playerProjectile]
+        ))
+        let enemyHealth = HealthComponent(health: GameConfig.Galaxy2.Enemy.tier1HP)
+        enemyHealth.hasInvulnerabilityFrames = false
+        enemy.addComponent(enemyHealth)
+        enemy.addComponent(ScoreComponent(points: 100))
+        scene.addEnemyForTesting(enemy)
+
+        let initialEnemyHP = enemyHealth.currentHealth
+
+        // Fire the laser directly for several ticks — all blocked by the large asteroid
+        let hitscan = LaserHitscanRequest(
+            position: playerPos,
+            width: GameConfig.Weapon.laserWidth,
+            damagePerTick: GameConfig.Weapon.laserDamagePerTick
+        )
+        for _ in 0..<5 {
+            scene.processLaserHitscan(hitscan)
+        }
+
+        // Large asteroid has no health component (it is indestructible)
+        #expect(largeAsteroid.component(ofType: HealthComponent.self) == nil,
+                "Large asteroid is indestructible — no health component")
+
+        // Enemy was completely shielded by the large asteroid
+        #expect(enemyHealth.currentHealth == initialEnemyHP,
+                "Enemy behind large asteroid must not take any laser damage")
+
+        // Remove the large asteroid and fire again — enemy should now take damage
+        scene.removeAsteroidForTesting(largeAsteroid)
+        for _ in 0..<3 {
+            scene.processLaserHitscan(hitscan)
+        }
+
+        #expect(enemyHealth.currentHealth < initialEnemyHP,
+                "Enemy with no asteroid blocker must take damage from Phase Laser")
     }
 
     @Test @MainActor func phaseLaserBlockedByLargeAsteroid() {

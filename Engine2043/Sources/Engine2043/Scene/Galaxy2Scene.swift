@@ -47,6 +47,9 @@ public final class Galaxy2Scene: GameScene {
     private var formationEnemies: [Int: [GKEntity]] = [:]
     private var nextFormationID: Int = 0
 
+    // MARK: - Rendering
+    public var backgroundColor: SIMD4<Float> { GameConfig.Galaxy2.Palette.g2Background }
+
     // MARK: - Game state
     public private(set) var gameState: GameState = .playing
     private var gravBombEntities: [GKEntity] = []
@@ -1595,61 +1598,14 @@ public final class Galaxy2Scene: GameScene {
         }
     }
 
-    private func processLaserHitscan(_ hitscan: LaserHitscanRequest) {
+    func processLaserHitscan(_ hitscan: LaserHitscanRequest) {
         let halfWidth = hitscan.width / 2
         let laserMinX = hitscan.position.x - halfWidth
         let laserMaxX = hitscan.position.x + halfWidth
         let laserMinY = hitscan.position.y
         let laserMaxY = GameConfig.designHeight / 2 + 50
 
-        // Process enemies (laser passes through regardless of asteroid blocking)
-        for enemy in enemies {
-            guard let transform = enemy.component(ofType: TransformComponent.self),
-                  let health = enemy.component(ofType: HealthComponent.self),
-                  health.isAlive else { continue }
-
-            let size = enemy.component(ofType: RenderComponent.self)?.size ?? .zero
-            let enemyMinX = transform.position.x - size.x / 2
-            let enemyMaxX = transform.position.x + size.x / 2
-            let enemyMinY = transform.position.y - size.y / 2
-            let enemyMaxY = transform.position.y + size.y / 2
-
-            guard laserMaxX >= enemyMinX && laserMinX <= enemyMaxX &&
-                  laserMaxY >= enemyMinY && laserMinY <= enemyMaxY else { continue }
-
-            // Boss armor interception: laser damages first active armor slot
-            if let armor = enemy.component(ofType: BossArmorComponent.self) {
-                if let activeIdx = armor.slots.firstIndex(where: { $0.isActive }),
-                   let armorEntity = armor.slots[activeIdx].entity,
-                   let armorHealth = armorEntity.component(ofType: HealthComponent.self) {
-                    armorHealth.takeDamage(hitscan.damagePerTick)
-                    if !armorHealth.isAlive {
-                        sfx?.play(.asteroidDestroyed)
-                        armor.slots[activeIdx].entity = nil
-                        pendingRemovals.append(armorEntity)
-                        armorEntities.removeAll { $0 === armorEntity }
-                    } else {
-                        sfx?.play(.bossShieldDeflect) // armor deflects the laser
-                    }
-                    continue  // Armor absorbed the laser — skip boss damage
-                }
-            }
-
-            health.takeDamage(hitscan.damagePerTick)
-            if !health.isAlive {
-                sfx?.play(.enemyDestroyed)
-                if let score = enemy.component(ofType: ScoreComponent.self) {
-                    scoreSystem.addScore(score.points)
-                }
-                enemiesDestroyed += 1
-                pendingRemovals.append(enemy)
-                checkFormationWipe(enemy: enemy)
-            } else {
-                sfx?.play(.enemyHit)
-            }
-        }
-
-        // Laser cycles items
+        // Item cycling is unaffected by asteroid occlusion
         for item in items {
             guard let transform = item.component(ofType: TransformComponent.self) else { continue }
             let size = item.component(ofType: RenderComponent.self)?.size ?? .zero
@@ -1666,33 +1622,58 @@ public final class Galaxy2Scene: GameScene {
             }
         }
 
-        // Laser interacts with asteroids: sorted nearest-to-player first (ascending Y).
-        // Small asteroids take damage; large asteroids BLOCK the laser (beam stops).
-        let sortedAsteroids = asteroids.sorted {
-            let posA = $0.component(ofType: TransformComponent.self)?.position.y ?? 0
-            let posB = $1.component(ofType: TransformComponent.self)?.position.y ?? 0
-            return posA < posB
+        // Gather all entities (enemies + asteroids) that overlap the beam, sorted
+        // ascending by Y so those nearest the player are processed first.
+        enum LaserHitKind {
+            case enemy(GKEntity)
+            case asteroid(GKEntity)
+        }
+        struct HitCandidate {
+            let kind: LaserHitKind
+            let y: Float
         }
 
-        for asteroid in sortedAsteroids {
+        var candidates: [HitCandidate] = []
+
+        for enemy in enemies {
+            guard let transform = enemy.component(ofType: TransformComponent.self),
+                  let health = enemy.component(ofType: HealthComponent.self),
+                  health.isAlive else { continue }
+
+            let size = enemy.component(ofType: RenderComponent.self)?.size ?? .zero
+            guard laserMaxX >= transform.position.x - size.x / 2,
+                  laserMinX <= transform.position.x + size.x / 2,
+                  laserMaxY >= transform.position.y - size.y / 2,
+                  laserMinY <= transform.position.y + size.y / 2 else { continue }
+
+            candidates.append(HitCandidate(kind: .enemy(enemy), y: transform.position.y))
+        }
+
+        for asteroid in asteroids {
             guard let transform = asteroid.component(ofType: TransformComponent.self),
-                  let asteroidComp = asteroid.component(ofType: AsteroidComponent.self) else { continue }
+                  asteroid.component(ofType: AsteroidComponent.self) != nil else { continue }
 
             let size = asteroid.component(ofType: PhysicsComponent.self)?.collisionSize
                 ?? asteroid.component(ofType: RenderComponent.self)?.size ?? .zero
-            let astMinX = transform.position.x - size.x / 2
-            let astMaxX = transform.position.x + size.x / 2
-            let astMinY = transform.position.y - size.y / 2
-            let astMaxY = transform.position.y + size.y / 2
+            guard laserMaxX >= transform.position.x - size.x / 2,
+                  laserMinX <= transform.position.x + size.x / 2,
+                  laserMaxY >= transform.position.y - size.y / 2,
+                  laserMinY <= transform.position.y + size.y / 2 else { continue }
 
-            guard laserMaxX >= astMinX && laserMinX <= astMaxX &&
-                  laserMaxY >= astMinY && laserMinY <= astMaxY else { continue }
+            candidates.append(HitCandidate(kind: .asteroid(asteroid), y: transform.position.y))
+        }
 
-            if asteroidComp.asteroidSize == .large {
-                // Large asteroid blocks the laser beam — stop processing
-                break
-            } else {
-                // Small asteroid takes laser damage
+        // Sort ascending Y: entities closest to the player (lowest Y) come first.
+        candidates.sort { $0.y < $1.y }
+
+        for candidate in candidates {
+            switch candidate.kind {
+            case .asteroid(let asteroid):
+                guard let asteroidComp = asteroid.component(ofType: AsteroidComponent.self) else { continue }
+                if asteroidComp.asteroidSize == .large {
+                    return // Large asteroid blocks the beam — nothing behind it is hit
+                }
+                // Small asteroid: take damage; beam continues through
                 if let health = asteroid.component(ofType: HealthComponent.self) {
                     health.takeDamage(hitscan.damagePerTick)
                     if !health.isAlive {
@@ -1705,8 +1686,78 @@ public final class Galaxy2Scene: GameScene {
                         sfx?.play(.asteroidHit)
                     }
                 }
+
+            case .enemy(let enemy):
+                // Boss armor interception: geometric angle-based check.
+                // The Phase Laser fires straight up from the player, so the approach
+                // angle from the laser source to the boss determines which armor
+                // slot (if any) blocks the beam.
+                if let armor = enemy.component(ofType: BossArmorComponent.self) {
+                    let laserApproachAngle = atan2(
+                        enemy.component(ofType: TransformComponent.self)!.position.y - hitscan.position.y,
+                        enemy.component(ofType: TransformComponent.self)!.position.x - hitscan.position.x
+                    )
+                    let halfArc: Float = .pi / 6  // ±30°
+                    var coveringIdx: Int? = nil
+                    for (i, slot) in armor.slots.enumerated() where slot.isActive {
+                        var diff = laserApproachAngle - slot.angle
+                        while diff > .pi  { diff -= 2 * .pi }
+                        while diff < -.pi { diff += 2 * .pi }
+                        if abs(diff) <= halfArc {
+                            coveringIdx = i
+                            break
+                        }
+                    }
+                    if let idx = coveringIdx,
+                       let armorEntity = armor.slots[idx].entity,
+                       let armorHealth = armorEntity.component(ofType: HealthComponent.self) {
+                        armorHealth.takeDamage(hitscan.damagePerTick)
+                        if !armorHealth.isAlive {
+                            sfx?.play(.asteroidDestroyed)
+                            armor.slots[idx].entity = nil
+                            pendingRemovals.append(armorEntity)
+                            armorEntities.removeAll { $0 === armorEntity }
+                        } else {
+                            sfx?.play(.bossShieldDeflect) // armor deflects the laser
+                        }
+                        continue  // Armor absorbed the laser — skip boss damage
+                    }
+                }
+
+                guard let health = enemy.component(ofType: HealthComponent.self) else { continue }
+                health.takeDamage(hitscan.damagePerTick)
+                if !health.isAlive {
+                    sfx?.play(.enemyDestroyed)
+                    if let score = enemy.component(ofType: ScoreComponent.self) {
+                        scoreSystem.addScore(score.points)
+                    }
+                    enemiesDestroyed += 1
+                    pendingRemovals.append(enemy)
+                    checkFormationWipe(enemy: enemy)
+                } else {
+                    sfx?.play(.enemyHit)
+                }
             }
         }
+    }
+
+    // MARK: - Testability
+
+    /// Registers an entity as an enemy. For use in tests via @testable import only.
+    func addEnemyForTesting(_ entity: GKEntity) {
+        registerEntity(entity)
+        enemies.append(entity)
+        lightningArcSystem.registerEnemy(entity)
+    }
+
+    /// Registers an entity as an asteroid. For use in tests via @testable import only.
+    func addAsteroidForTesting(_ entity: GKEntity) {
+        registerAsteroid(entity)
+    }
+
+    /// Removes an asteroid immediately (bypasses pendingRemovals). For use in tests only.
+    func removeAsteroidForTesting(_ entity: GKEntity) {
+        unregisterAsteroid(entity)
     }
 
     // MARK: - Collisions

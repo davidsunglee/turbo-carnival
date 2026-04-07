@@ -121,12 +121,32 @@ final class CollisionResponseHandler {
         ctx.sfx?.play(.playerDamaged)
     }
 
+    /// Half-arc that an armor slot covers on each side of its angle (±30°).
+    static let armorSlotHalfArc: Float = .pi / 6  // 30°
+
+    /// Returns the index of the armor slot (if any) that covers the given approach angle.
+    private func armorSlotCovering(angle: Float, armor: BossArmorComponent) -> Int? {
+        for (i, slot) in armor.slots.enumerated() where slot.isActive {
+            var diff = angle - slot.angle
+            // Normalize to [-π, π]
+            while diff > .pi  { diff -= 2 * .pi }
+            while diff < -.pi { diff += 2 * .pi }
+            if abs(diff) <= Self.armorSlotHalfArc {
+                return i
+            }
+        }
+        return nil
+    }
+
     private func handleProjectileHitEnemy(projectile: GKEntity, enemy: GKEntity, ctx: any CollisionContext) {
-        // Boss armor interception: if enemy has BossArmorComponent with active armor,
-        // damage a random active armor piece instead of the boss.
-        if let armor = enemy.component(ofType: BossArmorComponent.self) {
-            let activeIndices = armor.slots.enumerated().compactMap { $0.element.isActive ? $0.offset : nil }
-            if let idx = activeIndices.first,
+        // Boss armor interception: geometric angle-based check.
+        // Compute approach angle from projectile to boss; only the armor slot
+        // covering that angle can block the hit.
+        if let armor = enemy.component(ofType: BossArmorComponent.self),
+           let projPos = projectile.component(ofType: TransformComponent.self)?.position,
+           let bossPos = enemy.component(ofType: TransformComponent.self)?.position {
+            let approachAngle = atan2(bossPos.y - projPos.y, bossPos.x - projPos.x)
+            if let idx = armorSlotCovering(angle: approachAngle, armor: armor),
                let armorEntity = armor.slots[idx].entity,
                let armorHealth = armorEntity.component(ofType: HealthComponent.self) {
                 armorHealth.takeDamage(GameConfig.Player.damage)
