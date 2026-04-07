@@ -40,6 +40,7 @@ public final class Galaxy2Scene: GameScene {
     private var armorEntities: [GKEntity] = []  // armor asteroids orbiting Lithic Harvester
     private var shieldDrones: [GKEntity] = []
     private var asteroids: [GKEntity] = []
+    var asteroidCount: Int { asteroids.count } // testability
     var pendingRemovals: [GKEntity] = [] // CollisionContext
 
     // MARK: - Formation tracking
@@ -50,6 +51,7 @@ public final class Galaxy2Scene: GameScene {
     public private(set) var gameState: GameState = .playing
     private var gravBombEntities: [GKEntity] = []
     private var gravBombTimers: [ObjectIdentifier: Double] = [:]
+    private var tractorBeamSearchTimer: Double = 0
     private var blastEffects: [(entity: GKEntity, timer: Double)] = []
     private var slowMoTimer: Double = 0
     private var isSlowMo: Bool = false
@@ -365,6 +367,9 @@ public final class Galaxy2Scene: GameScene {
             for spawn in bossSystem.pendingProjectileSpawns {
                 spawnEnemyProjectile(position: spawn.position, velocity: spawn.velocity, damage: spawn.damage)
             }
+
+            // Initiate new tractor beam captures when boss has empty armor slots
+            initiateTractorBeamCaptures(deltaTime: time.fixedDeltaTime)
 
             // Process tractor beam pulls: move targeted asteroids toward boss
             processTractorBeamPulls()
@@ -1414,6 +1419,35 @@ public final class Galaxy2Scene: GameScene {
         }
     }
 
+    private func initiateTractorBeamCaptures(deltaTime: Double) {
+        guard let boss = bossEntity,
+              let armor = boss.component(ofType: BossArmorComponent.self),
+              let bossPos = boss.component(ofType: TransformComponent.self)?.position else { return }
+
+        tractorBeamSearchTimer += deltaTime
+        let hasEmptySlot = armor.slots.contains { !$0.isActive }
+        let notCurrentlyPulling = armor.tractorBeamTargets.isEmpty
+
+        // Only try to capture a new asteroid periodically (using boss's tractor beam interval)
+        guard hasEmptySlot && notCurrentlyPulling &&
+              tractorBeamSearchTimer >= armor.tractorBeamInterval else { return }
+
+        tractorBeamSearchTimer = 0
+
+        // Find nearest asteroid not already serving as armor
+        let armorEntityIds = Set(armorEntities.map { ObjectIdentifier($0) })
+        if let nearest = asteroids
+            .filter({ !armorEntityIds.contains(ObjectIdentifier($0)) })
+            .min(by: {
+                let d1 = simd_length(($0.component(ofType: TransformComponent.self)?.position ?? .zero) - bossPos)
+                let d2 = simd_length(($1.component(ofType: TransformComponent.self)?.position ?? .zero) - bossPos)
+                return d1 < d2
+            }) {
+            armor.tractorBeamTargets.append(nearest)
+            sfx?.play(.tractorBeam) // tractor beam activation
+        }
+    }
+
     private func processTractorBeamPulls() {
         guard let boss = bossEntity,
               let armor = boss.component(ofType: BossArmorComponent.self),
@@ -1595,7 +1629,7 @@ public final class Galaxy2Scene: GameScene {
                         pendingRemovals.append(armorEntity)
                         armorEntities.removeAll { $0 === armorEntity }
                     } else {
-                        sfx?.play(.asteroidHit)
+                        sfx?.play(.bossShieldDeflect) // armor deflects the laser
                     }
                     continue  // Armor absorbed the laser — skip boss damage
                 }

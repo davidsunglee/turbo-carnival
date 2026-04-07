@@ -135,7 +135,7 @@ final class CollisionResponseHandler {
                     armor.slots[idx].entity = nil
                     ctx.pendingRemovals.append(armorEntity)
                 } else {
-                    ctx.sfx?.play(.asteroidHit)
+                    ctx.sfx?.play(.bossShieldDeflect) // armor deflects the projectile
                 }
                 ctx.pendingRemovals.append(projectile)
                 return

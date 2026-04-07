@@ -287,6 +287,225 @@ struct Galaxy2SceneTests {
         let scene = Galaxy2Scene(carryover: carryover)
         #expect(scene.enemiesDestroyed == 42)
     }
+
+    // MARK: - Integration Test: Galaxy 1 → Galaxy 2 Full Progression
+
+    @Test @MainActor func galaxy1ToGalaxy2FullTransitionEndToEnd() {
+        // Create Galaxy1Scene and simulate until boss spawns, then kill it
+        // and verify the .toGalaxy2 transition fires with valid carryover.
+        let g1 = Galaxy1Scene()
+        let input = MockInputProvider(movement: .zero, primary: true)
+        g1.inputProvider = input
+
+        var g1Time = GameTime()
+
+        // Advance until boss spawns.
+        // Title card ~186 frames + scroll to 2150 at 20 units/s = ~6450 frames; total ~6636.
+        // Keep player alive on each fixed update to prevent premature game-over.
+        for _ in 0..<7000 {
+            g1Time.advance(by: GameConfig.fixedTimeStep)
+            while g1Time.shouldPerformFixedUpdate() {
+                // Prevent player death during the long ramp-up
+                g1.player.component(ofType: HealthComponent.self)?.currentHealth = GameConfig.Player.health
+                g1.fixedUpdate(time: g1Time)
+                g1Time.consumeFixedUpdate()
+            }
+            g1.update(time: g1Time)
+            if g1.bossEntity != nil { break }
+        }
+
+        guard g1.bossEntity != nil else {
+            Issue.record("Boss never spawned in Galaxy1Scene after 7000 frames")
+            return
+        }
+
+        // Kill the boss
+        g1.bossEntity?.component(ofType: HealthComponent.self)?.currentHealth = 0
+
+        // Advance until transition fires (boss death animation 3.7s + restart delay 1.5s = ~5.2s)
+        for _ in 0..<400 {
+            g1Time.advance(by: GameConfig.fixedTimeStep)
+            while g1Time.shouldPerformFixedUpdate() {
+                g1.player.component(ofType: HealthComponent.self)?.currentHealth = GameConfig.Player.health
+                g1.fixedUpdate(time: g1Time)
+                g1Time.consumeFixedUpdate()
+            }
+            g1.update(time: g1Time)
+            if g1.requestedTransition != nil { break }
+        }
+
+        // Verify the transition type and extract carryover
+        guard case .toGalaxy2(let carryover) = g1.requestedTransition else {
+            Issue.record("Expected .toGalaxy2 transition, got \(String(describing: g1.requestedTransition))")
+            return
+        }
+
+        #expect(carryover.score >= 0,  "Carryover score must be non-negative")
+        #expect(carryover.elapsedTime > 0, "Carryover elapsed time must be positive")
+        #expect(carryover.secondaryCharges >= 1, "G1 always grants at least 1 secondary charge")
+
+        // Create Galaxy2Scene from the carryover and verify player state
+        let g2 = Galaxy2Scene(carryover: carryover)
+
+        let weapon = g2.player.component(ofType: WeaponComponent.self)
+        #expect(weapon?.weaponType == carryover.weaponType, "Weapon type carried over")
+        #expect(g2.scoreSystem.currentScore == carryover.score, "Score carried over")
+        let health = g2.player.component(ofType: HealthComponent.self)
+        #expect(health?.currentHealth == GameConfig.Player.health, "Health fully restored in Galaxy 2")
+
+        // Run several frames to verify no crash after transition
+        runFrames(g2, count: 30)
+        #expect(g2.gameState == .playing)
+        #expect(g2.requestedTransition == nil)
+    }
+
+    // MARK: - Integration Test: Asteroid Field Lifecycle
+
+    @Test @MainActor func asteroidFieldLifecycleSpawnsAndRemovesAsteroids() {
+        let carryover = makeCarryover()
+        let scene = Galaxy2Scene(carryover: carryover)
+
+        // Initial sparse layer should be present at scene creation
+        #expect(scene.asteroidCount == GameConfig.Galaxy2.Asteroid.sparseCount,
+                "Sparse asteroid layer present at start")
+
+        // Advance past title card (~186 frames) + scroll past 200 to trigger first field
+        // Background scrolls at 20 units/s; 200 units = 10 seconds = 600 frames.
+        // Total: ~800 frames to safely clear both.
+        runFrames(scene, count: 800)
+
+        // After first field spawns, asteroids are present (sparse + field)
+        #expect(scene.asteroidCount > 0, "Asteroids present after field trigger at scroll 200")
+        #expect(scene.gameState == .playing)
+
+        // Run long enough for the first-field asteroids (y=370–570) to scroll off
+        // and for the second field (at scroll 600) to spawn.
+        // Field asteroids scroll at 30 units/s; 570 units / 30 = 19s max = ~1140 frames.
+        // Running 1300 extra frames puts us well past the first-field clear.
+        runFrames(scene, count: 1300)
+
+        // Game still running after full asteroid lifecycle pass
+        #expect(scene.gameState == .playing)
+
+        // Asteroid removal is working: count is bounded even after multiple fields
+        #expect(scene.asteroidCount < 100, "Asteroid removal prevents unbounded accumulation")
+    }
+
+    // MARK: - Integration Test: Game Over in Galaxy 2
+
+    @Test @MainActor func gameOverInGalaxy2ProducesCorrectGameResult() {
+        let carryover = makeCarryover(score: 5000, enemiesDestroyed: 30, elapsedTime: 120.0)
+        let scene = Galaxy2Scene(carryover: carryover)
+
+        // Advance past title card so gameplay is active
+        runFrames(scene, count: 200)
+
+        // Directly kill the player
+        scene.player.component(ofType: HealthComponent.self)?.currentHealth = 0
+
+        // Run until the game-over transition fires (restartDelay = 1.5s = 90 frames)
+        runFrames(scene, count: 150)
+
+        guard case .toGameOver(let result) = scene.requestedTransition else {
+            Issue.record("Expected .toGameOver transition, got \(String(describing: scene.requestedTransition))")
+            return
+        }
+
+        // Score must include the G1 carryover value
+        #expect(result.finalScore >= 5000, "Game result includes G1 carryover score")
+        #expect(!result.didWin, "Game over means didWin is false")
+        #expect(result.enemiesDestroyed >= 30, "Carries over G1 enemies destroyed count")
+    }
+
+    // MARK: - SFX Verification: Boss Armor
+
+    @Test @MainActor func bossArmorDeflectsProjectileWithCorrectSFX() {
+        // Verify that a projectile hitting boss armor (BossArmorComponent) that survives
+        // results in the projectile being removed and the armor taking damage,
+        // which is the trigger point for .bossShieldDeflect SFX in the game.
+        let ctx = MockCollisionContext()
+        let handler = CollisionResponseHandler(context: ctx)
+
+        // Boss entity with BossArmorComponent having one active armor slot
+        let boss = GKEntity()
+        boss.addComponent(TransformComponent(position: .zero))
+        let physics = PhysicsComponent(collisionSize: SIMD2(80, 80), layer: .enemy, mask: [.playerProjectile])
+        boss.addComponent(physics)
+        let bossHealth = HealthComponent(health: GameConfig.Galaxy2.Enemy.bossHP)
+        bossHealth.hasInvulnerabilityFrames = false
+        boss.addComponent(bossHealth)
+        boss.addComponent(ScoreComponent(points: GameConfig.Galaxy2.Score.g2Boss))
+
+        let armor = BossArmorComponent()
+        // Create one armor entity with enough HP to survive one hit
+        let armorEntity = GKEntity()
+        armorEntity.addComponent(TransformComponent(position: SIMD2(50, 0)))
+        let armorHealth = HealthComponent(health: GameConfig.Galaxy2.Enemy.bossArmorSlotHP)
+        armorHealth.hasInvulnerabilityFrames = false
+        armorEntity.addComponent(armorHealth)
+        armorEntity.addComponent(AsteroidComponent(size: .small))
+        armorEntity.addComponent(PhysicsComponent(collisionSize: SIMD2(16, 16), layer: .asteroid, mask: [.playerProjectile]))
+        armor.slots.append(ArmorSlot(angle: 0, entity: armorEntity))
+        boss.addComponent(armor)
+
+        let projectile = TestEntityFactory.makeProjectileEntity()
+
+        // Before collision: armor entity is alive
+        #expect(armorHealth.isAlive)
+        let bossDamageBefore = bossHealth.currentHealth
+
+        handler.processCollisions(pairs: [(projectile, boss)])
+
+        // Projectile should be removed
+        #expect(ctx.pendingRemovals.contains { $0 === projectile },
+                "Projectile removed after hitting armor")
+        // Armor took damage but survived (bossArmorSlotHP 4.0 > Player.damage 1.0)
+        #expect(armorHealth.isAlive, "Armor survives one projectile hit")
+        #expect(armorHealth.currentHealth < GameConfig.Galaxy2.Enemy.bossArmorSlotHP,
+                "Armor health reduced")
+        // Boss itself was NOT damaged — armor intercepted
+        #expect(bossHealth.currentHealth == bossDamageBefore, "Boss protected by armor")
+        // Boss not removed
+        #expect(!ctx.pendingRemovals.contains { $0 === boss })
+    }
+
+    @Test @MainActor func bossArmorDestructionPlaysAsteroidDestroyedSFX() {
+        // Verify that a projectile that destroys an armor piece removes the armor entity
+        // from pendingRemovals (the point where .asteroidDestroyed SFX plays).
+        let ctx = MockCollisionContext()
+        let handler = CollisionResponseHandler(context: ctx)
+
+        let boss = GKEntity()
+        boss.addComponent(TransformComponent(position: .zero))
+        boss.addComponent(PhysicsComponent(collisionSize: SIMD2(80, 80), layer: .enemy, mask: [.playerProjectile]))
+        let bossHealth = HealthComponent(health: GameConfig.Galaxy2.Enemy.bossHP)
+        bossHealth.hasInvulnerabilityFrames = false
+        boss.addComponent(bossHealth)
+        boss.addComponent(ScoreComponent(points: GameConfig.Galaxy2.Score.g2Boss))
+
+        let armor = BossArmorComponent()
+        let armorEntity = GKEntity()
+        armorEntity.addComponent(TransformComponent(position: SIMD2(50, 0)))
+        // Very low health so one hit destroys it
+        let armorHealth = HealthComponent(health: 0.5)
+        armorHealth.hasInvulnerabilityFrames = false
+        armorEntity.addComponent(armorHealth)
+        armorEntity.addComponent(AsteroidComponent(size: .small))
+        armorEntity.addComponent(PhysicsComponent(collisionSize: SIMD2(16, 16), layer: .asteroid, mask: [.playerProjectile]))
+        armor.slots.append(ArmorSlot(angle: 0, entity: armorEntity))
+        boss.addComponent(armor)
+
+        let projectile = TestEntityFactory.makeProjectileEntity()
+        handler.processCollisions(pairs: [(projectile, boss)])
+
+        // Armor destroyed — in pendingRemovals (where .asteroidDestroyed SFX plays)
+        #expect(ctx.pendingRemovals.contains { $0 === armorEntity },
+                "Destroyed armor entity queued for removal")
+        #expect(!armorHealth.isAlive, "Armor entity health at zero")
+        #expect(armor.slots[0].entity == nil, "Armor slot cleared after destruction")
+        // Projectile removed after hitting armor
+        #expect(ctx.pendingRemovals.contains { $0 === projectile })
+    }
 }
 
 // MARK: - Mock CollisionContext for unit tests

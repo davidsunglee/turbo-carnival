@@ -40,7 +40,7 @@ public final class Galaxy1Scene: GameScene {
     private var enemyProjectiles: [GKEntity] = []
     private var items: [GKEntity] = []
     private var capitalShipHulls: [GKEntity] = []
-    private var bossEntity: GKEntity?
+    var bossEntity: GKEntity? // @testable access for integration tests
     private var shieldEntities: [GKEntity] = []
     private var shieldDrones: [GKEntity] = []
     var pendingRemovals: [GKEntity] = [] // CollisionContext
