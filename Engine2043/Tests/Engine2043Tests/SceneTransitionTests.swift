@@ -3,7 +3,7 @@ import simd
 @testable import Engine2043
 
 struct SceneTransitionTests {
-    @Test @MainActor func titleSceneRequestsGameOnInput() {
+    @Test @MainActor func titleSceneRequestsGalaxySelectOnInput() {
         let scene = TitleScene()
         let input = MockInputProvider(primary: true)
         scene.inputProvider = input
@@ -15,7 +15,11 @@ struct SceneTransitionTests {
             time.consumeFixedUpdate()
         }
 
-        #expect(scene.requestedTransition != nil)
+        if case .toGalaxySelect = scene.requestedTransition {
+            // pass
+        } else {
+            #expect(Bool(false), "Expected .toGalaxySelect, got \(String(describing: scene.requestedTransition))")
+        }
     }
 
     @Test @MainActor func gameOverSceneStartsWithNoTransition() {

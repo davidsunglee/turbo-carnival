@@ -98,7 +98,7 @@ public final class TitleScene: GameScene {
         // Check for start input
         if let input = inputProvider?.poll() {
             if input.primaryFire || input.secondaryFire1 || input.secondaryFire2 || input.secondaryFire3 {
-                requestedTransition = .toGame
+                requestedTransition = .toGalaxySelect
             }
         }
     }
