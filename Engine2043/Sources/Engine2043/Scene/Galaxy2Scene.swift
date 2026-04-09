@@ -95,7 +95,15 @@ public final class Galaxy2Scene: GameScene {
 
     // MARK: - Init
 
-    public init(carryover: PlayerCarryover) {
+    public init(carryover: PlayerCarryover? = nil) {
+        let carryover = carryover ?? PlayerCarryover(
+            weaponType: .doubleCannon,
+            score: 0,
+            secondaryCharges: 1,
+            shieldDroneCount: 0,
+            enemiesDestroyed: 0,
+            elapsedTime: 0
+        )
         collisionSystem = CollisionSystem(worldBounds: AABB(min: SIMD2(-200, -340), max: SIMD2(200, 340)))
         backgroundSystem.palette = .galaxy2
 
@@ -304,6 +312,7 @@ public final class Galaxy2Scene: GameScene {
                     enemiesDestroyed: enemiesDestroyed,
                     elapsedTime: elapsedTime
                 )
+                ProgressStore.markCleared(galaxy: 2)
                 requestedTransition = .toGalaxy3(carryover)
                 isBossDying = false
             }

@@ -410,8 +410,9 @@ struct Galaxy2SceneTests {
         }
 
         // Verify the transition type and extract carryover
-        guard case .toGalaxy2(let carryover) = g1.requestedTransition else {
-            Issue.record("Expected .toGalaxy2 transition, got \(String(describing: g1.requestedTransition))")
+        guard case .toGalaxy2(let optCarryover) = g1.requestedTransition,
+              let carryover = optCarryover else {
+            Issue.record("Expected .toGalaxy2 transition with non-nil carryover, got \(String(describing: g1.requestedTransition))")
             return
         }
 

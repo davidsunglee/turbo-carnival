@@ -419,6 +419,30 @@ struct SpriteFactoryTests {
         }
     }
 
+    @Test func makeBitmapGlyphApostropheProducesContent() {
+        let (pixels, w, h) = SpriteFactory.makeBitmapGlyph("'")
+        #expect(w == 6)
+        #expect(h == 8)
+        let hasContent = stride(from: 3, to: pixels.count, by: 4).contains { pixels[$0] > 0 }
+        #expect(hasContent)
+    }
+
+    @Test func makeBitmapGlyphAsteriskProducesContent() {
+        let (pixels, w, h) = SpriteFactory.makeBitmapGlyph("*")
+        #expect(w == 6)
+        #expect(h == 8)
+        let hasContent = stride(from: 3, to: pixels.count, by: 4).contains { pixels[$0] > 0 }
+        #expect(hasContent)
+    }
+
+    @Test func makeBitmapGlyphGreaterThanProducesContent() {
+        let (pixels, w, h) = SpriteFactory.makeBitmapGlyph(">")
+        #expect(w == 6)
+        #expect(h == 8)
+        let hasContent = stride(from: 3, to: pixels.count, by: 4).contains { pixels[$0] > 0 }
+        #expect(hasContent)
+    }
+
     // MARK: - Galaxy 3 Sprites
 
     @Test func makeG3TrackingDroneReturnsCorrectSize() {

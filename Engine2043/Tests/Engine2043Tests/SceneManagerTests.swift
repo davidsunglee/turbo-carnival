@@ -239,4 +239,25 @@ struct SceneManagerTests {
         #expect(receivedCarryover?.weaponType == .doubleCannon)
         #expect(engine.currentScene as AnyObject === galaxy2Scene)
     }
+
+    @Test @MainActor func galaxySelectTransitionCallsFactory() {
+        let (manager, engine) = makeManager()
+
+        var galaxySelectFactoryCalled = false
+        let galaxySelectScene = StubScene()
+        manager.makeGalaxySelectScene = {
+            galaxySelectFactoryCalled = true
+            return galaxySelectScene
+        }
+
+        let scene = StubScene()
+        scene.requestedTransition = .toGalaxySelect
+        engine.currentScene = scene
+
+        manager.checkForTransition()
+        manager.updateTransition(deltaTime: 0.25)
+
+        #expect(galaxySelectFactoryCalled)
+        #expect(engine.currentScene as AnyObject === galaxySelectScene)
+    }
 }

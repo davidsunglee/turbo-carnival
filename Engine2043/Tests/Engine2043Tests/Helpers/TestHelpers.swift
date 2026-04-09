@@ -13,6 +13,9 @@ final class MockInputProvider: InputProvider {
     var secondary2: Bool = false
     var secondary3: Bool = false
     var tapPos: SIMD2<Float>?
+    var menuUp: Bool = false
+    var menuDown: Bool = false
+    var menuBack: Bool = false
 
     init(movement: SIMD2<Float> = .zero, primary: Bool = false) {
         self.movement = movement
@@ -26,6 +29,9 @@ final class MockInputProvider: InputProvider {
         input.secondaryFire1 = secondary1
         input.secondaryFire2 = secondary2
         input.secondaryFire3 = secondary3
+        input.menuUp = menuUp
+        input.menuDown = menuDown
+        input.menuBack = menuBack
         input.tapPosition = tapPos
         tapPos = nil
         return input

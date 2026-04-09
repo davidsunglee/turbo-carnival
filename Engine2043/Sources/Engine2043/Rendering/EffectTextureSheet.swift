@@ -21,7 +21,7 @@ public final class EffectTextureSheet {
         return names
     }()
 
-    static let glyphChars = Array("0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ-.: ")
+    static let glyphChars = Array("0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ-.:'*>")
 
     struct SpriteEntry {
         let name: String

@@ -3,7 +3,7 @@ import simd
 @testable import Engine2043
 
 struct SceneTransitionTests {
-    @Test @MainActor func titleSceneRequestsGameOnInput() {
+    @Test @MainActor func titleSceneRequestsGalaxySelectOnInput() {
         let scene = TitleScene()
         let input = MockInputProvider(primary: true)
         scene.inputProvider = input
@@ -15,7 +15,11 @@ struct SceneTransitionTests {
             time.consumeFixedUpdate()
         }
 
-        #expect(scene.requestedTransition != nil)
+        if case .toGalaxySelect = scene.requestedTransition {
+            // pass
+        } else {
+            #expect(Bool(false), "Expected .toGalaxySelect, got \(String(describing: scene.requestedTransition))")
+        }
     }
 
     @Test @MainActor func gameOverSceneStartsWithNoTransition() {
@@ -50,12 +54,12 @@ struct SceneTransitionTests {
         let transition = SceneTransition.toGalaxy3(carryover)
 
         if case .toGalaxy3(let carried) = transition {
-            #expect(carried.weaponType == .lightningArc)
-            #expect(carried.score == 8000)
-            #expect(carried.secondaryCharges == 3)
-            #expect(carried.shieldDroneCount == 1)
-            #expect(carried.enemiesDestroyed == 55)
-            #expect(carried.elapsedTime == 200.0)
+            #expect(carried?.weaponType == .lightningArc)
+            #expect(carried?.score == 8000)
+            #expect(carried?.secondaryCharges == 3)
+            #expect(carried?.shieldDroneCount == 1)
+            #expect(carried?.enemiesDestroyed == 55)
+            #expect(carried?.elapsedTime == 200.0)
         } else {
             #expect(Bool(false), "Expected .toGalaxy3 case")
         }
@@ -74,12 +78,13 @@ struct SceneTransitionTests {
         let transitions: [SceneTransition] = [
             .toGame,
             .toTitle,
+            .toGalaxySelect,
             .toGameOver(result),
             .toVictory(result),
             .toGalaxy2(carryover),
             .toGalaxy3(carryover),
         ]
-        #expect(transitions.count == 6, "All 6 transition cases should exist")
+        #expect(transitions.count == 7, "All 7 transition cases should exist")
     }
 
     @Test func toVictoryTransitionPreservesResult() {
@@ -104,11 +109,68 @@ struct SceneTransitionTests {
         let transition = SceneTransition.toGalaxy2(carryover)
 
         if case .toGalaxy2(let carried) = transition {
-            #expect(carried.weaponType == .phaseLaser)
-            #expect(carried.score == 4500)
-            #expect(carried.shieldDroneCount == 1)
+            #expect(carried?.weaponType == .phaseLaser)
+            #expect(carried?.score == 4500)
+            #expect(carried?.shieldDroneCount == 1)
         } else {
             #expect(Bool(false), "Expected .toGalaxy2 case")
+        }
+    }
+
+    @Test func toGalaxySelectTransitionExists() {
+        let transition = SceneTransition.toGalaxySelect
+        if case .toGalaxySelect = transition {
+            // pass
+        } else {
+            #expect(Bool(false), "Expected .toGalaxySelect case")
+        }
+    }
+
+    @Test func toGalaxy2AcceptsNilCarryover() {
+        let transition = SceneTransition.toGalaxy2(nil)
+        if case .toGalaxy2(let carryover) = transition {
+            #expect(carryover == nil)
+        } else {
+            #expect(Bool(false), "Expected .toGalaxy2 case")
+        }
+    }
+
+    @Test func toGalaxy3AcceptsNilCarryover() {
+        let transition = SceneTransition.toGalaxy3(nil)
+        if case .toGalaxy3(let carryover) = transition {
+            #expect(carryover == nil)
+        } else {
+            #expect(Bool(false), "Expected .toGalaxy3 case")
+        }
+    }
+
+    @Test @MainActor func galaxy2SceneAcceptsNilCarryover() {
+        let scene = Galaxy2Scene(carryover: nil)
+        #expect(scene.requestedTransition == nil)
+    }
+
+    @Test @MainActor func galaxy3SceneAcceptsNilCarryover() {
+        let scene = Galaxy3Scene(carryover: nil)
+        #expect(scene.requestedTransition == nil)
+    }
+
+    @Test @MainActor func titleSceneRequestsGalaxySelectOnTap() {
+        let scene = TitleScene()
+        let input = MockInputProvider()
+        input.tapPos = SIMD2(100, 100)
+        scene.inputProvider = input
+
+        var time = GameTime()
+        time.advance(by: 1.0 / 60.0)
+        while time.shouldPerformFixedUpdate() {
+            scene.fixedUpdate(time: time)
+            time.consumeFixedUpdate()
+        }
+
+        if case .toGalaxySelect = scene.requestedTransition {
+            // pass
+        } else {
+            #expect(Bool(false), "Expected .toGalaxySelect on tap, got \(String(describing: scene.requestedTransition))")
         }
     }
 }

@@ -66,6 +66,13 @@ final class MetalView: UIView {
             return scene
         }
 
+        sceneManager.makeGalaxySelectScene = { [weak self] in
+            let scene = GalaxySelectScene()
+            scene.inputProvider = self?.touchInput
+            scene.viewportManager = self?.viewportManager
+            return scene
+        }
+
         sceneManager.makeGameScene = { [weak self] in
             let scene = Galaxy1Scene()
             scene.inputProvider = self?.touchInput

@@ -19,6 +19,18 @@ public final class TouchInputProvider: InputProvider {
     private var secondary2TouchID: ObjectIdentifier?
     private var secondary3TouchID: ObjectIdentifier?
 
+    // Swipe detection for menu navigation
+    private var swipeOriginY: Float?
+    private var swipeTouchID: ObjectIdentifier?
+    private var pendingMenuUp: Bool = false
+    private var pendingMenuDown: Bool = false
+    private let swipeThreshold: Float = 30
+
+    // Deferred tap: emit on touch-end, cancel if swipe detected
+    private var tapCandidatePosition: SIMD2<Float>?
+    private var tapCandidateTouchID: ObjectIdentifier?
+    private var tapCandidateCancelled: Bool = false
+
     // Configuration
     private let maxJoystickRadius: Float = 60
     private let deadZone: Float = 10
@@ -77,6 +89,11 @@ public final class TouchInputProvider: InputProvider {
         input.tapPosition = pendingTapPosition
         pendingTapPosition = nil
 
+        input.menuUp = pendingMenuUp
+        input.menuDown = pendingMenuDown
+        pendingMenuUp = false
+        pendingMenuDown = false
+
         return input
     }
 
@@ -92,7 +109,18 @@ public final class TouchInputProvider: InputProvider {
             let designWidth = viewportManager?.currentDesignWidth ?? GameConfig.designWidth
             let gameX = (Float(loc.x) / Float(screenSize.width) - 0.5) * designWidth
             let gameY = (0.5 - Float(loc.y) / Float(screenSize.height)) * GameConfig.designHeight
-            pendingTapPosition = SIMD2(gameX, gameY)
+            // Defer tap to touch-end so swipes can cancel it
+            if tapCandidateTouchID == nil {
+                tapCandidatePosition = SIMD2(gameX, gameY)
+                tapCandidateTouchID = touchID
+                tapCandidateCancelled = false
+            }
+
+            // Track swipe origin for menu navigation
+            if swipeTouchID == nil {
+                swipeOriginY = Float(loc.y)
+                swipeTouchID = touchID
+            }
 
             let zoneWidth = min(180.0, screenSize.width / 2)
             if loc.x < zoneWidth && joystickTouchID == nil {
@@ -124,24 +152,51 @@ public final class TouchInputProvider: InputProvider {
                 let loc = touch.location(in: view)
                 joystickCurrent = SIMD2<Float>(Float(loc.x), Float(loc.y))
             }
+
+            // Swipe detection
+            if touchID == swipeTouchID, let originY = swipeOriginY {
+                let currentY = Float(touch.location(in: view).y)
+                let delta = currentY - originY
+                if delta > swipeThreshold {
+                    pendingMenuDown = true
+                    swipeOriginY = currentY
+                    tapCandidateCancelled = true
+                } else if delta < -swipeThreshold {
+                    pendingMenuUp = true
+                    swipeOriginY = currentY
+                    tapCandidateCancelled = true
+                }
+            }
         }
     }
 
     public func touchesEnded(_ touches: Set<UITouch>, in view: UIView) {
-        cancelTouches(touches)
+        cancelTouches(touches, emitTap: true)
     }
 
     public func touchesCancelled(_ touches: Set<UITouch>, in view: UIView) {
-        cancelTouches(touches)
+        cancelTouches(touches, emitTap: false)
     }
 
-    private func cancelTouches(_ touches: Set<UITouch>) {
+    private func cancelTouches(_ touches: Set<UITouch>, emitTap: Bool = false) {
         for touch in touches {
             let touchID = ObjectIdentifier(touch)
             if touchID == joystickTouchID {
                 joystickOrigin = nil
                 joystickCurrent = nil
                 joystickTouchID = nil
+            }
+            if touchID == swipeTouchID {
+                swipeOriginY = nil
+                swipeTouchID = nil
+            }
+            if touchID == tapCandidateTouchID {
+                if emitTap && !tapCandidateCancelled, let pos = tapCandidatePosition {
+                    pendingTapPosition = pos
+                }
+                tapCandidatePosition = nil
+                tapCandidateTouchID = nil
+                tapCandidateCancelled = false
             }
             if touchID == primaryTouchID {
                 primaryFireActive = false

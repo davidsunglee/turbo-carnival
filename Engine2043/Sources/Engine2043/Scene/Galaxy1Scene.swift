@@ -241,6 +241,7 @@ public final class Galaxy1Scene: GameScene {
                     enemiesDestroyed: enemiesDestroyed,
                     elapsedTime: elapsedTime
                 )
+                ProgressStore.markCleared(galaxy: 1)
                 requestedTransition = .toGalaxy2(carryover)
                 isBossDying = false
             }
