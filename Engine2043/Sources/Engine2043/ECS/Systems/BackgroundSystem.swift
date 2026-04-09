@@ -23,6 +23,16 @@ public struct BackgroundPalette: Sendable {
             0.2
         )
     )
+
+    public static let galaxy3 = BackgroundPalette(
+        starColor: SIMD4<Float>(0.5, 0.7, 1.0, 0.35),
+        nebulaColor: SIMD4<Float>(
+            GameConfig.Galaxy3.Palette.g3Midground.x,
+            GameConfig.Galaxy3.Palette.g3Midground.y,
+            GameConfig.Galaxy3.Palette.g3Midground.z,
+            0.15
+        )
+    )
 }
 
 @MainActor

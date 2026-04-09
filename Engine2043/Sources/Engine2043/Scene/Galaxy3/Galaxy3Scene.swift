@@ -2,7 +2,17 @@ import GameplayKit
 import simd
 
 @MainActor
-public final class Galaxy2Scene: GameScene {
+public final class Galaxy3Scene: GameScene {
+
+    // MARK: - Stage State
+
+    enum StageState {
+        case scrolling
+        case bossIntro
+        case bossActive
+        case bossDefeat
+    }
+    private(set) var stageState: StageState = .scrolling
 
     // MARK: - Systems
     private let physicsSystem = PhysicsSystem()
@@ -16,11 +26,11 @@ public final class Galaxy2Scene: GameScene {
     let scoreSystem = ScoreSystem() // CollisionContext
     private let backgroundSystem = BackgroundSystem()
     private let bossSystem = BossSystem()
-    private let spawnDirector = SpawnDirector(galaxy: .galaxy2)
-    let asteroidSystem = AsteroidSystem() // CollisionContext
+    private let environmentSystem = Galaxy3EnvironmentSystem()
+    private let encounterDirector = Galaxy3EncounterDirector()
     private var lightningArcSystem: LightningArcSystem!
     private let collisionResponseHandler = CollisionResponseHandler()
-    private let titleCard = GalaxyTitleCard(title: "GALAXY 2: KAY'SHARA EXPANSE")
+    private let titleCard = GalaxyTitleCard(title: "GALAXY 3: THE ZENITH ARMADA GRID")
 
     // MARK: - Input / Audio
     public var inputProvider: (any InputProvider)?
@@ -34,13 +44,11 @@ public final class Galaxy2Scene: GameScene {
     private var projectiles: [GKEntity] = []
     private var enemyProjectiles: [GKEntity] = []
     private var items: [GKEntity] = []
-    private var capitalShipHulls: [GKEntity] = []
-    private var bossEntity: GKEntity?
+    private var barriers: [GKEntity] = []
+    private var fortressHulls: [GKEntity] = []
+    private(set) var bossEntity: GKEntity?
     private var shieldEntities: [GKEntity] = []
-    private var armorEntities: [GKEntity] = []  // armor asteroids orbiting Lithic Harvester
     private var shieldDrones: [GKEntity] = []
-    private var asteroids: [GKEntity] = []
-    var asteroidCount: Int { asteroids.count } // testability
     var pendingRemovals: [GKEntity] = [] // CollisionContext
 
     // MARK: - Formation tracking
@@ -48,7 +56,7 @@ public final class Galaxy2Scene: GameScene {
     private var nextFormationID: Int = 0
 
     // MARK: - Rendering
-    public var backgroundColor: SIMD4<Float> { GameConfig.Galaxy2.Palette.g2Background }
+    public var backgroundColor: SIMD4<Float> { GameConfig.Galaxy3.Palette.g3Background }
 
     // MARK: - Game state
     public private(set) var gameState: GameState = .playing
@@ -97,7 +105,7 @@ public final class Galaxy2Scene: GameScene {
 
     public init(carryover: PlayerCarryover) {
         collisionSystem = CollisionSystem(worldBounds: AABB(min: SIMD2(-200, -340), max: SIMD2(200, 340)))
-        backgroundSystem.palette = .galaxy2
+        backgroundSystem.palette = .galaxy3
 
         // Carry over stats (accumulated totals)
         enemiesDestroyed = carryover.enemiesDestroyed
@@ -106,16 +114,6 @@ public final class Galaxy2Scene: GameScene {
         setupPlayer(carryover: carryover)
         lightningArcSystem = LightningArcSystem(player: player)
         collisionResponseHandler.context = self
-
-        // Spawn initial sparse asteroid background layer
-        let sparseAsteroids = asteroidSystem.spawnSparseLayer(
-            count: GameConfig.Galaxy2.Asteroid.sparseCount,
-            viewportHalfWidth: GameConfig.designWidth / 2,
-            fieldHeight: GameConfig.designHeight
-        )
-        for entity in sparseAsteroids {
-            registerAsteroid(entity)
-        }
 
         // Spawn initial shield drones from carryover
         if carryover.shieldDroneCount > 0 {
@@ -132,7 +130,7 @@ public final class Galaxy2Scene: GameScene {
         let physics = PhysicsComponent(
             collisionSize: GameConfig.Player.size,
             layer: .player,
-            mask: [.enemy, .enemyProjectile, .item, .asteroid]
+            mask: [.enemy, .enemyProjectile, .item, .barrier]
         )
         player.addComponent(physics)
 
@@ -197,29 +195,7 @@ public final class Galaxy2Scene: GameScene {
         bossSystem.unregister(entity)
     }
 
-    private func registerAsteroid(_ entity: GKEntity) {
-        asteroidSystem.register(entity)
-        physicsSystem.register(entity)
-        collisionSystem.register(entity)
-        renderSystem.register(entity)
-        asteroids.append(entity)
-    }
-
-    private func unregisterAsteroid(_ entity: GKEntity) {
-        asteroidSystem.unregister(entity)
-        physicsSystem.unregister(entity)
-        collisionSystem.unregister(entity)
-        renderSystem.unregister(entity)
-        asteroids.removeAll { $0 === entity }
-    }
-
     private func removeEntity(_ entity: GKEntity) {
-        // Check if it's an asteroid first
-        if entity.component(ofType: AsteroidComponent.self) != nil {
-            unregisterAsteroid(entity)
-            return
-        }
-
         unregisterEntity(entity)
         lightningArcSystem.unregisterEnemy(entity)
         lightningArcSystem.unregisterItem(entity)
@@ -227,11 +203,11 @@ public final class Galaxy2Scene: GameScene {
         projectiles.removeAll { $0 === entity }
         enemyProjectiles.removeAll { $0 === entity }
         items.removeAll { $0 === entity }
-        capitalShipHulls.removeAll { $0 === entity }
+        barriers.removeAll { $0 === entity }
+        fortressHulls.removeAll { $0 === entity }
         gravBombEntities.removeAll { $0 === entity }
         gravBombTimers.removeValue(forKey: ObjectIdentifier(entity))
         shieldEntities.removeAll { $0 === entity }
-        armorEntities.removeAll { $0 === entity }
         shieldDrones.removeAll { $0 === entity }
 
         for (id, var members) in formationEnemies {
@@ -249,6 +225,7 @@ public final class Galaxy2Scene: GameScene {
     public func fixedUpdate(time: GameTime) {
         if !musicStarted {
             musicStarted = true
+            // Reuse galaxy2 music for Galaxy 3 first pass
             sfx?.startMusic(.galaxy2)
         }
         sfx?.updateMusicFade(deltaTime: Float(time.fixedDeltaTime))
@@ -263,7 +240,7 @@ public final class Galaxy2Scene: GameScene {
             elapsedTime += time.fixedDeltaTime
         }
 
-        // Game over / victory — transition after delay
+        // Game over / victory -- transition after delay
         if gameState != .playing {
             gameOverTimer += time.fixedDeltaTime
             if gameOverTimer > Self.restartDelay && requestedTransition == nil {
@@ -295,16 +272,8 @@ public final class Galaxy2Scene: GameScene {
             }
             let totalBossDeathDuration = Self.bossFlashDuration + Self.bossFadeDuration
             if bossDyingTimer >= totalBossDeathDuration {
-                let weapon = player.component(ofType: WeaponComponent.self)
-                let carryover = PlayerCarryover(
-                    weaponType: weapon?.weaponType ?? .doubleCannon,
-                    score: scoreSystem.currentScore,
-                    secondaryCharges: weapon?.secondaryCharges ?? 1,
-                    shieldDroneCount: shieldDrones.count,
-                    enemiesDestroyed: enemiesDestroyed,
-                    elapsedTime: elapsedTime
-                )
-                requestedTransition = .toGalaxy3(carryover)
+                // Galaxy 3 boss defeated -- go to victory
+                gameState = .victory
                 isBossDying = false
             }
         }
@@ -332,36 +301,29 @@ public final class Galaxy2Scene: GameScene {
             weaponNameTimer -= time.fixedDeltaTime
         }
 
-        // Background and spawn director
+        // Environment system (Galaxy 3 scroll)
+        environmentSystem.update(deltaTime: time.fixedDeltaTime)
+
+        // Background starfield (separate from environment scroll)
         backgroundSystem.update(deltaTime: time.fixedDeltaTime)
-        if spawnDirector.shouldLockScroll {
+        if environmentSystem.isScrollLocked {
             backgroundSystem.isScrollLocked = true
+        } else {
+            backgroundSystem.isScrollLocked = false
         }
 
-        spawnDirector.update(scrollDistance: backgroundSystem.scrollDistance)
-        processSpawnDirectorWaves()
+        // Encounter director
+        encounterDirector.update(
+            scrollDistance: environmentSystem.scrollDistance,
+            deltaTime: time.fixedDeltaTime
+        )
+        processEncounterCommands()
 
-        // Process asteroid field triggers
-        for fieldDef in spawnDirector.pendingAsteroidFields {
-            let fieldEntities = asteroidSystem.spawnField(
-                count: fieldDef.count,
-                largeFraction: fieldDef.largeFraction,
-                spawnYBase: GameConfig.designHeight / 2 + 50,
-                viewportHalfWidth: currentHalfWidth
-            )
-            for entity in fieldEntities {
-                registerAsteroid(entity)
-            }
-        }
+        // Update lane bounds from active barriers
+        environmentSystem.updateLaneBounds(barriers: barriers)
 
-        // Scripted drops
-        for drop in spawnDirector.pendingDrops {
-            switch drop.type {
-            case .weaponModule:
-                let x = Float.random(in: -40...40)
-                spawnWeaponModuleItem(at: SIMD2(x, 300))
-            }
-        }
+        // Scroll barriers downward with environment
+        updateBarriers(deltaTime: time.fixedDeltaTime)
 
         // Behavior systems
         let playerPos = player.component(ofType: TransformComponent.self)?.position ?? .zero
@@ -372,27 +334,13 @@ public final class Galaxy2Scene: GameScene {
         // Turrets and boss projectiles paused during slow-mo
         if !isSlowMo {
             updateTurrets(deltaTime: time.fixedDeltaTime)
+            updateFortressNodes(deltaTime: time.fixedDeltaTime)
 
             bossSystem.playerPosition = playerPos
             bossSystem.update(deltaTime: time.fixedDeltaTime)
             for spawn in bossSystem.pendingProjectileSpawns {
                 spawnEnemyProjectile(position: spawn.position, velocity: spawn.velocity, damage: spawn.damage)
             }
-
-            // Initiate new tractor beam captures when boss has empty armor slots
-            initiateTractorBeamCaptures(deltaTime: time.fixedDeltaTime)
-
-            // Process tractor beam pulls: move targeted asteroids toward boss
-            processTractorBeamPulls()
-
-            // Process boss armor: clean up destroyed armor entities
-            updateBossArmor()
-        }
-
-        // Asteroid system update
-        asteroidSystem.update(deltaTime: time.fixedDeltaTime)
-        for entity in asteroidSystem.pendingRemovals {
-            pendingRemovals.append(entity)
         }
 
         // Physics
@@ -496,6 +444,7 @@ public final class Galaxy2Scene: GameScene {
            gameState == .playing {
             isBossDying = true
             bossDyingTimer = 0
+            stageState = .bossDefeat
             sfx?.play(.victory)
             sfx?.stopLaser()
             sfx?.stopMusic()
@@ -513,8 +462,8 @@ public final class Galaxy2Scene: GameScene {
             }
         }
 
-        // Capital ship hull updates
-        updateCapitalShipHulls()
+        // Fortress hull updates
+        updateFortressHulls()
 
         // Cull off-screen
         cullOffScreen()
@@ -540,8 +489,24 @@ public final class Galaxy2Scene: GameScene {
     public func collectSprites(atlas: TextureAtlas?) -> [SpriteInstance] {
         var sprites = backgroundSystem.collectSprites()
 
-        // Capital ship hulls render behind gameplay entities
-        for hull in capitalShipHulls {
+        // Environment plating entities render behind gameplay
+        for entity in environmentSystem.platingEntities {
+            if let transform = entity.component(ofType: TransformComponent.self),
+               let render = entity.component(ofType: RenderComponent.self),
+               render.isVisible {
+                let uv = atlas?.uvRect(for: render.spriteId) ?? SpriteInstance.defaultUVRect
+                sprites.append(SpriteInstance(
+                    position: transform.position,
+                    size: render.size,
+                    color: render.color,
+                    rotation: transform.rotation,
+                    uvRect: uv
+                ))
+            }
+        }
+
+        // Fortress hulls render behind gameplay entities
+        for hull in fortressHulls {
             if let transform = hull.component(ofType: TransformComponent.self),
                let render = hull.component(ofType: RenderComponent.self) {
                 let uv = atlas?.uvRect(for: render.spriteId) ?? SpriteInstance.defaultUVRect
@@ -555,32 +520,10 @@ public final class Galaxy2Scene: GameScene {
             }
         }
 
-        // Asteroids render between background and gameplay entities
-        for asteroid in asteroids {
-            if let transform = asteroid.component(ofType: TransformComponent.self),
-               let render = asteroid.component(ofType: RenderComponent.self),
-               render.isVisible {
-                let spriteId: String?
-                if let asteroidComp = asteroid.component(ofType: AsteroidComponent.self) {
-                    spriteId = asteroidComp.asteroidSize == .large ? "asteroidLarge" : "asteroidSmall"
-                } else {
-                    spriteId = render.spriteId
-                }
-                let uv = atlas?.uvRect(for: spriteId) ?? SpriteInstance.defaultUVRect
-                sprites.append(SpriteInstance(
-                    position: transform.position,
-                    size: render.size,
-                    color: render.color,
-                    rotation: transform.rotation,
-                    uvRect: uv
-                ))
-            }
-        }
-
-        // Armor entities render on top of asteroids
-        for armorEntity in armorEntities {
-            if let transform = armorEntity.component(ofType: TransformComponent.self),
-               let render = armorEntity.component(ofType: RenderComponent.self),
+        // Barrier entities render behind gameplay but in front of hulls
+        for barrier in barriers {
+            if let transform = barrier.component(ofType: TransformComponent.self),
+               let render = barrier.component(ofType: RenderComponent.self),
                render.isVisible {
                 let uv = atlas?.uvRect(for: render.spriteId) ?? SpriteInstance.defaultUVRect
                 sprites.append(SpriteInstance(
@@ -588,31 +531,6 @@ public final class Galaxy2Scene: GameScene {
                     size: render.size,
                     color: render.color,
                     rotation: transform.rotation,
-                    uvRect: uv
-                ))
-            }
-        }
-
-        // Tractor beam visuals
-        if let boss = bossEntity,
-           let bossTransform = boss.component(ofType: TransformComponent.self),
-           let armor = boss.component(ofType: BossArmorComponent.self) {
-            for target in armor.tractorBeamTargets {
-                guard let targetTransform = target.component(ofType: TransformComponent.self) else { continue }
-                let from = bossTransform.position
-                let to = targetTransform.position
-                let diff = to - from
-                let length = simd_length(diff)
-                guard length > 0 else { continue }
-                let midpoint = (from + to) / 2
-                let angle = atan2(diff.x, diff.y)
-
-                let uv = atlas?.uvRect(for: "tractorBeamSegment") ?? SpriteInstance.defaultUVRect
-                sprites.append(SpriteInstance(
-                    position: midpoint,
-                    size: SIMD2(4, length),
-                    color: GameConfig.Galaxy2.Palette.g2TractorBeam,
-                    rotation: -angle,
                     uvRect: uv
                 ))
             }
@@ -883,7 +801,7 @@ public final class Galaxy2Scene: GameScene {
                 sfx?.stopLaser()
             }
 
-            // Map secondary fire buttons — first pressed wins
+            // Map secondary fire buttons -- first pressed wins
             if input.secondaryFire1 {
                 weapon.secondaryFiring = .gravBomb
             } else if input.secondaryFire2 {
@@ -896,64 +814,44 @@ public final class Galaxy2Scene: GameScene {
         }
     }
 
-    // MARK: - Spawning
+    // MARK: - Encounter Director Command Processing
 
-    private func processSpawnDirectorWaves() {
-        for wave in spawnDirector.pendingWaves {
-            switch wave.enemyTier {
-            case .tier1:
-                spawnG2Tier1Formation(wave: wave)
-            case .tier2:
-                spawnG2Tier2Group(wave: wave)
-            case .tier3:
-                spawnG2MiningBarge(wave: wave)
-            case .boss:
-                spawnBoss()
+    private func processEncounterCommands() {
+        for command in encounterDirector.pendingCommands {
+            switch command {
+            case .droneCluster(let count, let spawnX):
+                spawnDroneCluster(count: count, spawnX: spawnX)
+            case .fighterSquad(let count, let spawnX):
+                spawnFighterSquad(count: count, spawnX: spawnX)
+            case .fortressEncounter(let fortressID):
+                spawnFortressEncounter(fortressID: fortressID)
+            case .barrierLayout(let kind, let width):
+                spawnBarrierLayout(kind: kind, width: width)
+            case .bossTrigger:
+                triggerBoss()
             }
         }
     }
 
-    private func spawnG2Tier1Formation(wave: WaveDefinition) {
+    // MARK: - Spawning
+
+    private func spawnDroneCluster(count: Int, spawnX: Float) {
         let formationID = nextFormationID
         nextFormationID += 1
         var members: [GKEntity] = []
 
-        let spacing: Float = 50
-        let startX = wave.spawnX - Float(wave.count - 1) / 2 * spacing
+        let spacing: Float = 30
+        let startX = spawnX - Float(count - 1) / 2 * spacing
+        // Convert spawnX from design-space [0..360] to centered coordinates
+        let centerOffset = -GameConfig.designWidth / 2
 
-        for i in 0..<wave.count {
-            let entity = GKEntity()
-            let xOffset = startX + Float(i) * spacing
-            var yOffset: Float = 0
-            if wave.pattern == .vShape {
-                yOffset = abs(Float(i) - Float(wave.count - 1) / 2) * 20
-            }
+        for i in 0..<count {
+            let x = centerOffset + startX + Float(i) * spacing
+            let y = GameConfig.designHeight / 2 + 30
 
-            entity.addComponent(TransformComponent(position: SIMD2(xOffset, wave.spawnY + yOffset)))
+            let entity = Galaxy3EntityFactory.makeTrackingDrone(at: SIMD2(x, y))
 
-            let physics = PhysicsComponent(
-                collisionSize: GameConfig.Galaxy2.Enemy.tier1Size,
-                layer: .enemy,
-                mask: [.player, .playerProjectile]
-            )
-            entity.addComponent(physics)
-
-            let tier1Render = RenderComponent(
-                size: GameConfig.Galaxy2.Enemy.tier1Size,
-                color: GameConfig.Galaxy2.Palette.g2Tier1
-            )
-            tier1Render.spriteId = "g2Interceptor"
-            entity.addComponent(tier1Render)
-
-            let health1 = HealthComponent(health: GameConfig.Galaxy2.Enemy.tier1HP)
-            health1.hasInvulnerabilityFrames = false
-            entity.addComponent(health1)
-            entity.addComponent(ScoreComponent(points: GameConfig.Galaxy2.Score.g2Tier1))
-
-            let formation = FormationComponent(pattern: wave.pattern, index: i, formationID: formationID)
-            if wave.pattern == .sineWave {
-                formation.phaseOffset = Float(i) * 0.5
-            }
+            let formation = FormationComponent(pattern: .staggeredLine, index: i, formationID: formationID)
             entity.addComponent(formation)
 
             registerEntity(entity)
@@ -965,41 +863,23 @@ public final class Galaxy2Scene: GameScene {
         formationEnemies[formationID] = members
     }
 
-    private func spawnG2Tier2Group(wave: WaveDefinition) {
-        for i in 0..<wave.count {
-            let entity = GKEntity()
+    private func spawnFighterSquad(count: Int, spawnX: Float) {
+        let centerOffset = -GameConfig.designWidth / 2
 
-            let xSpread: Float = 60
-            let x = wave.spawnX + Float(i) * xSpread - Float(wave.count - 1) / 2 * xSpread
-            entity.addComponent(TransformComponent(position: SIMD2(x, wave.spawnY)))
+        for i in 0..<count {
+            let spacing: Float = 50
+            let x = centerOffset + spawnX + Float(i) * spacing - Float(count - 1) / 2 * spacing
+            let y = GameConfig.designHeight / 2 + 40
 
-            let physics = PhysicsComponent(
-                collisionSize: GameConfig.Galaxy2.Enemy.tier2Size,
-                layer: .enemy,
-                mask: [.player, .playerProjectile]
-            )
-            physics.velocity = SIMD2(0, -GameConfig.Galaxy2.Enemy.tier2Speed)
-            entity.addComponent(physics)
-
-            let tier2Render = RenderComponent(
-                size: GameConfig.Galaxy2.Enemy.tier2Size,
-                color: GameConfig.Galaxy2.Palette.g2Tier2
-            )
-            tier2Render.spriteId = "g2Fighter"
-            entity.addComponent(tier2Render)
-
-            let health2 = HealthComponent(health: GameConfig.Galaxy2.Enemy.tier2HP)
-            health2.hasInvulnerabilityFrames = false
-            entity.addComponent(health2)
-            entity.addComponent(ScoreComponent(points: GameConfig.Galaxy2.Score.g2Tier2))
+            let entity = Galaxy3EntityFactory.makeFighter(at: SIMD2(x, y))
 
             let steering = SteeringComponent(behavior: .leadShot)
             steering.steerStrength = 3.0
             entity.addComponent(steering)
 
             let turretComp = TurretComponent(trackingSpeed: 1.5)
-            turretComp.fireInterval = 1.5
-            turretComp.projectileSpeed = 300
+            turretComp.fireInterval = 2.0
+            turretComp.projectileSpeed = 250
             turretComp.damage = 5
             entity.addComponent(turretComp)
 
@@ -1009,152 +889,113 @@ public final class Galaxy2Scene: GameScene {
         }
     }
 
-    private func spawnG2MiningBarge(wave: WaveDefinition) {
-        let hull = GKEntity()
-        hull.addComponent(TransformComponent(position: SIMD2(0, wave.spawnY + 100)))
-        let hullRender = RenderComponent(
-            size: GameConfig.Galaxy2.Enemy.tier3HullSize,
-            color: GameConfig.Palette.capitalShipHull
+    private func spawnFortressEncounter(fortressID: Int) {
+        let hullY = GameConfig.designHeight / 2 + GameConfig.Galaxy3.Enemy.fortressHullSize.y / 2 + 20
+        let hull = Galaxy3EntityFactory.makeFortressHull(at: SIMD2(0, hullY))
+        let hullPhysics = PhysicsComponent(
+            collisionSize: GameConfig.Galaxy3.Enemy.fortressHullSize,
+            layer: [],
+            mask: []
         )
-        hullRender.spriteId = "miningBargeHull"
-        hull.addComponent(hullRender)
-        let hullPhysics = PhysicsComponent(collisionSize: .zero, layer: [], mask: [])
-        hullPhysics.velocity = SIMD2(0, -GameConfig.Background.starScrollSpeed * GameConfig.Enemy.tier3ScrollMultiplier)
+        hullPhysics.velocity = SIMD2(0, -environmentSystem.scrollSpeed * 0.5)
         hull.addComponent(hullPhysics)
         physicsSystem.register(hull)
-        capitalShipHulls.append(hull)
+        fortressHulls.append(hull)
 
-        // 6 turrets: 3 on each side, spread across the 216-wide hull
-        let turretOffsets: [SIMD2<Float>] = [
-            SIMD2(-85, 25), SIMD2(-50, 25), SIMD2(-15, 25),  // left side
-            SIMD2(15, 25),  SIMD2(50, 25),  SIMD2(85, 25)    // right side
+        // Spawn fortress nodes around the hull
+        let nodeOffsets: [(role: FortressNodeRole, offset: SIMD2<Float>)] = [
+            (.shieldGenerator, SIMD2(0, 30)),
+            (.mainBattery, SIMD2(-60, 0)),
+            (.mainBattery, SIMD2(60, 0)),
+            (.pulseTurret, SIMD2(-30, -20)),
+            (.pulseTurret, SIMD2(30, -20)),
         ]
 
         let formationID = nextFormationID
         nextFormationID += 1
-        var turretMembers: [GKEntity] = []
+        var nodeMembers: [GKEntity] = []
 
-        for offset in turretOffsets.prefix(wave.count) {
-            let turret = GKEntity()
-
-            let turretTransform = TransformComponent(
-                position: SIMD2(offset.x, wave.spawnY + 100 + offset.y)
+        for nodeSpec in nodeOffsets {
+            let nodePos = SIMD2(nodeSpec.offset.x, hullY + nodeSpec.offset.y)
+            let node = Galaxy3EntityFactory.makeFortressNode(
+                role: nodeSpec.role,
+                at: nodePos,
+                fortressID: fortressID
             )
-            turret.addComponent(turretTransform)
 
-            let turretPhysics = PhysicsComponent(
-                collisionSize: GameConfig.Galaxy2.Enemy.tier3TurretSize,
-                layer: .enemy,
-                mask: [.player, .playerProjectile]
-            )
-            turretPhysics.velocity = SIMD2(0, -GameConfig.Background.starScrollSpeed * GameConfig.Enemy.tier3ScrollMultiplier)
-            turret.addComponent(turretPhysics)
+            // Nodes move with the hull
+            let nodePhysics = node.component(ofType: PhysicsComponent.self)
+            nodePhysics?.velocity = SIMD2(0, -environmentSystem.scrollSpeed * 0.5)
 
-            let turretRender = RenderComponent(
-                size: GameConfig.Galaxy2.Enemy.tier3TurretSize,
-                color: GameConfig.Palette.turret
-            )
-            turretRender.spriteId = "miningBargeTurret"
-            turret.addComponent(turretRender)
-
-            let turretHealth = HealthComponent(health: GameConfig.Galaxy2.Enemy.tier3TurretHP)
-            turretHealth.hasInvulnerabilityFrames = false
-            turret.addComponent(turretHealth)
-            turret.addComponent(ScoreComponent(points: GameConfig.Galaxy2.Score.g2Tier3Turret))
-
-            let turretComp = TurretComponent(trackingSpeed: 2.0)
+            let turretComp = TurretComponent(trackingSpeed: 1.5)
             turretComp.parentEntity = hull
-            turretComp.mountOffset = offset
-            turret.addComponent(turretComp)
+            turretComp.mountOffset = nodeSpec.offset
+            if let fortNode = node.component(ofType: FortressNodeComponent.self) {
+                turretComp.fireInterval = fortNode.fireInterval
+            }
+            turretComp.projectileSpeed = 200
+            turretComp.damage = 5
+            node.addComponent(turretComp)
 
-            registerEntity(turret)
-            enemies.append(turret)
-            lightningArcSystem.registerEnemy(turret)
-            turretMembers.append(turret)
+            registerEntity(node)
+            enemies.append(node)
+            lightningArcSystem.registerEnemy(node)
+            nodeMembers.append(node)
         }
 
-        formationEnemies[formationID] = turretMembers
+        formationEnemies[formationID] = nodeMembers
     }
 
-    private func spawnBoss() {
-        let boss = GKEntity()
+    private func spawnBarrierLayout(kind: BarrierKind, width: Float) {
+        // Create barrier walls on left and right sides of the corridor
+        let centerX: Float = 0
+        let gapHalf = width / 2
+        let segmentSize = GameConfig.Galaxy3.Barrier.gateSegmentSize
+        let spawnY = GameConfig.designHeight / 2 + segmentSize.y / 2 + 10
 
-        boss.addComponent(TransformComponent(position: SIMD2(0, 250)))
-        let physics = PhysicsComponent(
-            collisionSize: GameConfig.Galaxy2.Enemy.bossSize,
-            layer: .enemy,
-            mask: [.player, .playerProjectile, .blast]
-        )
-        boss.addComponent(physics)
+        // Left wall barrier
+        let leftX = centerX - gapHalf - segmentSize.x / 2
+        let leftBarrier = Galaxy3EntityFactory.makeBarrier(kind: kind, at: SIMD2(leftX, spawnY))
+        registerEntity(leftBarrier)
+        barriers.append(leftBarrier)
 
-        let bossRender = RenderComponent(
-            size: GameConfig.Galaxy2.Enemy.bossSize,
-            color: GameConfig.Galaxy2.Palette.g2BossCore
-        )
-        bossRender.spriteId = "lithicHarvesterCore"
-        boss.addComponent(bossRender)
+        // Right wall barrier
+        let rightX = centerX + gapHalf + segmentSize.x / 2
+        let rightBarrier = Galaxy3EntityFactory.makeBarrier(kind: kind, at: SIMD2(rightX, spawnY))
+        registerEntity(rightBarrier)
+        barriers.append(rightBarrier)
+    }
 
-        let bossHealth = HealthComponent(health: GameConfig.Galaxy2.Enemy.bossHP)
-        bossHealth.hasInvulnerabilityFrames = false
-        boss.addComponent(bossHealth)
-        boss.addComponent(BossPhaseComponent(totalHP: GameConfig.Galaxy2.Enemy.bossHP))
-        boss.addComponent(ScoreComponent(points: GameConfig.Galaxy2.Score.g2Boss))
+    private func triggerBoss() {
+        guard stageState == .scrolling else { return }
+        stageState = .bossIntro
+        environmentSystem.lockScroll()
 
-        // Lithic Harvester armor
-        let armorComp = BossArmorComponent()
-        let slotCount = GameConfig.Galaxy2.Enemy.bossArmorSlots
-        for i in 0..<slotCount {
-            let angle = Float(i) / Float(slotCount) * .pi * 2
-            armorComp.slots.append(ArmorSlot(angle: angle, entity: nil))
-        }
-        boss.addComponent(armorComp)
+        // Boss spawning is deferred to Task 5 (Zenith Core Sentinel).
+        // The scroll lock and stage state are set here so the boss system
+        // can be wired in without restructuring.
+    }
 
+    // MARK: - Boss Integration Hooks
+
+    /// Called by BossSystem integration (Task 5) to register the Zenith boss.
+    func registerBoss(_ boss: GKEntity, shields: [GKEntity]) {
+        bossEntity = boss
         registerEntity(boss)
-        bossSystem.bossType = .lithicHarvester
         bossSystem.register(boss)
         enemies.append(boss)
         lightningArcSystem.registerEnemy(boss)
-        bossEntity = boss
 
-        // Spawn initial armor asteroids
-        let bossPos = boss.component(ofType: TransformComponent.self)!.position
-        for i in 0..<slotCount {
-            let armorEntity = makeArmorAsteroid(
-                position: bossPos + SIMD2(
-                    cos(armorComp.slots[i].angle),
-                    sin(armorComp.slots[i].angle)
-                ) * armorComp.armorRadius
-            )
-            armorComp.slots[i].entity = armorEntity
-            registerEntity(armorEntity)
-            collisionSystem.register(armorEntity)
-            armorEntities.append(armorEntity)
+        for shield in shields {
+            registerEntity(shield)
+            bossSystem.registerShield(shield)
+            shieldEntities.append(shield)
         }
 
-        sfx?.fadeToTrack(.galaxy2Boss, fadeOut: 1.0, silence: 0.5, fadeIn: 1.0)
+        stageState = .bossActive
     }
 
-    private func makeArmorAsteroid(position: SIMD2<Float>) -> GKEntity {
-        let entity = GKEntity()
-        entity.addComponent(TransformComponent(position: position))
-        let physics = PhysicsComponent(
-            collisionSize: GameConfig.Galaxy2.Asteroid.smallSize,
-            layer: .asteroid,
-            mask: [.playerProjectile]
-        )
-        entity.addComponent(physics)
-        let render = RenderComponent(
-            size: GameConfig.Galaxy2.Asteroid.smallSize,
-            color: GameConfig.Galaxy2.Palette.g2AsteroidSmall
-        )
-        render.spriteId = "asteroidSmall"
-        entity.addComponent(render)
-        let health = HealthComponent(health: GameConfig.Galaxy2.Enemy.bossArmorSlotHP)
-        health.hasInvulnerabilityFrames = false
-        entity.addComponent(health)
-        entity.addComponent(AsteroidComponent(size: .small))
-        return entity
-    }
+    // MARK: - Projectile Spawning
 
     private func spawnPlayerProjectile(_ request: ProjectileSpawnRequest) {
         let entity = GKEntity()
@@ -1169,7 +1010,7 @@ public final class Galaxy2Scene: GameScene {
         let physics = PhysicsComponent(
             collisionSize: projSize,
             layer: .playerProjectile,
-            mask: [.enemy, .bossShield, .item, .asteroid]
+            mask: [.enemy, .bossShield, .item, .barrier]
         )
         physics.velocity = request.velocity
         entity.addComponent(physics)
@@ -1405,6 +1246,10 @@ public final class Galaxy2Scene: GameScene {
             guard let turret = enemy.component(ofType: TurretComponent.self),
                   let transform = enemy.component(ofType: TransformComponent.self) else { continue }
 
+            // Skip fortress nodes that don't fire (shieldGenerator)
+            if let fortNode = enemy.component(ofType: FortressNodeComponent.self),
+               fortNode.role == .shieldGenerator { continue }
+
             if let parent = turret.parentEntity,
                let parentTransform = parent.component(ofType: TransformComponent.self) {
                 transform.position = parentTransform.position + turret.mountOffset
@@ -1430,89 +1275,61 @@ public final class Galaxy2Scene: GameScene {
         }
     }
 
-    private func initiateTractorBeamCaptures(deltaTime: Double) {
-        guard let boss = bossEntity,
-              let armor = boss.component(ofType: BossArmorComponent.self),
-              let bossPos = boss.component(ofType: TransformComponent.self)?.position else { return }
-
-        tractorBeamSearchTimer += deltaTime
-        let hasEmptySlot = armor.slots.contains { !$0.isActive }
-        let notCurrentlyPulling = armor.tractorBeamTargets.isEmpty
-
-        // Only try to capture a new asteroid periodically (using boss's tractor beam interval)
-        guard hasEmptySlot && notCurrentlyPulling &&
-              tractorBeamSearchTimer >= armor.tractorBeamInterval else { return }
-
-        tractorBeamSearchTimer = 0
-
-        // Find nearest asteroid not already serving as armor
-        let armorEntityIds = Set(armorEntities.map { ObjectIdentifier($0) })
-        if let nearest = asteroids
-            .filter({ !armorEntityIds.contains(ObjectIdentifier($0)) })
-            .min(by: {
-                let d1 = simd_length(($0.component(ofType: TransformComponent.self)?.position ?? .zero) - bossPos)
-                let d2 = simd_length(($1.component(ofType: TransformComponent.self)?.position ?? .zero) - bossPos)
-                return d1 < d2
-            }) {
-            armor.tractorBeamTargets.append(nearest)
-            sfx?.play(.tractorBeam) // tractor beam activation
+    private func updateFortressNodes(deltaTime: Double) {
+        // Check for shield generator destruction and unshield other nodes
+        var destroyedGeneratorIDs: Set<Int> = []
+        for enemy in enemies {
+            guard let fortNode = enemy.component(ofType: FortressNodeComponent.self),
+                  fortNode.role == .shieldGenerator else { continue }
+            if let health = enemy.component(ofType: HealthComponent.self), !health.isAlive {
+                destroyedGeneratorIDs.insert(fortNode.fortressID)
+            }
         }
-    }
 
-    private func processTractorBeamPulls() {
-        guard let boss = bossEntity,
-              let armor = boss.component(ofType: BossArmorComponent.self),
-              let bossTransform = boss.component(ofType: TransformComponent.self) else { return }
-
-        // Move tractor beam targets toward the boss
-        var arrivedIndices: [Int] = []
-        for (i, target) in armor.tractorBeamTargets.enumerated() {
-            guard let targetTransform = target.component(ofType: TransformComponent.self) else { continue }
-
-            let toBoss = bossTransform.position - targetTransform.position
-            let distance = simd_length(toBoss)
-
-            if distance < armor.armorRadius + 10 {
-                // Arrived — attach to an empty armor slot
-                arrivedIndices.append(i)
-                if let emptyIdx = armor.slots.firstIndex(where: { !$0.isActive }) {
-                    armor.slots[emptyIdx].entity = target
-                    armorEntities.append(target)
-                    sfx?.play(.tractorBeam)
+        if !destroyedGeneratorIDs.isEmpty {
+            for enemy in enemies {
+                guard let fortNode = enemy.component(ofType: FortressNodeComponent.self) else { continue }
+                if destroyedGeneratorIDs.contains(fortNode.fortressID) {
+                    fortNode.isShielded = false
                 }
-            } else {
-                // Move toward boss
-                let dir = toBoss / distance
-                targetTransform.position += dir * 120 * Float(GameConfig.fixedTimeStep)
-            }
-        }
-
-        // Remove arrived targets (iterate in reverse to preserve indices)
-        for i in arrivedIndices.sorted().reversed() {
-            armor.tractorBeamTargets.remove(at: i)
-        }
-    }
-
-    private func updateBossArmor() {
-        guard let boss = bossEntity,
-              let armor = boss.component(ofType: BossArmorComponent.self) else { return }
-
-        // Clean up destroyed armor entities
-        for i in 0..<armor.slots.count {
-            if let armorEntity = armor.slots[i].entity,
-               let health = armorEntity.component(ofType: HealthComponent.self),
-               !health.isAlive {
-                armor.slots[i].entity = nil
-                pendingRemovals.append(armorEntity)
-                armorEntities.removeAll { $0 === armorEntity }
             }
         }
     }
 
-    private func updateCapitalShipHulls() {
-        for hull in capitalShipHulls {
+    private func updateBarriers(deltaTime: Double) {
+        guard !environmentSystem.isScrollLocked else { return }
+        let scrollDelta = environmentSystem.scrollSpeed * Float(deltaTime)
+
+        for barrier in barriers {
+            guard let transform = barrier.component(ofType: TransformComponent.self) else { continue }
+            transform.position.y -= scrollDelta
+
+            // Rotate rotating gates
+            if let barrierComp = barrier.component(ofType: BarrierComponent.self),
+               barrierComp.kind == .rotatingGate {
+                barrierComp.currentAngle += barrierComp.rotationSpeed * Float(deltaTime)
+                transform.rotation = barrierComp.currentAngle
+            }
+        }
+
+        // Remove barriers that are off-screen below
+        barriers.removeAll { barrier in
+            guard let transform = barrier.component(ofType: TransformComponent.self),
+                  let render = barrier.component(ofType: RenderComponent.self) else {
+                return true
+            }
+            if transform.position.y + render.size.y / 2 < -GameConfig.designHeight / 2 - 50 {
+                unregisterEntity(barrier)
+                return true
+            }
+            return false
+        }
+    }
+
+    private func updateFortressHulls() {
+        for hull in fortressHulls {
             if let transform = hull.component(ofType: TransformComponent.self),
-               transform.position.y < -GameConfig.designHeight / 2 - GameConfig.Galaxy2.Enemy.tier3HullSize.y {
+               transform.position.y < -GameConfig.designHeight / 2 - GameConfig.Galaxy3.Enemy.fortressHullSize.y {
                 pendingRemovals.append(hull)
             }
         }
@@ -1585,7 +1402,7 @@ public final class Galaxy2Scene: GameScene {
         let empWidth = viewportManager?.currentDesignWidth ?? GameConfig.designWidth
         let flashRender = RenderComponent(
             size: SIMD2(empWidth, GameConfig.designHeight),
-            color: GameConfig.Palette.empFlash
+            color: GameConfig.Galaxy3.Palette.g3EmpFlash
         )
         flashRender.isVisible = false
         flash.addComponent(flashRender)
@@ -1613,7 +1430,7 @@ public final class Galaxy2Scene: GameScene {
         let laserMinY = hitscan.position.y
         let laserMaxY = GameConfig.designHeight / 2 + 50
 
-        // Item cycling is unaffected by asteroid occlusion
+        // Item cycling is unaffected by barrier occlusion
         for item in items {
             guard let transform = item.component(ofType: TransformComponent.self) else { continue }
             let size = item.component(ofType: RenderComponent.self)?.size ?? .zero
@@ -1630,19 +1447,7 @@ public final class Galaxy2Scene: GameScene {
             }
         }
 
-        // Gather all entities (enemies + asteroids) that overlap the beam, sorted
-        // ascending by Y so those nearest the player are processed first.
-        enum LaserHitKind {
-            case enemy(GKEntity)
-            case asteroid(GKEntity)
-        }
-        struct HitCandidate {
-            let kind: LaserHitKind
-            let y: Float
-        }
-
-        var candidates: [HitCandidate] = []
-
+        // Galaxy 3 has no asteroids, so just process enemies directly
         for enemy in enemies {
             guard let transform = enemy.component(ofType: TransformComponent.self),
                   let health = enemy.component(ofType: HealthComponent.self),
@@ -1654,97 +1459,17 @@ public final class Galaxy2Scene: GameScene {
                   laserMaxY >= transform.position.y - size.y / 2,
                   laserMinY <= transform.position.y + size.y / 2 else { continue }
 
-            candidates.append(HitCandidate(kind: .enemy(enemy), y: transform.position.y))
-        }
-
-        for asteroid in asteroids {
-            guard let transform = asteroid.component(ofType: TransformComponent.self),
-                  asteroid.component(ofType: AsteroidComponent.self) != nil else { continue }
-
-            let size = asteroid.component(ofType: PhysicsComponent.self)?.collisionSize
-                ?? asteroid.component(ofType: RenderComponent.self)?.size ?? .zero
-            guard laserMaxX >= transform.position.x - size.x / 2,
-                  laserMinX <= transform.position.x + size.x / 2,
-                  laserMaxY >= transform.position.y - size.y / 2,
-                  laserMinY <= transform.position.y + size.y / 2 else { continue }
-
-            candidates.append(HitCandidate(kind: .asteroid(asteroid), y: transform.position.y))
-        }
-
-        // Sort ascending Y: entities closest to the player (lowest Y) come first.
-        candidates.sort { $0.y < $1.y }
-
-        for candidate in candidates {
-            switch candidate.kind {
-            case .asteroid(let asteroid):
-                guard let asteroidComp = asteroid.component(ofType: AsteroidComponent.self) else { continue }
-                if asteroidComp.asteroidSize == .large {
-                    return // Large asteroid blocks the beam — nothing behind it is hit
+            health.takeDamage(hitscan.damagePerTick)
+            if !health.isAlive {
+                sfx?.play(.enemyDestroyed)
+                if let score = enemy.component(ofType: ScoreComponent.self) {
+                    scoreSystem.addScore(score.points)
                 }
-                // Small asteroid: take damage; beam continues through
-                if let health = asteroid.component(ofType: HealthComponent.self) {
-                    health.takeDamage(hitscan.damagePerTick)
-                    if !health.isAlive {
-                        sfx?.play(.asteroidDestroyed)
-                        if let score = asteroid.component(ofType: ScoreComponent.self) {
-                            scoreSystem.addScore(score.points)
-                        }
-                        pendingRemovals.append(asteroid)
-                    } else {
-                        sfx?.play(.asteroidHit)
-                    }
-                }
-
-            case .enemy(let enemy):
-                // Boss armor interception: geometric angle-based check.
-                // The Phase Laser fires straight up from the player, so the approach
-                // angle from the laser source to the boss determines which armor
-                // slot (if any) blocks the beam.
-                if let armor = enemy.component(ofType: BossArmorComponent.self) {
-                    let laserApproachAngle = atan2(
-                        enemy.component(ofType: TransformComponent.self)!.position.y - hitscan.position.y,
-                        enemy.component(ofType: TransformComponent.self)!.position.x - hitscan.position.x
-                    )
-                    let halfArc: Float = .pi / 6  // ±30°
-                    var coveringIdx: Int? = nil
-                    for (i, slot) in armor.slots.enumerated() where slot.isActive {
-                        var diff = laserApproachAngle - slot.angle
-                        while diff > .pi  { diff -= 2 * .pi }
-                        while diff < -.pi { diff += 2 * .pi }
-                        if abs(diff) <= halfArc {
-                            coveringIdx = i
-                            break
-                        }
-                    }
-                    if let idx = coveringIdx,
-                       let armorEntity = armor.slots[idx].entity,
-                       let armorHealth = armorEntity.component(ofType: HealthComponent.self) {
-                        armorHealth.takeDamage(hitscan.damagePerTick)
-                        if !armorHealth.isAlive {
-                            sfx?.play(.asteroidDestroyed)
-                            armor.slots[idx].entity = nil
-                            pendingRemovals.append(armorEntity)
-                            armorEntities.removeAll { $0 === armorEntity }
-                        } else {
-                            sfx?.play(.bossShieldDeflect) // armor deflects the laser
-                        }
-                        continue  // Armor absorbed the laser — skip boss damage
-                    }
-                }
-
-                guard let health = enemy.component(ofType: HealthComponent.self) else { continue }
-                health.takeDamage(hitscan.damagePerTick)
-                if !health.isAlive {
-                    sfx?.play(.enemyDestroyed)
-                    if let score = enemy.component(ofType: ScoreComponent.self) {
-                        scoreSystem.addScore(score.points)
-                    }
-                    enemiesDestroyed += 1
-                    pendingRemovals.append(enemy)
-                    checkFormationWipe(enemy: enemy)
-                } else {
-                    sfx?.play(.enemyHit)
-                }
+                enemiesDestroyed += 1
+                pendingRemovals.append(enemy)
+                checkFormationWipe(enemy: enemy)
+            } else {
+                sfx?.play(.enemyHit)
             }
         }
     }
@@ -1756,16 +1481,6 @@ public final class Galaxy2Scene: GameScene {
         registerEntity(entity)
         enemies.append(entity)
         lightningArcSystem.registerEnemy(entity)
-    }
-
-    /// Registers an entity as an asteroid. For use in tests via @testable import only.
-    func addAsteroidForTesting(_ entity: GKEntity) {
-        registerAsteroid(entity)
-    }
-
-    /// Removes an asteroid immediately (bypasses pendingRemovals). For use in tests only.
-    func removeAsteroidForTesting(_ entity: GKEntity) {
-        unregisterAsteroid(entity)
     }
 
     // MARK: - Collisions
@@ -1791,6 +1506,30 @@ public final class Galaxy2Scene: GameScene {
                 }
                 break
             }
+        }
+    }
+
+    // MARK: - Barrier Push-Out
+
+    func handleBarrierPushOut(barrier: GKEntity) {
+        guard let playerTransform = player.component(ofType: TransformComponent.self),
+              let barrierTransform = barrier.component(ofType: TransformComponent.self),
+              let barrierPhysics = barrier.component(ofType: PhysicsComponent.self) else { return }
+
+        // Push player out of barrier overlap on the closest axis
+        let playerPos = playerTransform.position
+        let barrierPos = barrierTransform.position
+        let barrierHalf = barrierPhysics.collisionSize / 2
+        let playerHalf = GameConfig.Player.size / 2
+
+        let overlapLeft = (barrierPos.x + barrierHalf.x) - (playerPos.x - playerHalf.x)
+        let overlapRight = (playerPos.x + playerHalf.x) - (barrierPos.x - barrierHalf.x)
+        let minOverlapX = min(overlapLeft, overlapRight)
+
+        if overlapLeft < overlapRight {
+            playerTransform.position.x -= minOverlapX
+        } else {
+            playerTransform.position.x += minOverlapX
         }
     }
 
@@ -1836,4 +1575,4 @@ public final class Galaxy2Scene: GameScene {
     }
 }
 
-extension Galaxy2Scene: CollisionContext {}
+extension Galaxy3Scene: CollisionContext {}
