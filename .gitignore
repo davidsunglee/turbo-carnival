@@ -4,6 +4,7 @@
 # Claude
 .claude/
 .playwright-cli/
+.superpowers/
 
 # Xcode
 #
