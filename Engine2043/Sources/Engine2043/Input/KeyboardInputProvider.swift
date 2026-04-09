@@ -15,6 +15,7 @@ public final class KeyboardInputProvider: InputProvider {
         static let z:          UInt16 = 6
         static let x:          UInt16 = 7
         static let c:          UInt16 = 8
+        static let escape:     UInt16 = 53
     }
 
     public weak var viewportManager: ViewportManager?
@@ -57,6 +58,10 @@ public final class KeyboardInputProvider: InputProvider {
         input.secondaryFire3 = keysPressed.contains(KeyCode.c)
         input.tapPosition = pendingClickPosition
         pendingClickPosition = nil
+
+        input.menuUp = keysPressed.contains(KeyCode.upArrow)
+        input.menuDown = keysPressed.contains(KeyCode.downArrow)
+        input.menuBack = keysPressed.contains(KeyCode.escape)
 
         return input
     }

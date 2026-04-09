@@ -121,4 +121,28 @@ struct InputTests {
         #expect(input.menuDown == false)
         #expect(input.menuBack == true)
     }
+
+#if os(macOS)
+    @Test @MainActor func keyboardProviderMapsArrowsToMenuUpDown() {
+        let provider = KeyboardInputProvider()
+        provider.keyDown(126) // up arrow
+        let input = provider.poll()
+        #expect(input.menuUp == true)
+        #expect(input.menuDown == false)
+    }
+
+    @Test @MainActor func keyboardProviderMapsEscapeToMenuBack() {
+        let provider = KeyboardInputProvider()
+        provider.keyDown(53) // escape
+        let input = provider.poll()
+        #expect(input.menuBack == true)
+    }
+
+    @Test @MainActor func keyboardProviderMenuBackFalseWhenEscNotPressed() {
+        let provider = KeyboardInputProvider()
+        provider.keyDown(49) // space
+        let input = provider.poll()
+        #expect(input.menuBack == false)
+    }
+#endif
 }
