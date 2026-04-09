@@ -14,7 +14,9 @@ public final class TextureAtlas {
         "energyDrop", "chargeCell", "shieldDrop", "shieldDrone",
         "weaponDoubleCannon", "weaponTriSpread", "weaponLightningArc", "weaponPhaseLaser",
         "asteroidSmall", "asteroidLarge", "miningBargeHull", "miningBargeTurret",
-        "lithicHarvesterCore", "tractorBeamSegment", "g2Interceptor", "g2Fighter"
+        "lithicHarvesterCore", "tractorBeamSegment", "g2Interceptor", "g2Fighter",
+        "g3TrackingDrone", "g3Fighter", "g3FortressHull", "g3FortressNode",
+        "g3BarrierWall", "g3ZenithCore", "g3ZenithShield", "g3EmpProjectile"
     ]
 
     struct SpriteEntry {
@@ -59,6 +61,16 @@ public final class TextureAtlas {
         // Row 302: Lithic Harvester boss
         SpriteEntry(name: "lithicHarvesterCore",  x: 0,   y: 302, width: 80,  height: 80),
         SpriteEntry(name: "tractorBeamSegment",   x: 80,  y: 302, width: 4,   height: 32),
+        // Row 340: Galaxy 3 small enemies and projectiles
+        SpriteEntry(name: "g3TrackingDrone",      x: 0,   y: 340, width: 18,  height: 18),
+        SpriteEntry(name: "g3Fighter",            x: 18,  y: 340, width: 26,  height: 26),
+        SpriteEntry(name: "g3FortressNode",       x: 44,  y: 340, width: 24,  height: 24),
+        SpriteEntry(name: "g3ZenithShield",       x: 68,  y: 340, width: 40,  height: 12),
+        SpriteEntry(name: "g3EmpProjectile",      x: 108, y: 340, width: 10,  height: 10),
+        // Row 370: Galaxy 3 large sprites
+        SpriteEntry(name: "g3BarrierWall",        x: 0,   y: 370, width: 40,  height: 120),
+        SpriteEntry(name: "g3ZenithCore",         x: 40,  y: 370, width: 80,  height: 80),
+        SpriteEntry(name: "g3FortressHull",       x: 120, y: 370, width: 120, height: 70),
     ]
 
     public var defaultTexture: MTLTexture { texture }
@@ -120,6 +132,14 @@ public final class TextureAtlas {
             ("miningBargeTurret",    SpriteFactory.makeMiningBargeTurret),
             ("lithicHarvesterCore",  SpriteFactory.makeLithicHarvesterCore),
             ("tractorBeamSegment",   SpriteFactory.makeTractorBeamSegment),
+            ("g3TrackingDrone",      SpriteFactory.makeG3TrackingDrone),
+            ("g3Fighter",            SpriteFactory.makeG3Fighter),
+            ("g3FortressHull",       SpriteFactory.makeG3FortressHull),
+            ("g3FortressNode",       SpriteFactory.makeG3FortressNode),
+            ("g3BarrierWall",        SpriteFactory.makeG3BarrierWall),
+            ("g3ZenithCore",         SpriteFactory.makeG3ZenithCore),
+            ("g3ZenithShield",       SpriteFactory.makeG3ZenithShield),
+            ("g3EmpProjectile",      SpriteFactory.makeG3EmpProjectile),
         ]
 
         for entry in Self.layout {

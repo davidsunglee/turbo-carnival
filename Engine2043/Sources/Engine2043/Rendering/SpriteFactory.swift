@@ -1716,4 +1716,346 @@ public enum SpriteFactory {
         }
         return (extractPixels(from: ctx, width: w, height: h), w, h)
     }
+
+    // MARK: - Galaxy 3: Tracking Drone (18x18)
+    // Small dart shape, icy blue tones.
+
+    public static func makeG3TrackingDrone() -> (pixels: [UInt8], width: Int, height: Int) {
+        let w = 18, h = 18
+        guard let ctx = makeContext(width: w, height: h) else {
+            return (Array(repeating: 0, count: w * h * 4), w, h)
+        }
+
+        let cx = CGFloat(w) / 2
+
+        // Dark icy-blue fill
+        ctx.setFillColor(cgColor(30, 60, 100))
+        ctx.beginPath()
+        ctx.move(to: CGPoint(x: cx, y: CGFloat(h) - 2))
+        ctx.addLine(to: CGPoint(x: 2, y: 4))
+        ctx.addLine(to: CGPoint(x: cx, y: 8))
+        ctx.addLine(to: CGPoint(x: CGFloat(w) - 2, y: 4))
+        ctx.closePath()
+        ctx.fillPath()
+
+        // Icy blue outline
+        ctx.setStrokeColor(cgColor(153, 204, 255))
+        ctx.setLineWidth(1.5)
+        ctx.beginPath()
+        ctx.move(to: CGPoint(x: cx, y: CGFloat(h) - 2))
+        ctx.addLine(to: CGPoint(x: 2, y: 4))
+        ctx.addLine(to: CGPoint(x: cx, y: 8))
+        ctx.addLine(to: CGPoint(x: CGFloat(w) - 2, y: 4))
+        ctx.closePath()
+        ctx.strokePath()
+
+        // Bright core dot
+        ctx.setFillColor(cgColor(200, 230, 255))
+        ctx.fillEllipse(in: CGRect(x: cx - 2, y: 10, width: 4, height: 4))
+
+        return (extractPixels(from: ctx, width: w, height: h), w, h)
+    }
+
+    // MARK: - Galaxy 3: Fighter (26x26)
+    // Angular fighter, deeper blue palette.
+
+    public static func makeG3Fighter() -> (pixels: [UInt8], width: Int, height: Int) {
+        let w = 26, h = 26
+        guard let ctx = makeContext(width: w, height: h) else {
+            return (Array(repeating: 0, count: w * h * 4), w, h)
+        }
+
+        let cx = CGFloat(w) / 2
+        let cy = CGFloat(h) / 2
+
+        // Dark blue fill — angular hexagonal shape
+        ctx.setFillColor(cgColor(25, 40, 80))
+        ctx.beginPath()
+        ctx.move(to: CGPoint(x: cx, y: CGFloat(h) - 2))
+        ctx.addLine(to: CGPoint(x: 2, y: cy + 4))
+        ctx.addLine(to: CGPoint(x: 4, y: 4))
+        ctx.addLine(to: CGPoint(x: cx, y: 2))
+        ctx.addLine(to: CGPoint(x: CGFloat(w) - 4, y: 4))
+        ctx.addLine(to: CGPoint(x: CGFloat(w) - 2, y: cy + 4))
+        ctx.closePath()
+        ctx.fillPath()
+
+        // Deep blue outline
+        ctx.setStrokeColor(cgColor(102, 153, 255))
+        ctx.setLineWidth(2)
+        ctx.beginPath()
+        ctx.move(to: CGPoint(x: cx, y: CGFloat(h) - 2))
+        ctx.addLine(to: CGPoint(x: 2, y: cy + 4))
+        ctx.addLine(to: CGPoint(x: 4, y: 4))
+        ctx.addLine(to: CGPoint(x: cx, y: 2))
+        ctx.addLine(to: CGPoint(x: CGFloat(w) - 4, y: 4))
+        ctx.addLine(to: CGPoint(x: CGFloat(w) - 2, y: cy + 4))
+        ctx.closePath()
+        ctx.strokePath()
+
+        // Wing detail lines
+        ctx.setStrokeColor(cgColor(50, 80, 130))
+        ctx.setLineWidth(1)
+        ctx.beginPath()
+        ctx.move(to: CGPoint(x: 6, y: cy))
+        ctx.addLine(to: CGPoint(x: CGFloat(w) - 6, y: cy))
+        ctx.strokePath()
+
+        // Engine glow dots
+        ctx.setFillColor(cgColor(150, 200, 255))
+        ctx.fillEllipse(in: CGRect(x: 5, y: cy + 2, width: 3, height: 3))
+        ctx.fillEllipse(in: CGRect(x: CGFloat(w) - 8, y: cy + 2, width: 3, height: 3))
+
+        // Bright core
+        ctx.setFillColor(cgColor(180, 220, 255))
+        ctx.fillEllipse(in: CGRect(x: cx - 3, y: cy - 3, width: 6, height: 6))
+
+        return (extractPixels(from: ctx, width: w, height: h), w, h)
+    }
+
+    // MARK: - Galaxy 3: Fortress Hull (120x70)
+    // Half-size of design (240x140), dark industrial plating.
+
+    public static func makeG3FortressHull() -> (pixels: [UInt8], width: Int, height: Int) {
+        let w = 120, h = 70
+        guard let ctx = makeContext(width: w, height: h) else {
+            return (Array(repeating: 0, count: w * h * 4), w, h)
+        }
+
+        // Dark hull base fill
+        ctx.setFillColor(cgColor(64, 77, 115))
+        ctx.fill(CGRect(x: 2, y: 2, width: w - 4, height: h - 4))
+
+        // Darker inner panel
+        ctx.setFillColor(cgColor(45, 55, 85))
+        ctx.fill(CGRect(x: 8, y: 8, width: w - 16, height: h - 16))
+
+        // Panel line details — horizontal
+        ctx.setStrokeColor(cgColor(80, 95, 130))
+        ctx.setLineWidth(1)
+        for yOff in stride(from: 14, to: h - 8, by: 14) {
+            ctx.beginPath()
+            ctx.move(to: CGPoint(x: 10, y: CGFloat(yOff)))
+            ctx.addLine(to: CGPoint(x: CGFloat(w - 10), y: CGFloat(yOff)))
+            ctx.strokePath()
+        }
+
+        // Panel line details — vertical
+        for xOff in stride(from: 20, to: w - 8, by: 24) {
+            ctx.beginPath()
+            ctx.move(to: CGPoint(x: CGFloat(xOff), y: 10))
+            ctx.addLine(to: CGPoint(x: CGFloat(xOff), y: CGFloat(h - 10)))
+            ctx.strokePath()
+        }
+
+        // Hull outline
+        ctx.setStrokeColor(cgColor(100, 115, 150))
+        ctx.setLineWidth(2)
+        ctx.stroke(CGRect(x: 2, y: 2, width: w - 4, height: h - 4))
+
+        // Corner rivets
+        let rivetColor = cgColor(120, 135, 170)
+        ctx.setFillColor(rivetColor)
+        ctx.fillEllipse(in: CGRect(x: 4, y: 4, width: 4, height: 4))
+        ctx.fillEllipse(in: CGRect(x: CGFloat(w - 8), y: 4, width: 4, height: 4))
+        ctx.fillEllipse(in: CGRect(x: 4, y: CGFloat(h - 8), width: 4, height: 4))
+        ctx.fillEllipse(in: CGRect(x: CGFloat(w - 8), y: CGFloat(h - 8), width: 4, height: 4))
+
+        return (extractPixels(from: ctx, width: w, height: h), w, h)
+    }
+
+    // MARK: - Galaxy 3: Fortress Node (24x24)
+    // Small turret/generator node.
+
+    public static func makeG3FortressNode() -> (pixels: [UInt8], width: Int, height: Int) {
+        let w = 24, h = 24
+        guard let ctx = makeContext(width: w, height: h) else {
+            return (Array(repeating: 0, count: w * h * 4), w, h)
+        }
+
+        let cx = CGFloat(w) / 2
+        let cy = CGFloat(h) / 2
+
+        // Base octagon
+        ctx.setFillColor(cgColor(50, 65, 100))
+        let r: CGFloat = 10
+        ctx.beginPath()
+        for i in 0..<8 {
+            let angle = CGFloat(i) * .pi / 4 - .pi / 8
+            let pt = CGPoint(x: cx + r * cos(angle), y: cy + r * sin(angle))
+            if i == 0 { ctx.move(to: pt) } else { ctx.addLine(to: pt) }
+        }
+        ctx.closePath()
+        ctx.fillPath()
+
+        // Outline
+        ctx.setStrokeColor(cgColor(120, 160, 220))
+        ctx.setLineWidth(1.5)
+        ctx.beginPath()
+        for i in 0..<8 {
+            let angle = CGFloat(i) * .pi / 4 - .pi / 8
+            let pt = CGPoint(x: cx + r * cos(angle), y: cy + r * sin(angle))
+            if i == 0 { ctx.move(to: pt) } else { ctx.addLine(to: pt) }
+        }
+        ctx.closePath()
+        ctx.strokePath()
+
+        // Central energy core
+        ctx.setFillColor(cgColor(180, 220, 255))
+        ctx.fillEllipse(in: CGRect(x: cx - 4, y: cy - 4, width: 8, height: 8))
+
+        // Inner ring
+        ctx.setStrokeColor(cgColor(100, 150, 200))
+        ctx.setLineWidth(1)
+        ctx.strokeEllipse(in: CGRect(x: cx - 6, y: cy - 6, width: 12, height: 12))
+
+        return (extractPixels(from: ctx, width: w, height: h), w, h)
+    }
+
+    // MARK: - Galaxy 3: Barrier Wall (40x120)
+    // Grey-blue metal barrier segment.
+
+    public static func makeG3BarrierWall() -> (pixels: [UInt8], width: Int, height: Int) {
+        let w = 40, h = 120
+        guard let ctx = makeContext(width: w, height: h) else {
+            return (Array(repeating: 0, count: w * h * 4), w, h)
+        }
+
+        // Base fill
+        ctx.setFillColor(cgColor(89, 102, 128))
+        ctx.fill(CGRect(x: 0, y: 0, width: w, height: h))
+
+        // Darker inner panels
+        ctx.setFillColor(cgColor(70, 82, 110))
+        ctx.fill(CGRect(x: 4, y: 4, width: w - 8, height: h - 8))
+
+        // Horizontal rivets / panel lines
+        ctx.setStrokeColor(cgColor(110, 125, 155))
+        ctx.setLineWidth(1)
+        for yOff in stride(from: 15, to: h, by: 20) {
+            ctx.beginPath()
+            ctx.move(to: CGPoint(x: 4, y: CGFloat(yOff)))
+            ctx.addLine(to: CGPoint(x: CGFloat(w - 4), y: CGFloat(yOff)))
+            ctx.strokePath()
+        }
+
+        // Edge highlight (left)
+        ctx.setFillColor(cgColor(130, 145, 175))
+        ctx.fill(CGRect(x: 0, y: 0, width: 2, height: h))
+
+        // Edge shadow (right)
+        ctx.setFillColor(cgColor(55, 65, 90))
+        ctx.fill(CGRect(x: w - 2, y: 0, width: 2, height: h))
+
+        // Outer border
+        ctx.setStrokeColor(cgColor(100, 115, 145))
+        ctx.setLineWidth(1.5)
+        ctx.stroke(CGRect(x: 1, y: 1, width: w - 2, height: h - 2))
+
+        return (extractPixels(from: ctx, width: w, height: h), w, h)
+    }
+
+    // MARK: - Galaxy 3: Zenith Core (80x80)
+    // Boss core, warm orange-red glow.
+
+    public static func makeG3ZenithCore() -> (pixels: [UInt8], width: Int, height: Int) {
+        let w = 80, h = 80
+        guard let ctx = makeSoftContext(width: w, height: h) else {
+            return (Array(repeating: 0, count: w * h * 4), w, h)
+        }
+
+        let cx = CGFloat(w) / 2
+        let cy = CGFloat(h) / 2
+
+        // Outer glow halo
+        ctx.setFillColor(cgColor(255, 80, 30, 40))
+        ctx.fillEllipse(in: CGRect(x: cx - 38, y: cy - 38, width: 76, height: 76))
+
+        // Main body — dark armored shell
+        ctx.setFillColor(cgColor(60, 25, 15))
+        ctx.fillEllipse(in: CGRect(x: cx - 30, y: cy - 30, width: 60, height: 60))
+
+        // Armored ring
+        ctx.setStrokeColor(cgColor(180, 70, 30))
+        ctx.setLineWidth(3)
+        ctx.strokeEllipse(in: CGRect(x: cx - 28, y: cy - 28, width: 56, height: 56))
+
+        // Inner ring detail
+        ctx.setStrokeColor(cgColor(120, 50, 20))
+        ctx.setLineWidth(1.5)
+        ctx.strokeEllipse(in: CGRect(x: cx - 20, y: cy - 20, width: 40, height: 40))
+
+        // Central eye / core
+        ctx.setFillColor(cgColor(255, 120, 50))
+        ctx.fillEllipse(in: CGRect(x: cx - 10, y: cy - 10, width: 20, height: 20))
+
+        // Hot center
+        ctx.setFillColor(cgColor(255, 200, 150))
+        ctx.fillEllipse(in: CGRect(x: cx - 5, y: cy - 5, width: 10, height: 10))
+
+        // Vent lines radiating from center
+        ctx.setStrokeColor(cgColor(200, 80, 30, 180))
+        ctx.setLineWidth(1)
+        for i in 0..<8 {
+            let angle = CGFloat(i) * .pi / 4
+            ctx.beginPath()
+            ctx.move(to: CGPoint(x: cx + 14 * cos(angle), y: cy + 14 * sin(angle)))
+            ctx.addLine(to: CGPoint(x: cx + 26 * cos(angle), y: cy + 26 * sin(angle)))
+            ctx.strokePath()
+        }
+
+        return (extractPixels(from: ctx, width: w, height: h), w, h)
+    }
+
+    // MARK: - Galaxy 3: Zenith Shield (40x12)
+    // Shield segment, blue tint.
+
+    public static func makeG3ZenithShield() -> (pixels: [UInt8], width: Int, height: Int) {
+        let w = 40, h = 12
+        guard let ctx = makeContext(width: w, height: h) else {
+            return (Array(repeating: 0, count: w * h * 4), w, h)
+        }
+
+        // Semi-transparent blue shield fill
+        ctx.setFillColor(cgColor(102, 179, 255, 180))
+        ctx.fill(CGRect(x: 2, y: 2, width: w - 4, height: h - 4))
+
+        // Bright edge outline
+        ctx.setStrokeColor(cgColor(150, 210, 255, 220))
+        ctx.setLineWidth(1.5)
+        ctx.stroke(CGRect(x: 1, y: 1, width: w - 2, height: h - 2))
+
+        // Center highlight line
+        ctx.setFillColor(cgColor(200, 235, 255, 200))
+        ctx.fill(CGRect(x: 4, y: h / 2 - 1, width: w - 8, height: 2))
+
+        return (extractPixels(from: ctx, width: w, height: h), w, h)
+    }
+
+    // MARK: - Galaxy 3: EMP Projectile (10x10)
+    // Bright flash projectile.
+
+    public static func makeG3EmpProjectile() -> (pixels: [UInt8], width: Int, height: Int) {
+        let w = 10, h = 10
+        guard let ctx = makeSoftContext(width: w, height: h) else {
+            return (Array(repeating: 0, count: w * h * 4), w, h)
+        }
+
+        let cx = CGFloat(w) / 2
+        let cy = CGFloat(h) / 2
+
+        // Outer glow
+        ctx.setFillColor(cgColor(204, 230, 255, 100))
+        ctx.fillEllipse(in: CGRect(x: 0, y: 0, width: w, height: h))
+
+        // Inner bright flash
+        ctx.setFillColor(cgColor(220, 240, 255, 220))
+        ctx.fillEllipse(in: CGRect(x: cx - 3, y: cy - 3, width: 6, height: 6))
+
+        // Hot center
+        ctx.setFillColor(cgColor(255, 255, 255, 255))
+        ctx.fillEllipse(in: CGRect(x: cx - 1.5, y: cy - 1.5, width: 3, height: 3))
+
+        return (extractPixels(from: ctx, width: w, height: h), w, h)
+    }
 }

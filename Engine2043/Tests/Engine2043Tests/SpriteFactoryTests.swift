@@ -418,4 +418,122 @@ struct SpriteFactoryTests {
             #expect(hasContent, "Glyph '\(char)' should have visible pixels")
         }
     }
+
+    // MARK: - Galaxy 3 Sprites
+
+    @Test func makeG3TrackingDroneReturnsCorrectSize() {
+        let (pixels, width, height) = SpriteFactory.makeG3TrackingDrone()
+        #expect(width == 18)
+        #expect(height == 18)
+        #expect(pixels.count == 18 * 18 * 4)
+    }
+
+    @Test func makeG3TrackingDroneHasNonTransparentPixels() {
+        let (pixels, _, _) = SpriteFactory.makeG3TrackingDrone()
+        let hasVisiblePixels = stride(from: 3, to: pixels.count, by: 4).contains { pixels[$0] > 0 }
+        #expect(hasVisiblePixels)
+    }
+
+    @Test func makeG3FighterReturnsCorrectSize() {
+        let (pixels, width, height) = SpriteFactory.makeG3Fighter()
+        #expect(width == 26)
+        #expect(height == 26)
+        #expect(pixels.count == 26 * 26 * 4)
+    }
+
+    @Test func makeG3FighterHasNonTransparentPixels() {
+        let (pixels, _, _) = SpriteFactory.makeG3Fighter()
+        let hasVisiblePixels = stride(from: 3, to: pixels.count, by: 4).contains { pixels[$0] > 0 }
+        #expect(hasVisiblePixels)
+    }
+
+    @Test func makeG3FortressHullReturnsCorrectSize() {
+        let (pixels, width, height) = SpriteFactory.makeG3FortressHull()
+        #expect(width == 120)
+        #expect(height == 70)
+        #expect(pixels.count == 120 * 70 * 4)
+    }
+
+    @Test func makeG3FortressHullHasNonTransparentPixels() {
+        let (pixels, _, _) = SpriteFactory.makeG3FortressHull()
+        let hasVisiblePixels = stride(from: 3, to: pixels.count, by: 4).contains { pixels[$0] > 0 }
+        #expect(hasVisiblePixels)
+    }
+
+    @Test func makeG3FortressNodeReturnsCorrectSize() {
+        let (pixels, width, height) = SpriteFactory.makeG3FortressNode()
+        #expect(width == 24)
+        #expect(height == 24)
+        #expect(pixels.count == 24 * 24 * 4)
+    }
+
+    @Test func makeG3FortressNodeHasNonTransparentPixels() {
+        let (pixels, _, _) = SpriteFactory.makeG3FortressNode()
+        let hasVisiblePixels = stride(from: 3, to: pixels.count, by: 4).contains { pixels[$0] > 0 }
+        #expect(hasVisiblePixels)
+    }
+
+    @Test func makeG3BarrierWallReturnsCorrectSize() {
+        let (pixels, width, height) = SpriteFactory.makeG3BarrierWall()
+        #expect(width == 40)
+        #expect(height == 120)
+        #expect(pixels.count == 40 * 120 * 4)
+    }
+
+    @Test func makeG3BarrierWallHasNonTransparentPixels() {
+        let (pixels, _, _) = SpriteFactory.makeG3BarrierWall()
+        let hasVisiblePixels = stride(from: 3, to: pixels.count, by: 4).contains { pixels[$0] > 0 }
+        #expect(hasVisiblePixels)
+    }
+
+    @Test func makeG3ZenithCoreReturnsCorrectSize() {
+        let (pixels, width, height) = SpriteFactory.makeG3ZenithCore()
+        #expect(width == 80)
+        #expect(height == 80)
+        #expect(pixels.count == 80 * 80 * 4)
+    }
+
+    @Test func makeG3ZenithCoreHasNonTransparentPixels() {
+        let (pixels, _, _) = SpriteFactory.makeG3ZenithCore()
+        let hasVisiblePixels = stride(from: 3, to: pixels.count, by: 4).contains { pixels[$0] > 0 }
+        #expect(hasVisiblePixels)
+    }
+
+    @Test func makeG3ZenithShieldReturnsCorrectSize() {
+        let (pixels, width, height) = SpriteFactory.makeG3ZenithShield()
+        #expect(width == 40)
+        #expect(height == 12)
+        #expect(pixels.count == 40 * 12 * 4)
+    }
+
+    @Test func makeG3ZenithShieldHasNonTransparentPixels() {
+        let (pixels, _, _) = SpriteFactory.makeG3ZenithShield()
+        let hasVisiblePixels = stride(from: 3, to: pixels.count, by: 4).contains { pixels[$0] > 0 }
+        #expect(hasVisiblePixels)
+    }
+
+    @Test func makeG3EmpProjectileReturnsCorrectSize() {
+        let (pixels, width, height) = SpriteFactory.makeG3EmpProjectile()
+        #expect(width == 10)
+        #expect(height == 10)
+        #expect(pixels.count == 10 * 10 * 4)
+    }
+
+    @Test func makeG3EmpProjectileHasNonTransparentPixels() {
+        let (pixels, _, _) = SpriteFactory.makeG3EmpProjectile()
+        let hasVisiblePixels = stride(from: 3, to: pixels.count, by: 4).contains { pixels[$0] > 0 }
+        #expect(hasVisiblePixels)
+    }
+
+    @Test @MainActor func textureAtlasIncludesGalaxy3Sprites() {
+        let names = TextureAtlas.spriteNames
+        #expect(names.contains("g3TrackingDrone"))
+        #expect(names.contains("g3Fighter"))
+        #expect(names.contains("g3FortressHull"))
+        #expect(names.contains("g3FortressNode"))
+        #expect(names.contains("g3BarrierWall"))
+        #expect(names.contains("g3ZenithCore"))
+        #expect(names.contains("g3ZenithShield"))
+        #expect(names.contains("g3EmpProjectile"))
+    }
 }
