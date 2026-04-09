@@ -177,4 +177,89 @@ public enum GameConfig {
             public static let g2TractorBeam = SIMD4<Float>(0.4, 0.8, 1.0, 0.6)
         }
     }
+
+    public enum Galaxy3 {
+        public enum Enemy {
+            // Tier 1 — tracking drones
+            public static let tier1HP: Float = 1.0
+            public static let tier1Size = SIMD2<Float>(18, 18)
+            public static let tier1Speed: Float = 120
+
+            // Tier 2 — four-fighter squads
+            public static let tier2HP: Float = 2.5
+            public static let tier2Size = SIMD2<Float>(26, 26)
+            public static let tier2Speed: Float = 80
+
+            // Tier 3 — fortress nodes
+            public static let fortressShieldGenHP: Float = 4.0
+            public static let fortressMainBatteryHP: Float = 6.0
+            public static let fortressPulseTurretHP: Float = 3.0
+            public static let fortressNodeSize = SIMD2<Float>(24, 24)
+            public static let fortressHullSize = SIMD2<Float>(240, 140)
+
+            // Zenith Core Sentinel — boss
+            public static let bossHP: Float = 150
+            public static let bossSize = SIMD2<Float>(120, 120)
+            public static let bossPhaseThresholds: [Float] = [0.75, 0.50, 0.25]
+        }
+
+        public enum Barrier {
+            public static let collisionDamage: Float = 20
+            public static let trenchWallWidth: Float = 60
+            public static let gateSegmentSize = SIMD2<Float>(40, 120)
+            public static let rotatingGateSpeed: Float = 1.5
+        }
+
+        public enum Corridor {
+            public static let narrowWidth: Float = 80
+            public static let standardWidth: Float = 120
+            public static let wideWidth: Float = 180
+        }
+
+        public enum BossAttack {
+            // Grid beam fire
+            public static let gridBeamInterval: Double = 2.0
+            public static let gridBeamProjectileSpeed: Float = 250
+
+            // Radial burst
+            public static let radialBurstInterval: Double = 3.0
+            public static let radialBurstProjectileSpeed: Float = 200
+            public static let radialBurstProjectileCount: Int = 12
+
+            // Homing missiles
+            public static let homingMissileInterval: Double = 4.0
+            public static let homingMissileSpeed: Float = 160
+            public static let homingMissileCount: Int = 3
+            public static let homingMissileTurnRate: Float = 2.5
+            public static let homingMissileLifetime: Double = 5.0
+
+            // Shield window
+            public static let shieldWindowDuration: Double = 3.0
+            public static let shieldCooldown: Double = 8.0
+
+            // EMP attack
+            public static let empDisableDuration: Double = 2.0
+            public static let empChargeTime: Double = 1.0
+        }
+
+        public enum Score {
+            public static let g3Tier1 = 20
+            public static let g3Tier2 = 100
+            public static let g3FortressNode = 200
+            public static let g3Boss = 2000
+        }
+
+        public enum Palette {
+            public static let g3Background = SIMD4<Float>(5.0 / 255.0, 15.0 / 255.0, 30.0 / 255.0, 1.0)
+            public static let g3Midground = SIMD4<Float>(20.0 / 255.0, 50.0 / 255.0, 80.0 / 255.0, 1.0)
+            public static let g3Barrier = SIMD4<Float>(0.35, 0.4, 0.5, 1.0)
+            public static let g3Tier1 = SIMD4<Float>(0.6, 0.8, 1.0, 1.0)
+            public static let g3Tier2 = SIMD4<Float>(0.4, 0.6, 1.0, 1.0)
+            public static let g3FortressHull = SIMD4<Float>(0.25, 0.3, 0.45, 1.0)
+            public static let g3FortressShield = SIMD4<Float>(0.3, 0.9, 1.0, 0.6)
+            public static let g3BossCore = SIMD4<Float>(1.0, 0.4, 0.2, 1.0)
+            public static let g3BossShield = SIMD4<Float>(0.4, 0.7, 1.0, 0.7)
+            public static let g3EmpFlash = SIMD4<Float>(0.8, 0.9, 1.0, 0.5)
+        }
+    }
 }

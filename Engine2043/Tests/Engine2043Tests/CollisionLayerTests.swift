@@ -78,4 +78,42 @@ struct CollisionLayerTests {
         #expect(mask.contains(.playerProjectile))
         #expect(!mask.contains(.enemy))
     }
+
+    @Test func barrierLayerRawValue() {
+        let layer = CollisionLayer.barrier
+        #expect(layer.rawValue == 512) // 1 << 9
+    }
+
+    @Test func barrierCoexistsWithExistingLayers() {
+        let combined = CollisionLayer.barrier.union([.player, .enemy, .asteroid])
+        #expect(combined.contains(.barrier))
+        #expect(combined.contains(.player))
+        #expect(combined.contains(.enemy))
+        #expect(combined.contains(.asteroid))
+        #expect(combined.rawValue == 773) // 1 | 4 | 256 | 512
+    }
+
+    @Test func barrierInPlayerMask() {
+        // Player mask should be able to include barrier for symmetric collision
+        let playerMask: CollisionLayer = [.enemy, .enemyProjectile, .item, .barrier]
+        #expect(playerMask.contains(.barrier))
+        #expect(playerMask.contains(.enemy))
+        #expect(!playerMask.contains(.playerProjectile))
+    }
+
+    @Test func barrierSymmetricCollision() {
+        // Barrier's mask includes player, player's mask includes barrier
+        let barrierLayer: CollisionLayer = .barrier
+        let barrierMask: CollisionLayer = [.player]
+        let playerLayer: CollisionLayer = .player
+        let playerMask: CollisionLayer = [.barrier]
+
+        // From player's perspective: barrier layer intersects player mask
+        let playerSeesBarrier = !barrierLayer.intersection(playerMask).isEmpty
+        // From barrier's perspective: player layer intersects barrier mask
+        let barrierSeesPlayer = !playerLayer.intersection(barrierMask).isEmpty
+
+        #expect(playerSeesBarrier)
+        #expect(barrierSeesPlayer)
+    }
 }
