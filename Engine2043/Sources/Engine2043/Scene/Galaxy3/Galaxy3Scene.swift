@@ -319,8 +319,9 @@ public final class Galaxy3Scene: GameScene {
         )
         processEncounterCommands()
 
-        // Update lane bounds from active barriers
-        environmentSystem.updateLaneBounds(barriers: barriers)
+        // Update lane bounds from active barriers (filtered to player's Y band)
+        let playerY = player.component(ofType: TransformComponent.self)?.position.y ?? 0
+        environmentSystem.updateLaneBounds(barriers: barriers, playerY: playerY)
 
         // Scroll barriers downward with environment
         updateBarriers(deltaTime: time.fixedDeltaTime)
@@ -385,6 +386,21 @@ public final class Galaxy3Scene: GameScene {
             sfx?.play(.lightningArcZap)
         }
         for (entity, damage) in lightningArcSystem.pendingDamage {
+            // Zenith boss shield check — lightning arc is deflected when shield is active
+            if let zenith = entity.component(ofType: ZenithBossComponent.self),
+               zenith.isShieldActive {
+                sfx?.play(.bossShieldDeflect)
+                continue
+            }
+
+            // Fortress node shielding — shielded non-generator nodes deflect lightning
+            if let fortNode = entity.component(ofType: FortressNodeComponent.self),
+               fortNode.isShielded,
+               fortNode.role != .shieldGenerator {
+                sfx?.play(.bossShieldDeflect)
+                continue
+            }
+
             if let health = entity.component(ofType: HealthComponent.self) {
                 health.takeDamage(damage)
                 if !health.isAlive {
@@ -958,23 +974,29 @@ public final class Galaxy3Scene: GameScene {
     }
 
     private func spawnBarrierLayout(kind: BarrierKind, width: Float) {
-        // Create barrier walls on left and right sides of the corridor
+        // Create corridor runs with 3-4 staggered barrier segments
         let centerX: Float = 0
         let gapHalf = width / 2
         let segmentSize = GameConfig.Galaxy3.Barrier.gateSegmentSize
-        let spawnY = GameConfig.designHeight / 2 + segmentSize.y / 2 + 10
+        let baseSpawnY = GameConfig.designHeight / 2 + segmentSize.y / 2 + 10
+        let segmentSpacing: Float = 120  // vertical distance between segments
+        let segmentCount = Int.random(in: 3...4)
 
-        // Left wall barrier
-        let leftX = centerX - gapHalf - segmentSize.x / 2
-        let leftBarrier = Galaxy3EntityFactory.makeBarrier(kind: kind, at: SIMD2(leftX, spawnY))
-        registerEntity(leftBarrier)
-        barriers.append(leftBarrier)
+        for i in 0..<segmentCount {
+            let spawnY = baseSpawnY + Float(i) * segmentSpacing
 
-        // Right wall barrier
-        let rightX = centerX + gapHalf + segmentSize.x / 2
-        let rightBarrier = Galaxy3EntityFactory.makeBarrier(kind: kind, at: SIMD2(rightX, spawnY))
-        registerEntity(rightBarrier)
-        barriers.append(rightBarrier)
+            // Left wall barrier
+            let leftX = centerX - gapHalf - segmentSize.x / 2
+            let leftBarrier = Galaxy3EntityFactory.makeBarrier(kind: kind, at: SIMD2(leftX, spawnY))
+            registerEntity(leftBarrier)
+            barriers.append(leftBarrier)
+
+            // Right wall barrier
+            let rightX = centerX + gapHalf + segmentSize.x / 2
+            let rightBarrier = Galaxy3EntityFactory.makeBarrier(kind: kind, at: SIMD2(rightX, spawnY))
+            registerEntity(rightBarrier)
+            barriers.append(rightBarrier)
+        }
     }
 
     private func triggerBoss() {
@@ -1009,8 +1031,13 @@ public final class Galaxy3Scene: GameScene {
         bossSystem.bossType = .zenithCoreSentinel
 
         // Hide shield entities initially (they appear in phase 3+)
+        // Also disable their collision so invisible shields don't block projectiles
         for shield in shields {
             shield.component(ofType: RenderComponent.self)?.isVisible = false
+            if let physics = shield.component(ofType: PhysicsComponent.self) {
+                physics.collisionLayer = []
+                physics.collisionMask = []
+            }
         }
 
         // Switch to boss music — reuse existing boss track
@@ -1075,6 +1102,9 @@ public final class Galaxy3Scene: GameScene {
         )
         physics.velocity = velocity
         entity.addComponent(physics)
+
+        let projComp = ProjectileComponent(damage: damage, speed: simd_length(velocity))
+        entity.addComponent(projComp)
 
         let render = RenderComponent(size: SIMD2(8, 8), color: SIMD4(1, 1, 1, 1))
         render.spriteId = "enemyBullet"
@@ -1632,6 +1662,14 @@ public final class Galaxy3Scene: GameScene {
     func addBarrierForTesting(_ entity: GKEntity) {
         registerEntity(entity)
         barriers.append(entity)
+    }
+
+    /// Number of active barriers. For use in tests via @testable import only.
+    var barrierCountForTesting: Int { barriers.count }
+
+    /// Current lane bounds state. For use in tests via @testable import only.
+    var laneBoundsForTesting: Galaxy3EnvironmentSystem.LaneBounds {
+        environmentSystem.activeLaneBounds
     }
 
     // MARK: - Collisions

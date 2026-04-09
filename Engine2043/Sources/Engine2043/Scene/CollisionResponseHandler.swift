@@ -221,8 +221,17 @@ final class CollisionResponseHandler {
 
         if let health = enemy.component(ofType: HealthComponent.self) {
             if isBossOrFortress {
+                // Zenith boss shields absorb all contact damage
+                if let zenith = enemy.component(ofType: ZenithBossComponent.self),
+                   zenith.isShieldActive {
+                    // Shields active — boss takes zero damage
+                }
+                // Boss armor absorbs contact damage
+                else if enemy.component(ofType: BossArmorComponent.self) != nil {
+                    // Armor present — boss takes zero damage
+                }
                 // Shielded non-generator fortress nodes take no damage from ramming
-                if let fortNode = enemy.component(ofType: FortressNodeComponent.self),
+                else if let fortNode = enemy.component(ofType: FortressNodeComponent.self),
                    fortNode.isShielded,
                    fortNode.role != .shieldGenerator {
                     // Deflect — no damage to the node

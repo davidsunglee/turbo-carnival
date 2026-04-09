@@ -56,6 +56,10 @@ public final class BossSystem {
             bossPhase.isDefeated = true
             for shield in shieldEntities {
                 shield.component(ofType: RenderComponent.self)?.isVisible = false
+                if let physics = shield.component(ofType: PhysicsComponent.self) {
+                    physics.collisionLayer = []
+                    physics.collisionMask = []
+                }
             }
             return
         }
@@ -91,6 +95,10 @@ public final class BossSystem {
         if phase >= 2 {
             for shield in shieldEntities {
                 shield.component(ofType: RenderComponent.self)?.isVisible = false
+                if let physics = shield.component(ofType: PhysicsComponent.self) {
+                    physics.collisionLayer = []
+                    physics.collisionMask = []
+                }
             }
             return
         }
@@ -275,11 +283,11 @@ public final class BossSystem {
                 }
             }
         } else {
-            // Phases 1 and 2 — shields stay off
+            // Phases 1 and 2 — shields stay off; always ensure collision disabled
             if zenith.isShieldActive {
                 zenith.isShieldActive = false
-                updateZenithShieldVisibility(visible: false)
             }
+            updateZenithShieldVisibility(visible: false)
         }
 
         // Update shield positions around boss
@@ -368,6 +376,16 @@ public final class BossSystem {
     private func updateZenithShieldVisibility(visible: Bool) {
         for shield in shieldEntities {
             shield.component(ofType: RenderComponent.self)?.isVisible = visible
+            // Toggle collision participation so invisible shields don't block projectiles
+            if let physics = shield.component(ofType: PhysicsComponent.self) {
+                if visible {
+                    physics.collisionLayer = .bossShield
+                    physics.collisionMask = [.playerProjectile, .blast]
+                } else {
+                    physics.collisionLayer = []
+                    physics.collisionMask = []
+                }
+            }
         }
     }
 

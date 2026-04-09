@@ -644,6 +644,71 @@ struct CollisionResponseHandlerTests {
         #expect(playerHP.currentHealth < 100, "Player should still take collision damage")
     }
 
+    // MARK: - Finding 2: Player-Contact Damage Bypasses Boss Defenses
+
+    @Test @MainActor func playerRammingZenithDuringShieldWindowDoesZeroDamageToBoss() {
+        let player = TestEntityFactory.makePlayerEntity()
+        player.component(ofType: HealthComponent.self)!.hasInvulnerabilityFrames = false
+        let ctx = MockCollisionContext(player: player)
+        let handler = CollisionResponseHandler(context: ctx)
+
+        let boss = GKEntity()
+        boss.addComponent(TransformComponent(position: SIMD2(0, 200)))
+        let bossHealth = HealthComponent(health: GameConfig.Galaxy3.Enemy.bossHP)
+        bossHealth.hasInvulnerabilityFrames = false
+        boss.addComponent(bossHealth)
+        boss.addComponent(PhysicsComponent(
+            collisionSize: GameConfig.Galaxy3.Enemy.bossSize,
+            layer: .enemy,
+            mask: [.player, .playerProjectile, .blast]
+        ))
+        boss.addComponent(ScoreComponent(points: GameConfig.Galaxy3.Score.g3Boss))
+        boss.addComponent(BossPhaseComponent(totalHP: GameConfig.Galaxy3.Enemy.bossHP))
+        let zenith = ZenithBossComponent()
+        zenith.isShieldActive = true
+        boss.addComponent(zenith)
+
+        let initialHP = bossHealth.currentHealth
+        handler.processCollisions(pairs: [(player, boss)])
+
+        #expect(bossHealth.currentHealth == initialHP,
+                "Zenith boss should take zero damage when rammed during shield window")
+        // Player still takes damage
+        let playerHP = player.component(ofType: HealthComponent.self)!
+        #expect(playerHP.currentHealth < 100, "Player should still take collision damage")
+    }
+
+    @Test @MainActor func playerRammingLithicHarvesterWithArmorDoesZeroDamageToBoss() {
+        let player = TestEntityFactory.makePlayerEntity()
+        player.component(ofType: HealthComponent.self)!.hasInvulnerabilityFrames = false
+        let ctx = MockCollisionContext(player: player)
+        let handler = CollisionResponseHandler(context: ctx)
+
+        let boss = GKEntity()
+        boss.addComponent(TransformComponent(position: SIMD2(0, 200)))
+        let bossHealth = HealthComponent(health: GameConfig.Galaxy2.Enemy.bossHP)
+        bossHealth.hasInvulnerabilityFrames = false
+        boss.addComponent(bossHealth)
+        boss.addComponent(PhysicsComponent(
+            collisionSize: SIMD2(80, 80),
+            layer: .enemy,
+            mask: [.player, .playerProjectile, .blast]
+        ))
+        boss.addComponent(ScoreComponent(points: GameConfig.Galaxy2.Score.g2Boss))
+        boss.addComponent(BossPhaseComponent(totalHP: GameConfig.Galaxy2.Enemy.bossHP))
+        // Add armor component — even with no active slots, presence means armor absorbs
+        let armor = BossArmorComponent()
+        boss.addComponent(armor)
+
+        let initialHP = bossHealth.currentHealth
+        handler.processCollisions(pairs: [(player, boss)])
+
+        #expect(bossHealth.currentHealth == initialHP,
+                "Lithic Harvester with armor should take zero damage from player ramming")
+        let playerHP = player.component(ofType: HealthComponent.self)!
+        #expect(playerHP.currentHealth < 100, "Player should still take collision damage")
+    }
+
     @Test @MainActor func playerContactWithRegularEnemyStillKillsIt() {
         let player = TestEntityFactory.makePlayerEntity()
         player.component(ofType: HealthComponent.self)!.hasInvulnerabilityFrames = false

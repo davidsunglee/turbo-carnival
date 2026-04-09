@@ -640,11 +640,15 @@ struct Galaxy3SceneTests {
         // Run past title card
         runFrames(scene, count: 200)
 
-        // Add some barriers
-        let barrier1 = Galaxy3EntityFactory.makeBarrier(kind: .trenchWall, at: SIMD2(-100, 0))
-        let barrier2 = Galaxy3EntityFactory.makeBarrier(kind: .trenchWall, at: SIMD2(100, 0))
+        // Add some barriers near the player's Y so they register as lane bounds
+        let barrier1 = Galaxy3EntityFactory.makeBarrier(kind: .trenchWall, at: SIMD2(-100, -250))
+        let barrier2 = Galaxy3EntityFactory.makeBarrier(kind: .trenchWall, at: SIMD2(100, -250))
         scene.addBarrierForTesting(barrier1)
         scene.addBarrierForTesting(barrier2)
+
+        // Run a frame to update lane bounds
+        runFrames(scene, count: 1)
+        #expect(scene.barrierCountForTesting >= 2, "Barriers should be present before boss trigger")
 
         // Scroll to boss trigger distance — 2200 / 40 = 55s = 3300 frames + 200 title
         for _ in 0..<3600 {
@@ -666,6 +670,111 @@ struct Galaxy3SceneTests {
 
         #expect(scene.stageState == .bossIntro || scene.stageState == .bossActive,
                 "Stage should have transitioned to boss")
+        #expect(scene.barrierCountForTesting == 0,
+                "All barriers should be cleared when boss triggers")
+        #expect(scene.laneBoundsForTesting.isActive == false,
+                "Lane bounds should be reset when boss triggers")
+    }
+
+    // MARK: - Finding 3: Lightning Arc Respects Shield Logic
+
+    @Test @MainActor func lightningArcCannotDamageZenithDuringShieldWindow() {
+        let carryover = makeCarryover(weaponType: .lightningArc)
+        let scene = Galaxy3Scene(carryover: carryover)
+        let input = MockInputProvider(movement: .zero, primary: true) // firing
+        scene.inputProvider = input
+
+        // Run past title card
+        runFrames(scene, count: 200)
+
+        // Create a boss enemy with ZenithBossComponent and shield active
+        let boss = GKEntity()
+        boss.addComponent(TransformComponent(position: SIMD2(0, 0))) // within lightning range
+        let bossHealth = HealthComponent(health: 150)
+        bossHealth.hasInvulnerabilityFrames = false
+        boss.addComponent(bossHealth)
+        boss.addComponent(PhysicsComponent(
+            collisionSize: SIMD2(80, 80), layer: .enemy,
+            mask: [.player, .playerProjectile, .blast]
+        ))
+        let render = RenderComponent(size: SIMD2(80, 80), color: SIMD4(1, 1, 1, 1))
+        boss.addComponent(render)
+        boss.addComponent(ScoreComponent(points: 5000))
+        let zenith = ZenithBossComponent()
+        zenith.isShieldActive = true
+        boss.addComponent(zenith)
+
+        scene.addEnemyForTesting(boss)
+        let initialHP = bossHealth.currentHealth
+
+        // Run several frames to allow lightning arc to fire
+        for _ in 0..<60 {
+            scene.player.component(ofType: HealthComponent.self)?.currentHealth = GameConfig.Player.health
+            var time = GameTime()
+            time.advance(by: GameConfig.fixedTimeStep)
+            while time.shouldPerformFixedUpdate() {
+                scene.fixedUpdate(time: time)
+                time.consumeFixedUpdate()
+            }
+            scene.update(time: time)
+        }
+
+        #expect(bossHealth.currentHealth == initialHP,
+                "Lightning Arc should not damage Zenith during shield window")
+    }
+
+    @Test @MainActor func lightningArcCannotDamageShieldedFortressNode() {
+        let carryover = makeCarryover(weaponType: .lightningArc)
+        let scene = Galaxy3Scene(carryover: carryover)
+        let input = MockInputProvider(movement: .zero, primary: true) // firing
+        scene.inputProvider = input
+
+        // Run past title card
+        runFrames(scene, count: 200)
+
+        // Create a shielded fortress node within lightning range
+        let node = Galaxy3EntityFactory.makeFortressNode(role: .mainBattery, at: SIMD2(0, 0), fortressID: 1)
+        // Ensure isShielded is true (default from factory)
+        node.addComponent(RenderComponent(size: GameConfig.Galaxy3.Enemy.fortressNodeSize, color: SIMD4(1, 1, 1, 1)))
+        scene.addEnemyForTesting(node)
+
+        let nodeHealth = node.component(ofType: HealthComponent.self)!
+        let initialHP = nodeHealth.currentHealth
+
+        // Run several frames
+        for _ in 0..<60 {
+            scene.player.component(ofType: HealthComponent.self)?.currentHealth = GameConfig.Player.health
+            var time = GameTime()
+            time.advance(by: GameConfig.fixedTimeStep)
+            while time.shouldPerformFixedUpdate() {
+                scene.fixedUpdate(time: time)
+                time.consumeFixedUpdate()
+            }
+            scene.update(time: time)
+        }
+
+        #expect(nodeHealth.currentHealth == initialHP,
+                "Lightning Arc should not damage shielded fortress node")
+    }
+
+    // MARK: - Finding 5: Enemy Projectile Custom Damage
+
+    @Test @MainActor func enemyProjectileWithCustomDamageAppliesCorrectDamage() {
+        let player = TestEntityFactory.makePlayerEntity()
+        player.component(ofType: HealthComponent.self)!.hasInvulnerabilityFrames = false
+        let ctx = MockGalaxy3CollisionContext(player: player)
+        let handler = CollisionResponseHandler(context: ctx)
+
+        // Create enemy projectile with ProjectileComponent carrying custom damage
+        let enemyProj = TestEntityFactory.makeEnemyProjectileEntity()
+        let projComp = ProjectileComponent(damage: 10, speed: 200)
+        enemyProj.addComponent(projComp)
+
+        handler.processCollisions(pairs: [(player, enemyProj)])
+
+        let playerHealth = player.component(ofType: HealthComponent.self)!
+        #expect(playerHealth.currentHealth == 90,
+                "Enemy projectile with damage 10 should deal 10 damage, not legacy 5")
     }
 
     // MARK: - Boss Intro State Persists

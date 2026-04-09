@@ -647,6 +647,92 @@ struct ZenithCoreSentinelTests {
                 "Radial burst should fire on its own timer in phase 3")
     }
 
+    // MARK: - Finding 1: Shield Colliders Disabled in Phases 1-2
+
+    @Test @MainActor func doubleCannonDamagesZenithInPhase1NoShieldDeflection() {
+        // In phase 1, shields are inactive and their collision is disabled,
+        // so projectiles should damage the boss directly.
+        let player = TestEntityFactory.makePlayerEntity()
+        let ctx = MockZenithCollisionContext(player: player)
+        let handler = CollisionResponseHandler(context: ctx)
+
+        let boss = makeZenithBossEntity(hp: 150)
+        let zenith = boss.component(ofType: ZenithBossComponent.self)!
+        zenith.currentPhase = .phase1
+        zenith.isShieldActive = false  // shields off in phase 1
+
+        let bossHealth = boss.component(ofType: HealthComponent.self)!
+        let initialHP = bossHealth.currentHealth
+
+        let projectile = TestEntityFactory.makeProjectileEntity()
+        handler.processCollisions(pairs: [(projectile, boss)])
+
+        #expect(bossHealth.currentHealth < initialHP,
+                "Projectile should damage Zenith in phase 1 (no shield deflection)")
+        #expect(ctx.pendingRemovals.contains(where: { $0 === projectile }))
+    }
+
+    @Test @MainActor func shieldCollisionDisabledWhenShieldsOff() {
+        // Verify that BossSystem disables shield physics when shields are off
+        let (system, boss) = makeZenithBossSystem()
+        skipIntro(system: system, boss: boss)
+
+        // Create shield entities for the system
+        let shield = GKEntity()
+        shield.addComponent(TransformComponent(position: .zero))
+        shield.addComponent(PhysicsComponent(
+            collisionSize: SIMD2(40, 12),
+            layer: .bossShield,
+            mask: [.playerProjectile, .blast]
+        ))
+        shield.addComponent(RenderComponent(size: SIMD2(40, 12), color: SIMD4(1, 1, 1, 1)))
+        system.registerShield(shield)
+
+        // In phase 1, shields should be off — run a frame
+        system.update(deltaTime: 1.0 / 60.0)
+
+        let physics = shield.component(ofType: PhysicsComponent.self)!
+        #expect(physics.collisionLayer == [],
+                "Shield collision layer should be empty in phase 1")
+        #expect(physics.collisionMask == [],
+                "Shield collision mask should be empty in phase 1")
+    }
+
+    @Test @MainActor func shieldCollisionRestoredWhenShieldsActivate() {
+        let (system, boss) = makeZenithBossSystem()
+        skipIntro(system: system, boss: boss)
+
+        // Create and register shield entity
+        let shield = GKEntity()
+        shield.addComponent(TransformComponent(position: .zero))
+        shield.addComponent(PhysicsComponent(
+            collisionSize: SIMD2(40, 12),
+            layer: .bossShield,
+            mask: [.playerProjectile, .blast]
+        ))
+        shield.addComponent(RenderComponent(size: SIMD2(40, 12), color: SIMD4(1, 1, 1, 1)))
+        system.registerShield(shield)
+
+        // Move to phase 3 where shields can activate
+        let health = boss.component(ofType: HealthComponent.self)!
+        health.currentHealth = 150 * 0.45
+        let zenith = boss.component(ofType: ZenithBossComponent.self)!
+
+        // Run until shield activates
+        let frames = Int(GameConfig.Galaxy3.BossAttack.shieldCooldown / (1.0 / 60.0)) + 10
+        for _ in 0..<frames {
+            system.update(deltaTime: 1.0 / 60.0)
+        }
+
+        if zenith.isShieldActive {
+            let physics = shield.component(ofType: PhysicsComponent.self)!
+            #expect(physics.collisionLayer == .bossShield,
+                    "Shield collision layer should be restored when shields activate")
+            #expect(physics.collisionMask == [.playerProjectile, .blast],
+                    "Shield collision mask should be restored when shields activate")
+        }
+    }
+
     @Test @MainActor func shieldDoesNotActivateInPhase2() {
         let (system, boss) = makeZenithBossSystem()
         skipIntro(system: system, boss: boss)
