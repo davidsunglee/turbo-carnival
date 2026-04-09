@@ -1065,6 +1065,9 @@ public final class Galaxy3Scene: GameScene {
         physics.velocity = request.velocity
         entity.addComponent(physics)
 
+        let projComp = ProjectileComponent(damage: request.damage, speed: simd_length(request.velocity))
+        entity.addComponent(projComp)
+
         let weaponType = weapon?.weaponType ?? .doubleCannon
         let spriteId: String
         switch weaponType {

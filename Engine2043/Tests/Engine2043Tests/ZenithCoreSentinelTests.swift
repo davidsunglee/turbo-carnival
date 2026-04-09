@@ -673,6 +673,9 @@ struct ZenithCoreSentinelTests {
     }
 
     @Test @MainActor func shieldCollisionDisabledWhenShieldsOff() {
+        // Unit test for component state only. Integration coverage verifying that
+        // CollisionSystem resyncs these mutations is in CollisionSystemTests
+        // (shieldWindowBulletDeflectionThroughRealCollisionSystem, etc.).
         // Verify that BossSystem disables shield physics when shields are off
         let (system, boss) = makeZenithBossSystem()
         skipIntro(system: system, boss: boss)
@@ -698,6 +701,7 @@ struct ZenithCoreSentinelTests {
                 "Shield collision mask should be empty in phase 1")
     }
 
+    // Unit test for component state; CollisionSystem integration coverage in CollisionSystemTests.
     @Test @MainActor func shieldCollisionRestoredWhenShieldsActivate() {
         let (system, boss) = makeZenithBossSystem()
         skipIntro(system: system, boss: boss)

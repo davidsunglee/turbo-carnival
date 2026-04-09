@@ -122,10 +122,16 @@ public final class CollisionSystem {
     }
 
     public func update(time: GameTime) {
-        // Sync positions from transform components
+        // Sync positions and physics data from components each frame so that
+        // runtime mutations (e.g. shield toggle, rotating gate resize) take effect.
         for i in entities.indices {
             if let transform = entities[i].component(ofType: TransformComponent.self) {
                 positions[i] = transform.position
+            }
+            if let physics = entities[i].component(ofType: PhysicsComponent.self) {
+                halfExtents[i] = physics.collisionSize * 0.5
+                layers[i] = physics.collisionLayer
+                masks[i] = physics.collisionMask
             }
         }
 

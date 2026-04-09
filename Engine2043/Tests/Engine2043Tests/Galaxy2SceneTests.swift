@@ -546,7 +546,7 @@ struct Galaxy2SceneTests {
 
     // MARK: - Boss Defeat → Galaxy 3 Transition
 
-    @Test @MainActor func bossDefeatStartsBossDyingAnimation() {
+    @Test @MainActor func sceneRemainsPlayingBeforeBossDefeat() {
         let carryover = makeCarryover(score: 5000, secondaryCharges: 2, shieldDroneCount: 1, enemiesDestroyed: 30, elapsedTime: 120.0)
         let scene = Galaxy2Scene(carryover: carryover)
         let input = MockInputProvider(movement: .zero, primary: false)

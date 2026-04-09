@@ -723,4 +723,121 @@ struct CollisionResponseHandlerTests {
                 "Regular enemy should still be killed by player contact")
         #expect(ctx.enemiesDestroyed == 1)
     }
+
+    // MARK: - Per-Projectile Damage (Finding 2)
+
+    @Test @MainActor func triSpreadProjectileDealsConfiguredDamage() {
+        // Tri-spread projectiles carry 0.7 damage via ProjectileComponent,
+        // not the default GameConfig.Player.damage (1.0).
+        let player = TestEntityFactory.makePlayerEntity()
+        let ctx = MockCollisionContext(player: player)
+        let handler = CollisionResponseHandler(context: ctx)
+
+        let enemy = TestEntityFactory.makeEnemyEntity(health: 10, scorePoints: 50)
+        let enemyHealth = enemy.component(ofType: HealthComponent.self)!
+        let initialHP = enemyHealth.currentHealth
+
+        let projectile = TestEntityFactory.makeProjectileEntity()
+        let projComp = ProjectileComponent(
+            damage: GameConfig.Weapon.triSpreadDamage,
+            speed: 500
+        )
+        projectile.addComponent(projComp)
+
+        handler.processCollisions(pairs: [(projectile, enemy)])
+
+        let expectedHP = initialHP - GameConfig.Weapon.triSpreadDamage
+        #expect(abs(enemyHealth.currentHealth - expectedHP) < 0.001,
+                "Tri-spread projectile should deal \(GameConfig.Weapon.triSpreadDamage) damage, not \(GameConfig.Player.damage)")
+    }
+
+    @Test @MainActor func doubleCannonProjectileDealsConfiguredDamageRegression() {
+        // Double cannon projectiles carry 1.0 damage — same as the old hard-coded
+        // value. This is a regression test ensuring the fallback path works.
+        let player = TestEntityFactory.makePlayerEntity()
+        let ctx = MockCollisionContext(player: player)
+        let handler = CollisionResponseHandler(context: ctx)
+
+        let enemy = TestEntityFactory.makeEnemyEntity(health: 10, scorePoints: 50)
+        let enemyHealth = enemy.component(ofType: HealthComponent.self)!
+        let initialHP = enemyHealth.currentHealth
+
+        let projectile = TestEntityFactory.makeProjectileEntity()
+        let projComp = ProjectileComponent(
+            damage: GameConfig.Player.damage,
+            speed: 500
+        )
+        projectile.addComponent(projComp)
+
+        handler.processCollisions(pairs: [(projectile, enemy)])
+
+        let expectedHP = initialHP - GameConfig.Player.damage
+        #expect(abs(enemyHealth.currentHealth - expectedHP) < 0.001,
+                "Double cannon projectile should deal \(GameConfig.Player.damage) damage")
+    }
+
+    @Test @MainActor func projectileWithoutComponentFallsBackToConfigDamage() {
+        // Projectiles without ProjectileComponent (legacy path) should still
+        // deal GameConfig.Player.damage.
+        let player = TestEntityFactory.makePlayerEntity()
+        let ctx = MockCollisionContext(player: player)
+        let handler = CollisionResponseHandler(context: ctx)
+
+        let enemy = TestEntityFactory.makeEnemyEntity(health: 10, scorePoints: 50)
+        let enemyHealth = enemy.component(ofType: HealthComponent.self)!
+        let initialHP = enemyHealth.currentHealth
+
+        let projectile = TestEntityFactory.makeProjectileEntity()
+        // No ProjectileComponent added — triggers fallback
+
+        handler.processCollisions(pairs: [(projectile, enemy)])
+
+        let expectedHP = initialHP - GameConfig.Player.damage
+        #expect(abs(enemyHealth.currentHealth - expectedHP) < 0.001,
+                "Projectile without ProjectileComponent should fall back to GameConfig.Player.damage")
+    }
+
+    @Test @MainActor func triSpreadDamageAppliesToBossArmor() {
+        // Tri-spread's 0.7 damage should be used against boss armor, not 1.0.
+        let player = TestEntityFactory.makePlayerEntity()
+        let ctx = MockCollisionContext(player: player)
+        let handler = CollisionResponseHandler(context: ctx)
+
+        let boss = GKEntity()
+        boss.addComponent(TransformComponent(position: SIMD2(0, 200)))
+        let bossHealth = HealthComponent(health: 100)
+        bossHealth.hasInvulnerabilityFrames = false
+        boss.addComponent(bossHealth)
+        boss.addComponent(PhysicsComponent(
+            collisionSize: SIMD2(100, 100), layer: .enemy,
+            mask: [.player, .playerProjectile, .blast]
+        ))
+        boss.addComponent(ScoreComponent(points: 1000))
+
+        // Create armor with a single slot directly below the boss
+        let armor = BossArmorComponent()
+        let armorEntity = GKEntity()
+        armorEntity.addComponent(TransformComponent(position: SIMD2(0, 200)))
+        let armorHP = HealthComponent(health: 5.0)
+        armorHP.hasInvulnerabilityFrames = false
+        armorEntity.addComponent(armorHP)
+        armor.slots = [ArmorSlot(angle: .pi / 2, entity: armorEntity)]
+        boss.addComponent(armor)
+
+        let initialArmorHP = armorHP.currentHealth
+
+        // Create projectile approaching from below (angle ~= π/2 toward boss)
+        let projectile = TestEntityFactory.makeProjectileEntity(position: SIMD2(0, 190))
+        let projComp = ProjectileComponent(
+            damage: GameConfig.Weapon.triSpreadDamage,
+            speed: 500
+        )
+        projectile.addComponent(projComp)
+
+        handler.processCollisions(pairs: [(projectile, boss)])
+
+        let expectedArmorHP = initialArmorHP - GameConfig.Weapon.triSpreadDamage
+        #expect(abs(armorHP.currentHealth - expectedArmorHP) < 0.001,
+                "Armor should take tri-spread damage (\(GameConfig.Weapon.triSpreadDamage)), not default (\(GameConfig.Player.damage))")
+    }
 }

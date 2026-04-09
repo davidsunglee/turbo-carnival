@@ -161,6 +161,14 @@ final class CollisionResponseHandler {
             return
         }
 
+        // Resolve per-projectile damage: prefer ProjectileComponent, fall back to config.
+        let projectileDamage: Float
+        if let projComp = projectile.component(ofType: ProjectileComponent.self) {
+            projectileDamage = projComp.damage
+        } else {
+            projectileDamage = GameConfig.Player.damage
+        }
+
         // Boss armor interception: geometric angle-based check.
         // Compute approach angle from projectile to boss; only the armor slot
         // covering that angle can block the hit.
@@ -171,7 +179,7 @@ final class CollisionResponseHandler {
             if let idx = armorSlotCovering(angle: approachAngle, armor: armor),
                let armorEntity = armor.slots[idx].entity,
                let armorHealth = armorEntity.component(ofType: HealthComponent.self) {
-                armorHealth.takeDamage(GameConfig.Player.damage)
+                armorHealth.takeDamage(projectileDamage)
                 if !armorHealth.isAlive {
                     ctx.sfx?.play(.asteroidDestroyed)
                     armor.slots[idx].entity = nil
@@ -194,7 +202,7 @@ final class CollisionResponseHandler {
         }
 
         if let health = enemy.component(ofType: HealthComponent.self) {
-            health.takeDamage(GameConfig.Player.damage)
+            health.takeDamage(projectileDamage)
             if !health.isAlive {
                 ctx.sfx?.play(.enemyDestroyed)
                 if let score = enemy.component(ofType: ScoreComponent.self) {

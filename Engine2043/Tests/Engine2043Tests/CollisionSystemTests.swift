@@ -320,4 +320,177 @@ struct CollisionSystemTests {
         system.update(time: time)
         #expect(system.collisionPairs.isEmpty)
     }
+
+    // MARK: - Runtime Physics Resync Integration Tests (Finding 1)
+
+    @Test @MainActor func runtimeCollisionLayerChangeIsResynced() {
+        // Simulates shield toggle: entity starts with collisionLayer = [] (disabled),
+        // then re-enables it at runtime. CollisionSystem must detect the change.
+        let system = CollisionSystem(worldBounds: worldBounds)
+        let shield = TestEntityFactory.makeEntity(
+            position: SIMD2(0, 0), size: SIMD2(40, 12),
+            collisionLayer: .bossShield, collisionMask: [.playerProjectile]
+        )
+        let projectile = TestEntityFactory.makeEntity(
+            position: SIMD2(0, 0), size: SIMD2(6, 12),
+            collisionLayer: .playerProjectile, collisionMask: [.enemy, .bossShield]
+        )
+        system.register(shield)
+        system.register(projectile)
+
+        // Disable shield collision at runtime (like shields-off in phase 1/2)
+        let shieldPhysics = shield.component(ofType: PhysicsComponent.self)!
+        shieldPhysics.collisionLayer = []
+        shieldPhysics.collisionMask = []
+
+        var time = GameTime()
+        time.advance(by: GameConfig.fixedTimeStep)
+        system.update(time: time)
+
+        // No collision because shield layer is now empty
+        #expect(system.collisionPairs.isEmpty,
+                "Disabled shield should not produce collision pairs")
+
+        // Re-enable shield collision (like shields activating in phase 3)
+        shieldPhysics.collisionLayer = .bossShield
+        shieldPhysics.collisionMask = [.playerProjectile]
+        system.update(time: time)
+
+        #expect(system.collisionPairs.count == 1,
+                "Re-enabled shield should produce collision with overlapping projectile")
+    }
+
+    @Test @MainActor func shieldWindowBulletDeflectionThroughRealCollisionSystem() {
+        // Integration test: shield entity has collision enabled, projectile overlaps —
+        // CollisionSystem should produce a pair. This verifies that runtime layer/mask
+        // mutations from BossSystem are picked up after the resync fix.
+        let system = CollisionSystem(worldBounds: worldBounds)
+
+        // Shield entity with collision enabled (shields active in phase 3)
+        let shield = TestEntityFactory.makeEntity(
+            position: SIMD2(0, 100), size: SIMD2(80, 12),
+            collisionLayer: .bossShield, collisionMask: [.playerProjectile, .blast]
+        )
+        // Player projectile heading toward shield
+        let projectile = TestEntityFactory.makeEntity(
+            position: SIMD2(0, 100), size: SIMD2(6, 12),
+            collisionLayer: .playerProjectile, collisionMask: [.enemy, .bossShield]
+        )
+        system.register(shield)
+        system.register(projectile)
+
+        var time = GameTime()
+        time.advance(by: GameConfig.fixedTimeStep)
+        system.update(time: time)
+
+        #expect(system.collisionPairs.count == 1,
+                "Projectile overlapping active shield should produce a collision pair")
+    }
+
+    @Test @MainActor func zenithPhase1BulletReachesBossThroughRealCollisionSystem() {
+        // In phase 1/2, shields are collision-disabled so the projectile reaches the boss.
+        let system = CollisionSystem(worldBounds: worldBounds)
+
+        // Boss entity
+        let boss = TestEntityFactory.makeEntity(
+            position: SIMD2(0, 100), size: SIMD2(120, 120),
+            collisionLayer: .enemy, collisionMask: [.player, .playerProjectile, .blast]
+        )
+        // Shield entity — disabled (phase 1)
+        let shield = TestEntityFactory.makeEntity(
+            position: SIMD2(0, 100), size: SIMD2(80, 12),
+            collisionLayer: [], collisionMask: []
+        )
+        // Projectile overlapping the boss
+        let projectile = TestEntityFactory.makeEntity(
+            position: SIMD2(0, 100), size: SIMD2(6, 12),
+            collisionLayer: .playerProjectile, collisionMask: [.enemy, .bossShield]
+        )
+        system.register(boss)
+        system.register(shield)
+        system.register(projectile)
+
+        var time = GameTime()
+        time.advance(by: GameConfig.fixedTimeStep)
+        system.update(time: time)
+
+        // Should detect projectile-boss pair but NOT projectile-shield (shield disabled)
+        #expect(system.collisionPairs.count == 1,
+                "With shields disabled, projectile should only collide with boss")
+        let pair = system.collisionPairs[0]
+        let entities = [pair.0, pair.1]
+        #expect(entities.contains(where: { $0 === boss }),
+                "Collision pair should include the boss entity")
+        #expect(entities.contains(where: { $0 === projectile }),
+                "Collision pair should include the projectile entity")
+    }
+
+    @Test @MainActor func rotatingGateCollisionSizeChangesOverTime() {
+        // Rotating gates can change their collisionSize at runtime.
+        // CollisionSystem must resync halfExtents each frame.
+        let system = CollisionSystem(worldBounds: worldBounds)
+
+        // Gate entity starts with large collision (closed)
+        let gate = TestEntityFactory.makeEntity(
+            position: SIMD2(0, 0), size: SIMD2(40, 120),
+            collisionLayer: .barrier, collisionMask: [.player]
+        )
+        // Player near the gate's edge
+        let player = TestEntityFactory.makeEntity(
+            position: SIMD2(0, 50), size: SIMD2(20, 20),
+            collisionLayer: .player, collisionMask: [.barrier]
+        )
+        system.register(gate)
+        system.register(player)
+
+        var time = GameTime()
+        time.advance(by: GameConfig.fixedTimeStep)
+        system.update(time: time)
+
+        // Gate closed — large hitbox should overlap with player at y=50
+        #expect(system.collisionPairs.count == 1,
+                "Closed gate (large hitbox) should collide with nearby player")
+
+        // Shrink gate collision (gate open)
+        gate.component(ofType: PhysicsComponent.self)!.collisionSize = SIMD2(40, 20)
+        system.update(time: time)
+
+        // Gate open — small hitbox should NOT reach player at y=50
+        #expect(system.collisionPairs.isEmpty,
+                "Open gate (small hitbox) should not collide with player at y=50")
+
+        // Close gate again
+        gate.component(ofType: PhysicsComponent.self)!.collisionSize = SIMD2(40, 120)
+        system.update(time: time)
+
+        #expect(system.collisionPairs.count == 1,
+                "Re-closed gate should collide with player again")
+    }
+
+    @Test @MainActor func runtimeMaskChangeAffectsCollisionDetection() {
+        // Verify that changing collisionMask at runtime is resynced.
+        let system = CollisionSystem(worldBounds: worldBounds)
+        let a = TestEntityFactory.makeEntity(
+            position: SIMD2(0, 0), size: SIMD2(20, 20),
+            collisionLayer: .player, collisionMask: .enemy
+        )
+        let b = TestEntityFactory.makeEntity(
+            position: SIMD2(5, 0), size: SIMD2(20, 20),
+            collisionLayer: .enemy, collisionMask: .player
+        )
+        system.register(a)
+        system.register(b)
+
+        var time = GameTime()
+        time.advance(by: GameConfig.fixedTimeStep)
+        system.update(time: time)
+        #expect(system.collisionPairs.count == 1)
+
+        // Clear masks at runtime — should stop detecting collisions
+        a.component(ofType: PhysicsComponent.self)!.collisionMask = []
+        b.component(ofType: PhysicsComponent.self)!.collisionMask = []
+        system.update(time: time)
+        #expect(system.collisionPairs.isEmpty,
+                "Clearing masks at runtime should prevent collision detection")
+    }
 }
