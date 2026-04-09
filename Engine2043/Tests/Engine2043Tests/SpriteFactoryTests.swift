@@ -536,4 +536,29 @@ struct SpriteFactoryTests {
         #expect(names.contains("g3ZenithShield"))
         #expect(names.contains("g3EmpProjectile"))
     }
+
+    // MARK: - Galaxy 3 Sprite Content Integrity
+
+    @Test func galaxy3SpritesAllHaveNonZeroDimensions() {
+        // Verify all Galaxy 3 sprites produce valid, non-empty pixel data
+        let sprites: [(String, () -> ([UInt8], Int, Int))] = [
+            ("g3TrackingDrone", SpriteFactory.makeG3TrackingDrone),
+            ("g3Fighter", SpriteFactory.makeG3Fighter),
+            ("g3FortressHull", SpriteFactory.makeG3FortressHull),
+            ("g3FortressNode", SpriteFactory.makeG3FortressNode),
+            ("g3BarrierWall", SpriteFactory.makeG3BarrierWall),
+            ("g3ZenithCore", SpriteFactory.makeG3ZenithCore),
+            ("g3ZenithShield", SpriteFactory.makeG3ZenithShield),
+            ("g3EmpProjectile", SpriteFactory.makeG3EmpProjectile),
+        ]
+
+        for (name, factory) in sprites {
+            let (pixels, w, h) = factory()
+            #expect(w > 0, "\(name) width should be positive")
+            #expect(h > 0, "\(name) height should be positive")
+            #expect(pixels.count == w * h * 4, "\(name) pixel count should match dimensions")
+            let hasContent = stride(from: 3, to: pixels.count, by: 4).contains { pixels[$0] > 0 }
+            #expect(hasContent, "\(name) should have visible pixels")
+        }
+    }
 }

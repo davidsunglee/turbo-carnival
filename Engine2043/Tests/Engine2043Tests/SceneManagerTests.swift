@@ -163,4 +163,80 @@ struct SceneManagerTests {
         #expect(receivedCarryover?.weaponType == .triSpread)
         #expect(engine.currentScene as AnyObject === galaxy3Scene)
     }
+
+    // MARK: - All Transition Types Regression
+
+    @Test @MainActor func toGameTransitionCallsFactory() {
+        let (manager, engine) = makeManager()
+
+        var gameFactoryCalled = false
+        let gameScene = StubScene()
+        manager.makeGameScene = {
+            gameFactoryCalled = true
+            return gameScene
+        }
+
+        let scene = StubScene()
+        scene.requestedTransition = .toGame
+        engine.currentScene = scene
+
+        manager.checkForTransition()
+        manager.updateTransition(deltaTime: 0.25)
+
+        #expect(gameFactoryCalled)
+        #expect(engine.currentScene as AnyObject === gameScene)
+    }
+
+    @Test @MainActor func victoryTransitionCallsFactoryWithResult() {
+        let (manager, engine) = makeManager()
+
+        var receivedResult: GameResult?
+        let victoryScene = StubScene()
+        manager.makeVictoryScene = { result in
+            receivedResult = result
+            return victoryScene
+        }
+
+        let scene = StubScene()
+        let expectedResult = GameResult(finalScore: 25000, enemiesDestroyed: 120, elapsedTime: 600.0, didWin: true)
+        scene.requestedTransition = .toVictory(expectedResult)
+        engine.currentScene = scene
+
+        manager.checkForTransition()
+        manager.updateTransition(deltaTime: 0.25)
+
+        #expect(receivedResult?.finalScore == 25000)
+        #expect(receivedResult?.didWin == true)
+        #expect(engine.currentScene as AnyObject === victoryScene)
+    }
+
+    @Test @MainActor func galaxy2TransitionCallsFactory() {
+        let (manager, engine) = makeManager()
+
+        var receivedCarryover: PlayerCarryover?
+        let galaxy2Scene = StubScene()
+        manager.makeGalaxy2Scene = { carryover in
+            receivedCarryover = carryover
+            return galaxy2Scene
+        }
+
+        let scene = StubScene()
+        let carryover = PlayerCarryover(
+            weaponType: .doubleCannon,
+            score: 3000,
+            secondaryCharges: 1,
+            shieldDroneCount: 0,
+            enemiesDestroyed: 25,
+            elapsedTime: 90.0
+        )
+        scene.requestedTransition = .toGalaxy2(carryover)
+        engine.currentScene = scene
+
+        manager.checkForTransition()
+        manager.updateTransition(deltaTime: 0.25)
+
+        #expect(receivedCarryover?.score == 3000)
+        #expect(receivedCarryover?.weaponType == .doubleCannon)
+        #expect(engine.currentScene as AnyObject === galaxy2Scene)
+    }
 }

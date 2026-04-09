@@ -116,4 +116,45 @@ struct CollisionLayerTests {
         #expect(playerSeesBarrier)
         #expect(barrierSeesPlayer)
     }
+
+    // MARK: - Layer Uniqueness and Orthogonality
+
+    @Test func allLayersHaveUniqueRawValues() {
+        let layers: [CollisionLayer] = [
+            .player, .playerProjectile, .enemy, .enemyProjectile,
+            .item, .bossShield, .blast, .shieldDrone, .asteroid, .barrier
+        ]
+        var seen = Set<UInt16>()
+        for layer in layers {
+            #expect(!seen.contains(layer.rawValue), "Duplicate raw value: \(layer.rawValue)")
+            seen.insert(layer.rawValue)
+        }
+    }
+
+    @Test func allLayersArePowersOfTwo() {
+        let layers: [CollisionLayer] = [
+            .player, .playerProjectile, .enemy, .enemyProjectile,
+            .item, .bossShield, .blast, .shieldDrone, .asteroid, .barrier
+        ]
+        for layer in layers {
+            let raw = layer.rawValue
+            // A power of two has exactly one bit set: raw & (raw - 1) == 0
+            #expect(raw > 0 && (raw & (raw - 1)) == 0,
+                    "Layer raw value \(raw) is not a power of two")
+        }
+    }
+
+    @Test func barrierDoesNotOverlapPlayerProjectile() {
+        // Verify barrier and playerProjectile are distinct bits
+        let combined = CollisionLayer.barrier.intersection(.playerProjectile)
+        #expect(combined.isEmpty)
+    }
+
+    @Test func barrierProjectileMaskCanIncludePlayerProjectile() {
+        // Barrier should be hittable by player projectiles
+        let barrierMask: CollisionLayer = [.player, .playerProjectile]
+        #expect(barrierMask.contains(.playerProjectile))
+        #expect(barrierMask.contains(.player))
+        #expect(!barrierMask.contains(.enemy))
+    }
 }

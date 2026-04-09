@@ -113,4 +113,138 @@ struct Galaxy3EncounterDirectorTests {
         let secondBatch = director.pendingCommands.count
         #expect(secondBatch > 0)
     }
+
+    // MARK: - Command Ordering
+
+    @Test @MainActor func commandsEmittedInTriggerDistanceOrder() {
+        let director = Galaxy3EncounterDirector()
+        // Scroll far enough to trigger everything
+        director.update(scrollDistance: 3000, deltaTime: 1.0 / 60.0)
+
+        let commands = director.pendingCommands
+        #expect(commands.count > 1, "Should have multiple commands")
+
+        // Verify droneCluster appears before bossTrigger (which should be last)
+        var hasDrone = false
+        var bossIndex: Int? = nil
+        for (i, cmd) in commands.enumerated() {
+            if case .droneCluster = cmd {
+                hasDrone = true
+                // No boss trigger should have appeared before any drone cluster
+                #expect(bossIndex == nil, "Drone cluster should appear before boss trigger")
+            }
+            if case .bossTrigger = cmd {
+                bossIndex = i
+            }
+        }
+        #expect(hasDrone, "Script should contain drone clusters")
+        #expect(bossIndex != nil, "Script should contain boss trigger")
+    }
+
+    @Test @MainActor func bossTriggerIsLastCommand() {
+        let director = Galaxy3EncounterDirector()
+        director.update(scrollDistance: 3000, deltaTime: 1.0 / 60.0)
+
+        let commands = director.pendingCommands
+        guard let lastCommand = commands.last else {
+            Issue.record("No commands emitted")
+            return
+        }
+        if case .bossTrigger = lastCommand {
+            // Expected
+        } else {
+            Issue.record("Last command should be .bossTrigger, got \(lastCommand)")
+        }
+    }
+
+    // MARK: - All Five Command Types Present
+
+    @Test @MainActor func allFiveCommandTypesAppearInFullScript() {
+        let director = Galaxy3EncounterDirector()
+        director.update(scrollDistance: 3000, deltaTime: 1.0 / 60.0)
+
+        var hasDroneCluster = false
+        var hasFighterSquad = false
+        var hasFortressEncounter = false
+        var hasBarrierLayout = false
+        var hasBossTrigger = false
+
+        for cmd in director.pendingCommands {
+            switch cmd {
+            case .droneCluster: hasDroneCluster = true
+            case .fighterSquad: hasFighterSquad = true
+            case .fortressEncounter: hasFortressEncounter = true
+            case .barrierLayout: hasBarrierLayout = true
+            case .bossTrigger: hasBossTrigger = true
+            }
+        }
+
+        #expect(hasDroneCluster, "Script should contain droneCluster commands")
+        #expect(hasFighterSquad, "Script should contain fighterSquad commands")
+        #expect(hasFortressEncounter, "Script should contain fortressEncounter commands")
+        #expect(hasBarrierLayout, "Script should contain barrierLayout commands")
+        #expect(hasBossTrigger, "Script should contain bossTrigger command")
+    }
+
+    // MARK: - No Repeat Firing
+
+    @Test @MainActor func commandsFireOnlyOnce() {
+        let director = Galaxy3EncounterDirector()
+
+        // First update triggers everything
+        director.update(scrollDistance: 3000, deltaTime: 1.0 / 60.0)
+        let firstBatchCount = director.pendingCommands.count
+        #expect(firstBatchCount > 0)
+
+        // Second update at the same (or greater) distance should yield nothing
+        director.update(scrollDistance: 3000, deltaTime: 1.0 / 60.0)
+        #expect(director.pendingCommands.isEmpty, "Each trigger distance should fire only once")
+
+        // Third update even further should yield nothing (all commands already consumed)
+        director.update(scrollDistance: 5000, deltaTime: 1.0 / 60.0)
+        #expect(director.pendingCommands.isEmpty, "No commands left after full script consumed")
+    }
+
+    // MARK: - Incremental Scroll Emits Incrementally
+
+    @Test @MainActor func incrementalScrollEmitsCommandsProgressively() {
+        let director = Galaxy3EncounterDirector()
+
+        // Scroll to 55 — should get first drone cluster
+        director.update(scrollDistance: 55, deltaTime: 1.0 / 60.0)
+        let batch1 = director.pendingCommands.count
+
+        // Scroll to 120 — should get the next drone cluster
+        director.update(scrollDistance: 120, deltaTime: 1.0 / 60.0)
+        let batch2 = director.pendingCommands.count
+
+        // Each batch should be non-empty
+        #expect(batch1 > 0)
+        #expect(batch2 > 0)
+
+        // The total from incremental should equal what we'd get from a single jump
+        let director2 = Galaxy3EncounterDirector()
+        director2.update(scrollDistance: 120, deltaTime: 1.0 / 60.0)
+        #expect(director2.pendingCommands.count == batch1 + batch2,
+                "Incremental scroll should yield same commands as single jump")
+    }
+
+    // MARK: - Two Fortress Encounters
+
+    @Test @MainActor func twoFortressEncountersWithDistinctIDs() {
+        let director = Galaxy3EncounterDirector()
+        director.update(scrollDistance: 3000, deltaTime: 1.0 / 60.0)
+
+        var fortressIDs: [Int] = []
+        for cmd in director.pendingCommands {
+            if case .fortressEncounter(let fID) = cmd {
+                fortressIDs.append(fID)
+            }
+        }
+
+        #expect(fortressIDs.count == 2, "Script should have exactly 2 fortress encounters")
+        #expect(fortressIDs[0] != fortressIDs[1], "Fortress IDs should be distinct")
+        #expect(fortressIDs.contains(1))
+        #expect(fortressIDs.contains(2))
+    }
 }

@@ -520,4 +520,68 @@ struct WeaponSystemTests {
         #expect(!allHitscans.isEmpty, "Phase Laser should still fire when secondaries are disabled")
         #expect(weapon.laserHeat > 0, "Phase Laser heat should accumulate when secondaries are disabled")
     }
+
+    // MARK: - ProjectileSpawnRequest Backward Compatibility
+
+    @Test func projectileSpawnRequestOmittingNewFieldsCompiles() {
+        // Verify that callers who only pass position/velocity/damage still work
+        let req = ProjectileSpawnRequest(position: SIMD2(10, 20), velocity: SIMD2(0, -300), damage: 3)
+        #expect(req.effects == [])
+        #expect(req.isHoming == false)
+        #expect(req.homingTurnRate == 0)
+        #expect(req.lifetime == 5.0)
+        #expect(req.damage == 3)
+    }
+
+    // MARK: - Secondary Disable Timer Multiple Frames
+
+    @Test @MainActor func secondaryDisableTimerDecreasesOverMultipleFrames() {
+        let system = WeaponSystem()
+
+        let entity = GKEntity()
+        entity.addComponent(TransformComponent(position: SIMD2(0, 0)))
+        let weapon = WeaponComponent(fireRate: 8, damage: 1, projectileSpeed: 500)
+        weapon.secondaryDisabled = true
+        weapon.secondaryDisableTimer = 2.0
+        entity.addComponent(weapon)
+
+        system.register(entity)
+
+        // Run 30 frames (0.5 seconds)
+        for _ in 0..<30 {
+            var time = GameTime()
+            time.advance(by: GameConfig.fixedTimeStep)
+            _ = time.shouldPerformFixedUpdate()
+            system.update(time: time)
+        }
+
+        let expectedRemaining = 2.0 - (30.0 * GameConfig.fixedTimeStep)
+        #expect(abs(weapon.secondaryDisableTimer - expectedRemaining) < 0.01,
+                "Timer should have decreased by ~0.5s after 30 frames")
+        #expect(weapon.secondaryDisabled == true, "Should still be disabled with ~1.5s remaining")
+    }
+
+    @Test @MainActor func secondaryDisableTimerFullExpirationOverManyFrames() {
+        let system = WeaponSystem()
+
+        let entity = GKEntity()
+        entity.addComponent(TransformComponent(position: SIMD2(0, 0)))
+        let weapon = WeaponComponent(fireRate: 8, damage: 1, projectileSpeed: 500)
+        weapon.secondaryDisabled = true
+        weapon.secondaryDisableTimer = 0.5  // Half a second
+        entity.addComponent(weapon)
+
+        system.register(entity)
+
+        // Run 60 frames (1.0 second), well past the 0.5s timer
+        for _ in 0..<60 {
+            var time = GameTime()
+            time.advance(by: GameConfig.fixedTimeStep)
+            _ = time.shouldPerformFixedUpdate()
+            system.update(time: time)
+        }
+
+        #expect(weapon.secondaryDisabled == false, "Should be re-enabled after timer expires")
+        #expect(weapon.secondaryDisableTimer == 0, "Timer should be clamped to zero")
+    }
 }

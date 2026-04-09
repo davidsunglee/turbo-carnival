@@ -203,4 +203,157 @@ struct Galaxy3SceneTests {
         #expect(!result.didWin, "Game over means didWin is false")
         #expect(result.enemiesDestroyed >= 60, "Carries over G2 enemies destroyed count")
     }
+
+    // MARK: - Stage State Transitions
+
+    @Test @MainActor func stageStateRemainsScrollingDuringEarlyFrames() {
+        let carryover = makeCarryover()
+        let scene = Galaxy3Scene(carryover: carryover)
+
+        // Run 120 frames (2 seconds) — well within scrolling territory
+        runFrames(scene, count: 120)
+
+        #expect(scene.stageState == .scrolling, "Stage should remain scrolling during early gameplay")
+        #expect(scene.bossEntity == nil, "No boss yet during scrolling")
+    }
+
+    // MARK: - Boss Entity Spawning via Boss Trigger
+
+    @Test @MainActor func bossTriggerSpawnsBossEntity() {
+        let carryover = makeCarryover()
+        let scene = Galaxy3Scene(carryover: carryover)
+
+        // We need to scroll far enough to trigger boss spawn (scroll distance 2200)
+        // Galaxy3 scrollSpeed = 40 units/s, so 2200/40 = 55 seconds = 3300 frames + title card ~186 frames
+        // Keep player alive during the scroll
+        for _ in 0..<3600 {
+            scene.player.component(ofType: HealthComponent.self)?.currentHealth = GameConfig.Player.health
+            var time = GameTime()
+            time.advance(by: GameConfig.fixedTimeStep)
+            while time.shouldPerformFixedUpdate() {
+                scene.fixedUpdate(time: time)
+                time.consumeFixedUpdate()
+            }
+            scene.update(time: time)
+            // Early exit once boss spawns to save time
+            if scene.bossEntity != nil { break }
+        }
+
+        #expect(scene.bossEntity != nil, "Boss should spawn after scrolling to trigger distance")
+        // Stage state should have progressed past scrolling
+        #expect(scene.stageState != .scrolling, "Stage should transition from scrolling when boss triggers")
+    }
+
+    // MARK: - Scroll Lock on Boss Trigger
+
+    @Test @MainActor func scrollLocksWhenBossSpawns() {
+        let carryover = makeCarryover()
+        let scene = Galaxy3Scene(carryover: carryover)
+
+        // Scroll to boss trigger
+        for _ in 0..<3600 {
+            scene.player.component(ofType: HealthComponent.self)?.currentHealth = GameConfig.Player.health
+            var time = GameTime()
+            time.advance(by: GameConfig.fixedTimeStep)
+            while time.shouldPerformFixedUpdate() {
+                scene.fixedUpdate(time: time)
+                time.consumeFixedUpdate()
+            }
+            scene.update(time: time)
+            if scene.bossEntity != nil { break }
+        }
+
+        guard scene.bossEntity != nil else {
+            Issue.record("Boss never spawned; cannot test scroll lock")
+            return
+        }
+
+        // After boss spawns, scrolling should be locked
+        // The stageState should be bossIntro or bossActive (not scrolling)
+        let isLocked = scene.stageState == .bossIntro || scene.stageState == .bossActive
+        #expect(isLocked, "Scroll should be locked after boss trigger, got \(scene.stageState)")
+    }
+
+    // MARK: - Boss Has ZenithBossComponent
+
+    @Test @MainActor func spawnedBossHasZenithBossComponent() {
+        let carryover = makeCarryover()
+        let scene = Galaxy3Scene(carryover: carryover)
+
+        for _ in 0..<3600 {
+            scene.player.component(ofType: HealthComponent.self)?.currentHealth = GameConfig.Player.health
+            var time = GameTime()
+            time.advance(by: GameConfig.fixedTimeStep)
+            while time.shouldPerformFixedUpdate() {
+                scene.fixedUpdate(time: time)
+                time.consumeFixedUpdate()
+            }
+            scene.update(time: time)
+            if scene.bossEntity != nil { break }
+        }
+
+        guard let boss = scene.bossEntity else {
+            Issue.record("Boss never spawned")
+            return
+        }
+
+        #expect(boss.component(ofType: ZenithBossComponent.self) != nil,
+                "Boss should have ZenithBossComponent")
+        #expect(boss.component(ofType: HealthComponent.self) != nil,
+                "Boss should have HealthComponent")
+        #expect(boss.component(ofType: BossPhaseComponent.self) != nil,
+                "Boss should have BossPhaseComponent")
+    }
+
+    // MARK: - Title Card Blocks Gameplay
+
+    @Test @MainActor func titleCardPreventsGameplayAdvancement() {
+        let initialElapsedTime: Double = 180.0
+        let carryover = makeCarryover(elapsedTime: initialElapsedTime)
+        let scene = Galaxy3Scene(carryover: carryover)
+
+        // Run for 1 second (within title card duration ~3.1s)
+        runFrames(scene, count: 60)
+
+        // Elapsed time should NOT advance during title card
+        #expect(scene.elapsedTime == initialElapsedTime,
+                "elapsedTime should not advance during title card")
+    }
+
+    @Test @MainActor func elapsedTimeAdvancesAfterTitleCard() {
+        let carryover = makeCarryover(elapsedTime: 180.0)
+        let scene = Galaxy3Scene(carryover: carryover)
+
+        // Title card ~3.1s => run 4s = 240 frames
+        runFrames(scene, count: 240)
+
+        #expect(scene.elapsedTime > 180.0,
+                "elapsedTime should advance after title card completes")
+    }
+
+    // MARK: - All Weapon Types Carry Over Correctly
+
+    @Test @MainActor func allWeaponTypesCarryOverCorrectly() {
+        let weaponTypes: [WeaponType] = [.doubleCannon, .triSpread, .lightningArc, .phaseLaser]
+
+        for wt in weaponTypes {
+            let carryover = makeCarryover(weaponType: wt)
+            let scene = Galaxy3Scene(carryover: carryover)
+            let weapon = scene.player.component(ofType: WeaponComponent.self)!
+            #expect(weapon.weaponType == wt, "Weapon type \(wt) should carry over")
+        }
+    }
+
+    // MARK: - Player Collision Mask Includes Barrier
+
+    @Test @MainActor func playerCollisionMaskIncludesBarrierAndEnemy() {
+        let carryover = makeCarryover()
+        let scene = Galaxy3Scene(carryover: carryover)
+
+        let physics = scene.player.component(ofType: PhysicsComponent.self)!
+        #expect(physics.collisionMask.contains(.barrier))
+        #expect(physics.collisionMask.contains(.enemy))
+        #expect(physics.collisionMask.contains(.enemyProjectile))
+        #expect(physics.collisionMask.contains(.item))
+    }
 }

@@ -457,4 +457,113 @@ struct CollisionResponseHandlerTests {
         #expect(ctx.pendingRemovals.contains(where: { $0 === projectile }))
         #expect(!ctx.pendingRemovals.contains(where: { $0 === barrier }))
     }
+
+    // MARK: - Zenith Shield Invulnerability Tests
+
+    @Test @MainActor func zenithShieldDeflectsProjectileAndProtectsBoss() {
+        let player = TestEntityFactory.makePlayerEntity()
+        let ctx = MockCollisionContext(player: player)
+        let handler = CollisionResponseHandler(context: ctx)
+
+        // Create boss entity with ZenithBossComponent and shield active
+        let boss = GKEntity()
+        boss.addComponent(TransformComponent(position: SIMD2(0, 200)))
+        let bossHealth = HealthComponent(health: 150)
+        bossHealth.hasInvulnerabilityFrames = false
+        boss.addComponent(bossHealth)
+        boss.addComponent(PhysicsComponent(
+            collisionSize: SIMD2(80, 80), layer: .enemy,
+            mask: [.player, .playerProjectile, .blast]
+        ))
+        boss.addComponent(ScoreComponent(points: 5000))
+        let zenith = ZenithBossComponent()
+        zenith.isShieldActive = true
+        boss.addComponent(zenith)
+
+        let projectile = TestEntityFactory.makeProjectileEntity()
+        let initialHP = bossHealth.currentHealth
+
+        handler.processCollisions(pairs: [(projectile, boss)])
+
+        // Projectile consumed but boss takes NO damage
+        #expect(ctx.pendingRemovals.contains(where: { $0 === projectile }))
+        #expect(bossHealth.currentHealth == initialHP, "Boss should not take damage while shield is active")
+        #expect(!ctx.pendingRemovals.contains(where: { $0 === boss }))
+    }
+
+    @Test @MainActor func zenithShieldInactiveAllowsDamage() {
+        let player = TestEntityFactory.makePlayerEntity()
+        let ctx = MockCollisionContext(player: player)
+        let handler = CollisionResponseHandler(context: ctx)
+
+        let boss = GKEntity()
+        boss.addComponent(TransformComponent(position: SIMD2(0, 200)))
+        let bossHealth = HealthComponent(health: 150)
+        bossHealth.hasInvulnerabilityFrames = false
+        boss.addComponent(bossHealth)
+        boss.addComponent(PhysicsComponent(
+            collisionSize: SIMD2(80, 80), layer: .enemy,
+            mask: [.player, .playerProjectile, .blast]
+        ))
+        boss.addComponent(ScoreComponent(points: 5000))
+        let zenith = ZenithBossComponent()
+        zenith.isShieldActive = false
+        boss.addComponent(zenith)
+
+        let projectile = TestEntityFactory.makeProjectileEntity()
+        let initialHP = bossHealth.currentHealth
+
+        handler.processCollisions(pairs: [(projectile, boss)])
+
+        // Without shield, boss should take damage
+        #expect(bossHealth.currentHealth < initialHP, "Boss should take damage when shield is inactive")
+        #expect(ctx.pendingRemovals.contains(where: { $0 === projectile }))
+    }
+
+    // MARK: - Barrier Never Destroyed
+
+    @Test @MainActor func multipleProjectilesNeverDestroyBarrier() {
+        let player = TestEntityFactory.makePlayerEntity()
+        let ctx = MockCollisionContext(player: player)
+        let handler = CollisionResponseHandler(context: ctx)
+
+        let barrier = TestEntityFactory.makeEntity(
+            position: .zero, size: SIMD2(40, 120),
+            collisionLayer: .barrier, collisionMask: [.player, .playerProjectile]
+        )
+        barrier.addComponent(BarrierComponent(kind: .rotatingGate))
+
+        // Hit the barrier with 10 projectiles
+        for _ in 0..<10 {
+            let projectile = TestEntityFactory.makeProjectileEntity()
+            handler.processCollisions(pairs: [(projectile, barrier)])
+        }
+
+        // Barrier must never appear in pendingRemovals
+        #expect(!ctx.pendingRemovals.contains(where: { $0 === barrier }),
+                "Barrier should never be destroyed by projectiles")
+    }
+
+    // MARK: - Barrier Collision Damage Values
+
+    @Test @MainActor func barrierCollisionDamageMatchesConfig() {
+        let player = TestEntityFactory.makePlayerEntity()
+        player.component(ofType: HealthComponent.self)!.hasInvulnerabilityFrames = false
+        let ctx = MockCollisionContext(player: player)
+        let handler = CollisionResponseHandler(context: ctx)
+
+        let barrier = TestEntityFactory.makeEntity(
+            position: .zero, size: SIMD2(40, 120),
+            collisionLayer: .barrier, collisionMask: [.player, .playerProjectile]
+        )
+        barrier.addComponent(BarrierComponent(kind: .trenchWall))
+
+        let healthBefore = player.component(ofType: HealthComponent.self)!.currentHealth
+        handler.processCollisions(pairs: [(player, barrier)])
+        let healthAfter = player.component(ofType: HealthComponent.self)!.currentHealth
+
+        let damageTaken = healthBefore - healthAfter
+        #expect(damageTaken == GameConfig.Galaxy3.Barrier.collisionDamage,
+                "Barrier collision damage should match GameConfig value")
+    }
 }

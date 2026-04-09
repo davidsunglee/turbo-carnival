@@ -191,4 +191,91 @@ struct ComponentTests {
         boss.updatePhase(healthFraction: 0.0)
         #expect(boss.currentPhase == .defeated)
     }
+
+    // MARK: - ProjectileSpawnRequest Extended Fields
+
+    @Test func projectileSpawnRequestBackwardCompatibility() {
+        // Creating without new fields should use safe defaults
+        let req = ProjectileSpawnRequest(position: .zero, velocity: SIMD2(0, -200), damage: 5)
+        #expect(req.effects == [])
+        #expect(req.isHoming == false)
+        #expect(req.homingTurnRate == 0)
+        #expect(req.lifetime == 5.0)
+        #expect(req.damage == 5)
+    }
+
+    @Test func projectileSpawnRequestHomingFields() {
+        let req = ProjectileSpawnRequest(
+            position: SIMD2(10, 20), velocity: SIMD2(0, -100), damage: 8,
+            isHoming: true, homingTurnRate: 2.5, lifetime: 3.0
+        )
+        #expect(req.isHoming == true)
+        #expect(req.homingTurnRate == 2.5)
+        #expect(req.lifetime == 3.0)
+        #expect(req.position == SIMD2<Float>(10, 20))
+    }
+
+    @Test func projectileSpawnRequestEmpEffects() {
+        let req = ProjectileSpawnRequest(
+            position: .zero, velocity: SIMD2(0, -200), damage: 5, effects: .empDisable
+        )
+        #expect(req.effects.contains(.empDisable))
+        #expect(req.isHoming == false)
+    }
+
+    // MARK: - ZenithBossComponent Timer Defaults
+
+    @Test func zenithBossTimerFieldsAllStartAtZero() {
+        let boss = ZenithBossComponent()
+        #expect(boss.attackTimer == 0)
+        #expect(boss.shieldTimer == 0)
+        #expect(boss.shieldCooldownTimer == 0)
+        #expect(boss.empTimer == 0)
+        #expect(boss.introTimer == 0)
+        #expect(boss.spiralAngle == 0)
+    }
+
+    @Test func zenithBossLastPhaseStartsAsIntro() {
+        let boss = ZenithBossComponent()
+        #expect(boss.lastPhase == .intro)
+    }
+
+    // MARK: - ZenithPhase Enum Raw Values
+
+    @Test func zenithPhaseRawValuesAreSequential() {
+        #expect(ZenithPhase.intro.rawValue == 0)
+        #expect(ZenithPhase.phase1.rawValue == 1)
+        #expect(ZenithPhase.phase2.rawValue == 2)
+        #expect(ZenithPhase.phase3.rawValue == 3)
+        #expect(ZenithPhase.phase4.rawValue == 4)
+        #expect(ZenithPhase.defeated.rawValue == 5)
+    }
+
+    // MARK: - BarrierComponent Edge Cases
+
+    @Test func barrierComponentContactDamageMatchesConfig() {
+        let trench = BarrierComponent(kind: .trenchWall)
+        let gate = BarrierComponent(kind: .rotatingGate)
+        // Both barrier kinds use the same collision damage from config
+        #expect(trench.contactDamage == gate.contactDamage)
+        #expect(trench.contactDamage == GameConfig.Galaxy3.Barrier.collisionDamage)
+    }
+
+    // MARK: - ProjectileComponent Multiple Effects
+
+    @Test func projectileComponentDefaultsDoNotExpire() {
+        let proj = ProjectileComponent(damage: 1.0, speed: 300)
+        #expect(proj.age == 0)
+        #expect(proj.isExpired == false)
+        #expect(proj.lifetime == 5.0)
+    }
+
+    @Test func projectileComponentCustomLifetime() {
+        let proj = ProjectileComponent(damage: 1.0, speed: 300)
+        proj.lifetime = 2.0
+        proj.age = 1.9
+        #expect(proj.isExpired == false)
+        proj.age = 2.0
+        #expect(proj.isExpired == true)
+    }
 }

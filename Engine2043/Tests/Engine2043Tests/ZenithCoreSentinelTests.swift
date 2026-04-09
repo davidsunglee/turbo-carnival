@@ -364,6 +364,264 @@ struct ZenithCoreSentinelTests {
         #expect(zenith.spiralAngle == 0)
         #expect(zenith.lastPhase == .intro)
     }
+
+    // MARK: - Invulnerability Window Timing
+
+    @Test @MainActor func shieldCooldownTimerAccumulatesCorrectly() {
+        let (system, boss) = makeZenithBossSystem()
+        skipIntro(system: system, boss: boss)
+        let health = boss.component(ofType: HealthComponent.self)!
+        let zenith = boss.component(ofType: ZenithBossComponent.self)!
+
+        // Move to phase 3 where shields are active
+        health.currentHealth = 150 * 0.45
+        system.update(deltaTime: 1.0 / 60.0)
+        #expect(zenith.currentPhase == .phase3)
+
+        // Shield should start inactive with cooldown accumulating
+        zenith.isShieldActive = false
+        zenith.shieldCooldownTimer = 0
+
+        // Run 1 second — cooldown should accumulate
+        for _ in 0..<60 {
+            system.update(deltaTime: 1.0 / 60.0)
+        }
+
+        // shieldCooldownTimer should be approximately 1.0
+        // (unless shield already activated, in which case cooldownTimer reset)
+        let cooldown = GameConfig.Galaxy3.BossAttack.shieldCooldown
+        if zenith.isShieldActive {
+            // Shield activated before 1 second — cooldown was shorter or timer was ahead
+            #expect(zenith.shieldTimer >= 0, "Shield timer should be accumulating")
+        } else {
+            #expect(zenith.shieldCooldownTimer > 0.9, "Cooldown timer should accumulate (~1.0s)")
+            #expect(zenith.shieldCooldownTimer < cooldown, "Should not have reached cooldown yet")
+        }
+    }
+
+    @Test @MainActor func shieldActivatesAndDeactivatesInCycle() {
+        let (system, boss) = makeZenithBossSystem()
+        skipIntro(system: system, boss: boss)
+        let health = boss.component(ofType: HealthComponent.self)!
+        let zenith = boss.component(ofType: ZenithBossComponent.self)!
+
+        // Move to phase 3
+        health.currentHealth = 150 * 0.45
+
+        // Run for 15 seconds — should see at least one shield cycle
+        var shieldWasActive = false
+        var shieldWasInactive = false
+        let frames = Int(15.0 / (1.0 / 60.0))
+        for _ in 0..<frames {
+            system.update(deltaTime: 1.0 / 60.0)
+            if zenith.isShieldActive {
+                shieldWasActive = true
+            } else if shieldWasActive {
+                // Shield turned off after being on
+                shieldWasInactive = true
+                break
+            }
+        }
+
+        #expect(shieldWasActive, "Shield should activate at some point during phase 3")
+        #expect(shieldWasInactive, "Shield should deactivate after window duration")
+    }
+
+    // MARK: - Defeat Transitions
+
+    @Test @MainActor func defeatSetsBossPhaseDefeatedFlag() {
+        let (system, boss) = makeZenithBossSystem()
+        skipIntro(system: system, boss: boss)
+
+        let health = boss.component(ofType: HealthComponent.self)!
+        let phase = boss.component(ofType: BossPhaseComponent.self)!
+
+        health.currentHealth = 0
+        system.update(deltaTime: 1.0 / 60.0)
+
+        #expect(phase.isDefeated == true, "BossPhaseComponent should be defeated")
+    }
+
+    @Test @MainActor func defeatStopsProjectileGeneration() {
+        let (system, boss) = makeZenithBossSystem()
+        skipIntro(system: system, boss: boss)
+
+        let health = boss.component(ofType: HealthComponent.self)!
+
+        // Kill the boss
+        health.currentHealth = 0
+        system.update(deltaTime: 1.0 / 60.0)
+
+        // Run more frames — boss should not generate more projectiles
+        var totalProjectilesAfterDeath = 0
+        for _ in 0..<120 {
+            system.update(deltaTime: 1.0 / 60.0)
+            totalProjectilesAfterDeath += system.pendingProjectileSpawns.count
+        }
+
+        #expect(totalProjectilesAfterDeath == 0,
+                "Defeated boss should not generate any projectiles")
+    }
+
+    // MARK: - All Attack Pattern Types Present Across Phases
+
+    @Test @MainActor func phase2GeneratesSpiralSweeps() {
+        let (system, boss) = makeZenithBossSystem()
+        skipIntro(system: system, boss: boss)
+        let health = boss.component(ofType: HealthComponent.self)!
+        health.currentHealth = 150 * 0.74 // Just below 75% threshold
+
+        // Run enough frames to generate phase 2 attacks (grid beam + spiral)
+        var totalProjectiles = 0
+        let frames = Int(3.0 / (1.0 / 60.0))
+        for _ in 0..<frames {
+            system.update(deltaTime: 1.0 / 60.0)
+            totalProjectiles += system.pendingProjectileSpawns.count
+        }
+
+        // Phase 2 adds spiral sweeps on top of grid beams, so more projectiles
+        #expect(totalProjectiles > 0, "Phase 2 should generate projectiles including spirals")
+    }
+
+    @Test @MainActor func phase4HasMoreProjectilesThanPhase2() {
+        // Phase 4 should be strictly more intense than phase 2
+        let (system4, boss4) = makeZenithBossSystem()
+        skipIntro(system: system4, boss: boss4)
+        boss4.component(ofType: HealthComponent.self)!.currentHealth = 150 * 0.20
+
+        var phase4Total = 0
+        let frames = Int(5.0 / (1.0 / 60.0))
+        for _ in 0..<frames {
+            system4.update(deltaTime: 1.0 / 60.0)
+            phase4Total += system4.pendingProjectileSpawns.count
+        }
+
+        let (system2, boss2) = makeZenithBossSystem()
+        skipIntro(system: system2, boss: boss2)
+        boss2.component(ofType: HealthComponent.self)!.currentHealth = 150 * 0.74
+
+        var phase2Total = 0
+        for _ in 0..<frames {
+            system2.update(deltaTime: 1.0 / 60.0)
+            phase2Total += system2.pendingProjectileSpawns.count
+        }
+
+        #expect(phase4Total > phase2Total,
+                "Phase 4 (\(phase4Total)) should produce more projectiles than phase 2 (\(phase2Total))")
+    }
+
+    @Test @MainActor func phase4GeneratesEMPProjectiles() {
+        let (system, boss) = makeZenithBossSystem()
+        skipIntro(system: system, boss: boss)
+        boss.component(ofType: HealthComponent.self)!.currentHealth = 150 * 0.20
+
+        var hasEMP = false
+        let frames = Int(5.0 / (1.0 / 60.0))
+        for _ in 0..<frames {
+            system.update(deltaTime: 1.0 / 60.0)
+            for spawn in system.pendingProjectileSpawns {
+                if spawn.effects.contains(.empDisable) { hasEMP = true }
+            }
+        }
+
+        #expect(hasEMP, "Phase 4 should produce EMP projectiles")
+    }
+
+    @Test @MainActor func phase4GeneratesHomingMissiles() {
+        let (system, boss) = makeZenithBossSystem()
+        skipIntro(system: system, boss: boss)
+        boss.component(ofType: HealthComponent.self)!.currentHealth = 150 * 0.20
+
+        var hasHoming = false
+        let frames = Int(5.0 / (1.0 / 60.0))
+        for _ in 0..<frames {
+            system.update(deltaTime: 1.0 / 60.0)
+            for spawn in system.pendingProjectileSpawns {
+                if spawn.isHoming { hasHoming = true }
+            }
+        }
+
+        #expect(hasHoming, "Phase 4 should produce homing missiles")
+    }
+
+    // MARK: - Phase Transition Resets Attack Timer
+
+    @Test @MainActor func phaseTransitionResetsAttackTimer() {
+        let (system, boss) = makeZenithBossSystem()
+        skipIntro(system: system, boss: boss)
+        let health = boss.component(ofType: HealthComponent.self)!
+        let zenith = boss.component(ofType: ZenithBossComponent.self)!
+
+        // Run for 1 second in phase 1 to accumulate attack timer
+        for _ in 0..<60 {
+            system.update(deltaTime: 1.0 / 60.0)
+        }
+        #expect(zenith.attackTimer > 0, "Attack timer should have accumulated")
+
+        // Trigger phase transition to phase 2
+        health.currentHealth = 150 * 0.74
+        system.update(deltaTime: 1.0 / 60.0)
+
+        #expect(zenith.currentPhase == .phase2)
+        // Attack timer should have been reset on phase change
+        // (The timer may not be exactly 0 after the update tick, but it should be small)
+        #expect(zenith.attackTimer < 0.1,
+                "Attack timer should reset on phase transition")
+    }
+
+    // MARK: - Intro Completes and Transitions to Phase 1
+
+    @Test @MainActor func introCompletesTransitionToPhase1() {
+        let system = BossSystem()
+        system.bossType = .zenithCoreSentinel
+        let boss = makeZenithBossEntity(hp: 150)
+        boss.component(ofType: TransformComponent.self)!.position = SIMD2(0, 340)
+        system.register(boss)
+        system.playerPosition = SIMD2(0, -200)
+
+        let zenith = boss.component(ofType: ZenithBossComponent.self)!
+        #expect(zenith.currentPhase == .intro)
+
+        // Run for 2 seconds (intro duration is 1.5s)
+        for _ in 0..<120 {
+            system.update(deltaTime: 1.0 / 60.0)
+        }
+
+        #expect(zenith.currentPhase == .phase1, "Should transition to phase 1 after intro")
+        let transform = boss.component(ofType: TransformComponent.self)!
+        #expect(transform.position.y == 200, "Boss should be at y=200 after intro descent")
+    }
+
+    // MARK: - Shield Does Not Activate in Phase 1 or 2
+
+    @Test @MainActor func shieldDoesNotActivateInPhase1() {
+        let (system, boss) = makeZenithBossSystem()
+        skipIntro(system: system, boss: boss)
+        let zenith = boss.component(ofType: ZenithBossComponent.self)!
+
+        // Run for 15 seconds in phase 1
+        let frames = Int(15.0 / (1.0 / 60.0))
+        for _ in 0..<frames {
+            system.update(deltaTime: 1.0 / 60.0)
+        }
+
+        #expect(zenith.isShieldActive == false, "Shield should not activate in phase 1")
+    }
+
+    @Test @MainActor func shieldDoesNotActivateInPhase2() {
+        let (system, boss) = makeZenithBossSystem()
+        skipIntro(system: system, boss: boss)
+        let health = boss.component(ofType: HealthComponent.self)!
+        let zenith = boss.component(ofType: ZenithBossComponent.self)!
+        health.currentHealth = 150 * 0.74 // phase 2
+
+        let frames = Int(15.0 / (1.0 / 60.0))
+        for _ in 0..<frames {
+            system.update(deltaTime: 1.0 / 60.0)
+        }
+
+        #expect(zenith.isShieldActive == false, "Shield should not activate in phase 2")
+    }
 }
 
 // MARK: - Mock Collision Context

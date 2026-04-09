@@ -60,4 +60,55 @@ struct SceneTransitionTests {
             #expect(Bool(false), "Expected .toGalaxy3 case")
         }
     }
+
+    // MARK: - All SceneTransition Enum Cases
+
+    @Test func allSceneTransitionCasesCanBeConstructed() {
+        let result = GameResult(finalScore: 100, enemiesDestroyed: 5, elapsedTime: 30.0, didWin: false)
+        let carryover = PlayerCarryover(
+            weaponType: .doubleCannon, score: 0, secondaryCharges: 0,
+            shieldDroneCount: 0, enemiesDestroyed: 0, elapsedTime: 0
+        )
+
+        // Verify every case can be constructed without error
+        let transitions: [SceneTransition] = [
+            .toGame,
+            .toTitle,
+            .toGameOver(result),
+            .toVictory(result),
+            .toGalaxy2(carryover),
+            .toGalaxy3(carryover),
+        ]
+        #expect(transitions.count == 6, "All 6 transition cases should exist")
+    }
+
+    @Test func toVictoryTransitionPreservesResult() {
+        let result = GameResult(finalScore: 30000, enemiesDestroyed: 150, elapsedTime: 900.0, didWin: true)
+        let transition = SceneTransition.toVictory(result)
+
+        if case .toVictory(let stored) = transition {
+            #expect(stored.finalScore == 30000)
+            #expect(stored.enemiesDestroyed == 150)
+            #expect(stored.elapsedTime == 900.0)
+            #expect(stored.didWin == true)
+        } else {
+            #expect(Bool(false), "Expected .toVictory case")
+        }
+    }
+
+    @Test func toGalaxy2TransitionPreservesCarryover() {
+        let carryover = PlayerCarryover(
+            weaponType: .phaseLaser, score: 4500, secondaryCharges: 2,
+            shieldDroneCount: 1, enemiesDestroyed: 30, elapsedTime: 90.0
+        )
+        let transition = SceneTransition.toGalaxy2(carryover)
+
+        if case .toGalaxy2(let carried) = transition {
+            #expect(carried.weaponType == .phaseLaser)
+            #expect(carried.score == 4500)
+            #expect(carried.shieldDroneCount == 1)
+        } else {
+            #expect(Bool(false), "Expected .toGalaxy2 case")
+        }
+    }
 }
