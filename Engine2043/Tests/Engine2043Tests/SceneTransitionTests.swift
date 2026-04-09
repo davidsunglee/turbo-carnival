@@ -37,4 +37,27 @@ struct SceneTransitionTests {
         #expect(result.elapsedTime == 123.45)
         #expect(result.didWin == true)
     }
+
+    @Test func toGalaxy3TransitionCarriesPlayerState() {
+        let carryover = PlayerCarryover(
+            weaponType: .lightningArc,
+            score: 8000,
+            secondaryCharges: 3,
+            shieldDroneCount: 1,
+            enemiesDestroyed: 55,
+            elapsedTime: 200.0
+        )
+        let transition = SceneTransition.toGalaxy3(carryover)
+
+        if case .toGalaxy3(let carried) = transition {
+            #expect(carried.weaponType == .lightningArc)
+            #expect(carried.score == 8000)
+            #expect(carried.secondaryCharges == 3)
+            #expect(carried.shieldDroneCount == 1)
+            #expect(carried.enemiesDestroyed == 55)
+            #expect(carried.elapsedTime == 200.0)
+        } else {
+            #expect(Bool(false), "Expected .toGalaxy3 case")
+        }
+    }
 }

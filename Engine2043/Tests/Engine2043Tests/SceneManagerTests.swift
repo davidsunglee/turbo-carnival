@@ -130,4 +130,37 @@ struct SceneManagerTests {
         #expect(manager.isTransitioning == false)
         #expect(manager.transitionProgress == 0)
     }
+
+    @Test @MainActor func galaxy3TransitionCallsFactory() {
+        let (manager, engine) = makeManager()
+
+        var galaxy3FactoryCalled = false
+        var receivedCarryover: PlayerCarryover?
+        let galaxy3Scene = StubScene()
+        manager.makeGalaxy3Scene = { carryover in
+            galaxy3FactoryCalled = true
+            receivedCarryover = carryover
+            return galaxy3Scene
+        }
+
+        let currentScene = StubScene()
+        let carryover = PlayerCarryover(
+            weaponType: .triSpread,
+            score: 5000,
+            secondaryCharges: 2,
+            shieldDroneCount: 0,
+            enemiesDestroyed: 40,
+            elapsedTime: 120.0
+        )
+        currentScene.requestedTransition = .toGalaxy3(carryover)
+        engine.currentScene = currentScene
+
+        manager.checkForTransition()
+        manager.updateTransition(deltaTime: 0.25)
+
+        #expect(galaxy3FactoryCalled)
+        #expect(receivedCarryover?.score == 5000)
+        #expect(receivedCarryover?.weaponType == .triSpread)
+        #expect(engine.currentScene as AnyObject === galaxy3Scene)
+    }
 }

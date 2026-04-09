@@ -53,6 +53,15 @@ public final class WeaponSystem {
             guard let weapon = entity.component(ofType: WeaponComponent.self),
                   let transform = entity.component(ofType: TransformComponent.self) else { continue }
 
+            // Secondary-disable timer
+            if weapon.secondaryDisabled {
+                weapon.secondaryDisableTimer -= time.fixedDeltaTime
+                if weapon.secondaryDisableTimer <= 0 {
+                    weapon.secondaryDisabled = false
+                    weapon.secondaryDisableTimer = 0
+                }
+            }
+
             // Overcharge timer
             if weapon.overchargeActive {
                 weapon.overchargeTimer -= time.fixedDeltaTime
@@ -124,7 +133,8 @@ public final class WeaponSystem {
             // Secondary fire
             if let secondaryType = weapon.secondaryFiring,
                weapon.secondaryCharges > 0,
-               weapon.secondaryCooldown >= 0.5 {
+               weapon.secondaryCooldown >= 0.5,
+               !weapon.secondaryDisabled {
                 weapon.secondaryCooldown = 0
                 weapon.secondaryCharges -= 1
                 weapon.secondaryFiring = nil

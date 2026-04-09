@@ -34,6 +34,10 @@ public final class WeaponComponent: GKComponent {
     public var overchargeActive: Bool = false
     public var overchargeTimer: Double = 0
 
+    // Secondary-disable state (e.g. from EMP attacks)
+    public var secondaryDisabled: Bool = false
+    public var secondaryDisableTimer: Double = 0
+
     public override init() { super.init() }
 
     public convenience init(fireRate: Double, damage: Float, projectileSpeed: Float) {

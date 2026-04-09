@@ -402,4 +402,122 @@ struct WeaponSystemTests {
         #expect(system.pendingSpawns.count > 0)
         #expect(system.pendingSpawns[0].velocity.y < 0)
     }
+
+    // MARK: - Secondary Disable Tests
+
+    @Test @MainActor func secondaryDisabledBlocksSecondaryFire() {
+        let system = WeaponSystem()
+
+        let entity = GKEntity()
+        entity.addComponent(TransformComponent(position: SIMD2(0, 0)))
+        let weapon = WeaponComponent(fireRate: 8, damage: 1, projectileSpeed: 500)
+        weapon.secondaryCharges = 3
+        weapon.secondaryFiring = .gravBomb
+        weapon.secondaryCooldown = 0.5  // Ready to fire
+        weapon.secondaryDisabled = true
+        weapon.secondaryDisableTimer = 2.0
+        entity.addComponent(weapon)
+
+        system.register(entity)
+
+        var time = GameTime()
+        time.advance(by: 1.0 / 60.0)
+        _ = time.shouldPerformFixedUpdate()
+        system.update(time: time)
+
+        #expect(system.pendingSecondarySpawns.isEmpty, "Secondary fire should be blocked when disabled")
+        #expect(weapon.secondaryCharges == 3, "Charges should not be consumed when disabled")
+    }
+
+    @Test @MainActor func secondaryDisableTimerCountsDown() {
+        let system = WeaponSystem()
+
+        let entity = GKEntity()
+        entity.addComponent(TransformComponent(position: SIMD2(0, 0)))
+        let weapon = WeaponComponent(fireRate: 8, damage: 1, projectileSpeed: 500)
+        weapon.secondaryDisabled = true
+        weapon.secondaryDisableTimer = 1.0
+        entity.addComponent(weapon)
+
+        system.register(entity)
+
+        var time = GameTime()
+        time.advance(by: GameConfig.fixedTimeStep)
+        _ = time.shouldPerformFixedUpdate()
+        system.update(time: time)
+
+        #expect(weapon.secondaryDisableTimer < 1.0, "Disable timer should tick down")
+        #expect(weapon.secondaryDisabled == true, "Should still be disabled")
+    }
+
+    @Test @MainActor func secondaryDisableTimerExpiryReEnablesSecondaries() {
+        let system = WeaponSystem()
+
+        let entity = GKEntity()
+        entity.addComponent(TransformComponent(position: SIMD2(0, 0)))
+        let weapon = WeaponComponent(fireRate: 8, damage: 1, projectileSpeed: 500)
+        weapon.secondaryDisabled = true
+        weapon.secondaryDisableTimer = 0.01  // Nearly expired
+        entity.addComponent(weapon)
+
+        system.register(entity)
+
+        var time = GameTime()
+        time.advance(by: GameConfig.fixedTimeStep)
+        _ = time.shouldPerformFixedUpdate()
+        system.update(time: time)
+
+        #expect(weapon.secondaryDisabled == false, "Should re-enable after timer expires")
+        #expect(weapon.secondaryDisableTimer == 0)
+    }
+
+    @Test @MainActor func primaryFireStillWorksWhenSecondaryDisabled() {
+        let system = WeaponSystem()
+
+        let entity = GKEntity()
+        entity.addComponent(TransformComponent(position: SIMD2(0, 0)))
+        let weapon = WeaponComponent(fireRate: 60, damage: 1, projectileSpeed: 500)
+        weapon.weaponType = .doubleCannon
+        weapon.isFiring = true
+        weapon.secondaryDisabled = true
+        weapon.secondaryDisableTimer = 2.0
+        entity.addComponent(weapon)
+
+        system.register(entity)
+
+        var time = GameTime()
+        time.advance(by: 1.0 / 60.0)
+        _ = time.shouldPerformFixedUpdate()
+        system.update(time: time)
+
+        #expect(system.pendingSpawns.count == 2, "Primary fire should work even when secondaries are disabled")
+    }
+
+    @Test @MainActor func phaseLaserHeatStillWorksWhenSecondaryDisabled() {
+        let system = WeaponSystem()
+
+        let entity = GKEntity()
+        entity.addComponent(TransformComponent(position: SIMD2(0, 0)))
+        let weapon = WeaponComponent(fireRate: 4, damage: 1, projectileSpeed: 500)
+        weapon.weaponType = .phaseLaser
+        weapon.isFiring = true
+        weapon.secondaryDisabled = true
+        weapon.secondaryDisableTimer = 2.0
+        entity.addComponent(weapon)
+
+        system.register(entity)
+
+        let steps = Int(ceil(GameConfig.Weapon.laserTickInterval / GameConfig.fixedTimeStep)) + 1
+        var allHitscans: [LaserHitscanRequest] = []
+        for _ in 0..<steps {
+            var time = GameTime()
+            time.advance(by: GameConfig.fixedTimeStep)
+            _ = time.shouldPerformFixedUpdate()
+            system.update(time: time)
+            allHitscans.append(contentsOf: system.pendingLaserHitscans)
+        }
+
+        #expect(!allHitscans.isEmpty, "Phase Laser should still fire when secondaries are disabled")
+        #expect(weapon.laserHeat > 0, "Phase Laser heat should accumulate when secondaries are disabled")
+    }
 }

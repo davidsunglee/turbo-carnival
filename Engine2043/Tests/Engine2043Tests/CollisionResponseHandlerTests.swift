@@ -13,6 +13,7 @@ private final class MockCollisionContext: CollisionContext {
     var enemiesDestroyed: Int = 0
     var formationWipeChecked: [GKEntity] = []
     var shieldDronesSpawned = 0
+    var barrierPushOutCalled: [GKEntity] = []
 
     init(player: GKEntity) {
         self.player = player
@@ -24,6 +25,10 @@ private final class MockCollisionContext: CollisionContext {
 
     func spawnShieldDrones() {
         shieldDronesSpawned += 1
+    }
+
+    func handleBarrierPushOut(barrier: GKEntity) {
+        barrierPushOutCalled.append(barrier)
     }
 }
 
@@ -307,5 +312,149 @@ struct CollisionResponseHandlerTests {
 
         #expect(ctx.pendingRemovals.contains(where: { $0 === projectile }))
         #expect(!ctx.pendingRemovals.contains(where: { $0 === asteroid }))
+    }
+
+    // MARK: - ProjectileComponent Damage Tests
+
+    @Test @MainActor func playerHitByProjectileWithProjectileComponentUsesItsDamage() {
+        let player = TestEntityFactory.makePlayerEntity()
+        player.component(ofType: HealthComponent.self)!.hasInvulnerabilityFrames = false
+        let ctx = MockCollisionContext(player: player)
+        let handler = CollisionResponseHandler(context: ctx)
+
+        let enemyProj = TestEntityFactory.makeEnemyProjectileEntity()
+        let projComp = ProjectileComponent(damage: 15, speed: 200)
+        enemyProj.addComponent(projComp)
+
+        handler.processCollisions(pairs: [(player, enemyProj)])
+
+        let playerHealth = player.component(ofType: HealthComponent.self)!
+        #expect(playerHealth.currentHealth == 85)  // 100 - 15
+        #expect(ctx.pendingRemovals.contains(where: { $0 === enemyProj }))
+    }
+
+    @Test @MainActor func playerHitByLegacyProjectileFallsBackTo5Damage() {
+        let player = TestEntityFactory.makePlayerEntity()
+        player.component(ofType: HealthComponent.self)!.hasInvulnerabilityFrames = false
+        let ctx = MockCollisionContext(player: player)
+        let handler = CollisionResponseHandler(context: ctx)
+
+        // Enemy projectile WITHOUT ProjectileComponent — legacy Galaxy 1/2 behavior
+        let enemyProj = TestEntityFactory.makeEnemyProjectileEntity()
+
+        handler.processCollisions(pairs: [(player, enemyProj)])
+
+        let playerHealth = player.component(ofType: HealthComponent.self)!
+        #expect(playerHealth.currentHealth == 95)  // 100 - 5, legacy fallback
+    }
+
+    @Test @MainActor func empProjectileDisablesPlayerSecondaries() {
+        let player = TestEntityFactory.makePlayerEntity()
+        player.component(ofType: HealthComponent.self)!.hasInvulnerabilityFrames = false
+        let ctx = MockCollisionContext(player: player)
+        let handler = CollisionResponseHandler(context: ctx)
+
+        let enemyProj = TestEntityFactory.makeEnemyProjectileEntity()
+        let projComp = ProjectileComponent(damage: 10, speed: 200, effects: .empDisable)
+        enemyProj.addComponent(projComp)
+
+        handler.processCollisions(pairs: [(player, enemyProj)])
+
+        let weapon = player.component(ofType: WeaponComponent.self)!
+        #expect(weapon.secondaryDisabled == true)
+        #expect(weapon.secondaryDisableTimer == GameConfig.Galaxy3.BossAttack.empDisableDuration)
+    }
+
+    @Test @MainActor func nonEmpProjectileDoesNotDisableSecondaries() {
+        let player = TestEntityFactory.makePlayerEntity()
+        player.component(ofType: HealthComponent.self)!.hasInvulnerabilityFrames = false
+        let ctx = MockCollisionContext(player: player)
+        let handler = CollisionResponseHandler(context: ctx)
+
+        let enemyProj = TestEntityFactory.makeEnemyProjectileEntity()
+        let projComp = ProjectileComponent(damage: 10, speed: 200)
+        enemyProj.addComponent(projComp)
+
+        handler.processCollisions(pairs: [(player, enemyProj)])
+
+        let weapon = player.component(ofType: WeaponComponent.self)!
+        #expect(weapon.secondaryDisabled == false)
+    }
+
+    // MARK: - Barrier Collision Tests
+
+    @Test @MainActor func playerHitBarrierTakesDamageAndBarrierSurvives() {
+        let player = TestEntityFactory.makePlayerEntity()
+        player.component(ofType: HealthComponent.self)!.hasInvulnerabilityFrames = false
+        let ctx = MockCollisionContext(player: player)
+        let handler = CollisionResponseHandler(context: ctx)
+
+        let barrier = TestEntityFactory.makeEntity(
+            position: .zero, size: SIMD2(40, 120),
+            collisionLayer: .barrier, collisionMask: [.player, .playerProjectile]
+        )
+        barrier.addComponent(BarrierComponent(kind: .trenchWall))
+
+        handler.processCollisions(pairs: [(player, barrier)])
+
+        let playerHealth = player.component(ofType: HealthComponent.self)!
+        #expect(playerHealth.currentHealth == 100 - GameConfig.Galaxy3.Barrier.collisionDamage)
+        // Barrier must NOT be in pendingRemovals
+        #expect(!ctx.pendingRemovals.contains(where: { $0 === barrier }))
+    }
+
+    @Test @MainActor func playerHitBarrierCallsPushOutCallback() {
+        let player = TestEntityFactory.makePlayerEntity()
+        player.component(ofType: HealthComponent.self)!.hasInvulnerabilityFrames = false
+        let ctx = MockCollisionContext(player: player)
+        let handler = CollisionResponseHandler(context: ctx)
+
+        let barrier = TestEntityFactory.makeEntity(
+            position: .zero, size: SIMD2(40, 120),
+            collisionLayer: .barrier, collisionMask: [.player, .playerProjectile]
+        )
+        barrier.addComponent(BarrierComponent(kind: .trenchWall))
+
+        handler.processCollisions(pairs: [(player, barrier)])
+
+        #expect(ctx.barrierPushOutCalled.contains(where: { $0 === barrier }))
+    }
+
+    @Test @MainActor func playerHitBarrierReversedPairOrder() {
+        let player = TestEntityFactory.makePlayerEntity()
+        player.component(ofType: HealthComponent.self)!.hasInvulnerabilityFrames = false
+        let ctx = MockCollisionContext(player: player)
+        let handler = CollisionResponseHandler(context: ctx)
+
+        let barrier = TestEntityFactory.makeEntity(
+            position: .zero, size: SIMD2(40, 120),
+            collisionLayer: .barrier, collisionMask: [.player, .playerProjectile]
+        )
+        barrier.addComponent(BarrierComponent(kind: .trenchWall))
+
+        handler.processCollisions(pairs: [(barrier, player)])
+
+        let playerHealth = player.component(ofType: HealthComponent.self)!
+        #expect(playerHealth.currentHealth == 100 - GameConfig.Galaxy3.Barrier.collisionDamage)
+        #expect(!ctx.pendingRemovals.contains(where: { $0 === barrier }))
+        #expect(ctx.barrierPushOutCalled.contains(where: { $0 === barrier }))
+    }
+
+    @Test @MainActor func projectileHitBarrierRemovesProjectileNotBarrier() {
+        let player = TestEntityFactory.makePlayerEntity()
+        let ctx = MockCollisionContext(player: player)
+        let handler = CollisionResponseHandler(context: ctx)
+
+        let projectile = TestEntityFactory.makeProjectileEntity()
+        let barrier = TestEntityFactory.makeEntity(
+            position: .zero, size: SIMD2(40, 120),
+            collisionLayer: .barrier, collisionMask: [.player, .playerProjectile]
+        )
+        barrier.addComponent(BarrierComponent(kind: .trenchWall))
+
+        handler.processCollisions(pairs: [(projectile, barrier)])
+
+        #expect(ctx.pendingRemovals.contains(where: { $0 === projectile }))
+        #expect(!ctx.pendingRemovals.contains(where: { $0 === barrier }))
     }
 }

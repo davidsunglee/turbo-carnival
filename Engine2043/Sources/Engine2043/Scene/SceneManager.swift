@@ -10,6 +10,7 @@ public final class SceneManager {
     public var makeGameOverScene: ((GameResult) -> any GameScene)?
     public var makeVictoryScene: ((GameResult) -> any GameScene)?
     public var makeGalaxy2Scene: ((PlayerCarryover) -> any GameScene)?
+    public var makeGalaxy3Scene: ((PlayerCarryover) -> any GameScene)?
 
     // Transition state
     public private(set) var isTransitioning: Bool = false
@@ -80,6 +81,8 @@ public final class SceneManager {
             scene = makeVictoryScene?(result)
         case .toGalaxy2(let carryover):
             scene = makeGalaxy2Scene?(carryover)
+        case .toGalaxy3(let carryover):
+            scene = makeGalaxy3Scene?(carryover)
         }
         if let scene {
             engine.currentScene = scene

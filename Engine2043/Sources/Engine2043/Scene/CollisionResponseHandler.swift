@@ -15,10 +15,12 @@ protocol CollisionContext: AnyObject {
 
     func checkFormationWipe(enemy: GKEntity)
     func spawnShieldDrones()
+    func handleBarrierPushOut(barrier: GKEntity)
 }
 
 extension CollisionContext {
     var asteroidSystem: AsteroidSystem? { nil }
+    func handleBarrierPushOut(barrier: GKEntity) {}
 }
 
 /// Handles collision pair dispatch and response logic.
@@ -41,9 +43,20 @@ final class CollisionResponseHandler {
             // NOTE: Phase Laser (hitscan) vs asteroid is handled by the scene's
             // processLaserHitscan method, not by collision pairs here.
 
+            // Barrier branches — checked first since .barrier is its own layer,
+            // distinct from enemy/asteroid. Barriers are never destroyed.
+            if layerA.contains(.player) && layerB.contains(.barrier) {
+                handlePlayerHitBarrier(barrier: entityB, ctx: ctx)
+            } else if layerB.contains(.player) && layerA.contains(.barrier) {
+                handlePlayerHitBarrier(barrier: entityA, ctx: ctx)
+            } else if layerA.contains(.playerProjectile) && layerB.contains(.barrier) {
+                ctx.pendingRemovals.append(entityA)
+            } else if layerB.contains(.playerProjectile) && layerA.contains(.barrier) {
+                ctx.pendingRemovals.append(entityB)
+
             // Asteroid branches — checked before enemy/projectile branches since
             // .asteroid is a distinct layer that does not overlap with .enemy.
-            if layerA.contains(.playerProjectile) && layerB.contains(.asteroid) {
+            } else if layerA.contains(.playerProjectile) && layerB.contains(.asteroid) {
                 handleProjectileHitAsteroid(projectile: entityA, asteroid: entityB, ctx: ctx)
             } else if layerB.contains(.playerProjectile) && layerA.contains(.asteroid) {
                 handleProjectileHitAsteroid(projectile: entityB, asteroid: entityA, ctx: ctx)
@@ -195,9 +208,27 @@ final class CollisionResponseHandler {
     }
 
     private func handlePlayerHitByProjectile(projectile: GKEntity, ctx: any CollisionContext) {
-        ctx.player.component(ofType: HealthComponent.self)?.takeDamage(5)
+        if let projComp = projectile.component(ofType: ProjectileComponent.self) {
+            ctx.player.component(ofType: HealthComponent.self)?.takeDamage(projComp.damage)
+            if projComp.effects.contains(.empDisable),
+               let weapon = ctx.player.component(ofType: WeaponComponent.self) {
+                weapon.secondaryDisabled = true
+                weapon.secondaryDisableTimer = GameConfig.Galaxy3.BossAttack.empDisableDuration
+            }
+        } else {
+            // Legacy fallback: Galaxy 1 and Galaxy 2 projectiles lack ProjectileComponent
+            ctx.player.component(ofType: HealthComponent.self)?.takeDamage(5)
+        }
         ctx.sfx?.play(.playerDamaged)
         ctx.pendingRemovals.append(projectile)
+    }
+
+    private func handlePlayerHitBarrier(barrier: GKEntity, ctx: any CollisionContext) {
+        let damage = barrier.component(ofType: BarrierComponent.self)?.contactDamage
+            ?? GameConfig.Galaxy3.Barrier.collisionDamage
+        ctx.player.component(ofType: HealthComponent.self)?.takeDamage(damage)
+        ctx.sfx?.play(.playerDamaged)
+        ctx.handleBarrierPushOut(barrier: barrier)
     }
 
     private func handlePlayerCollectsItem(item: GKEntity, ctx: any CollisionContext) {
