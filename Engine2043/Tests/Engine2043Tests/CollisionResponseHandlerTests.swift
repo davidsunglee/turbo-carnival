@@ -566,4 +566,96 @@ struct CollisionResponseHandlerTests {
         #expect(damageTaken == GameConfig.Galaxy3.Barrier.collisionDamage,
                 "Barrier collision damage should match GameConfig value")
     }
+
+    // MARK: - Player Contact vs Boss / Fortress (Finding 2)
+
+    @Test @MainActor func playerContactWithZenithBossDoesNotKillIt() {
+        let player = TestEntityFactory.makePlayerEntity()
+        player.component(ofType: HealthComponent.self)!.hasInvulnerabilityFrames = false
+        let ctx = MockCollisionContext(player: player)
+        let handler = CollisionResponseHandler(context: ctx)
+
+        let boss = GKEntity()
+        boss.addComponent(TransformComponent(position: SIMD2(0, 200)))
+        let bossHealth = HealthComponent(health: GameConfig.Galaxy3.Enemy.bossHP)
+        bossHealth.hasInvulnerabilityFrames = false
+        boss.addComponent(bossHealth)
+        boss.addComponent(PhysicsComponent(
+            collisionSize: GameConfig.Galaxy3.Enemy.bossSize,
+            layer: .enemy,
+            mask: [.player, .playerProjectile, .blast]
+        ))
+        boss.addComponent(ScoreComponent(points: GameConfig.Galaxy3.Score.g3Boss))
+        boss.addComponent(BossPhaseComponent(totalHP: GameConfig.Galaxy3.Enemy.bossHP))
+        boss.addComponent(ZenithBossComponent())
+
+        handler.processCollisions(pairs: [(player, boss)])
+
+        // Boss should survive — takes only collisionDamage, not full HP
+        #expect(bossHealth.isAlive, "Zenith boss must survive player contact")
+        #expect(bossHealth.currentHealth == GameConfig.Galaxy3.Enemy.bossHP - GameConfig.Player.collisionDamage,
+                "Boss should take only collisionDamage, not be one-shot killed")
+        // Player should still take damage
+        let playerHP = player.component(ofType: HealthComponent.self)!
+        #expect(playerHP.currentHealth < 100, "Player should take collision damage")
+        // Boss should NOT be in pendingRemovals
+        #expect(!ctx.pendingRemovals.contains(where: { $0 === boss }),
+                "Boss should not be queued for removal")
+    }
+
+    @Test @MainActor func playerContactWithFortressNodeDoesNotOneShot() {
+        let player = TestEntityFactory.makePlayerEntity()
+        player.component(ofType: HealthComponent.self)!.hasInvulnerabilityFrames = false
+        let ctx = MockCollisionContext(player: player)
+        let handler = CollisionResponseHandler(context: ctx)
+
+        // Give the node enough HP to survive collisionDamage (15)
+        let node = Galaxy3EntityFactory.makeFortressNode(role: .mainBattery, at: .zero, fortressID: 1)
+        node.component(ofType: FortressNodeComponent.self)!.isShielded = false
+        let nodeHealth = node.component(ofType: HealthComponent.self)!
+        nodeHealth.currentHealth = 50  // enough to survive the 15 damage
+        let initialHP = nodeHealth.currentHealth
+
+        handler.processCollisions(pairs: [(player, node)])
+
+        #expect(nodeHealth.isAlive, "Fortress node must survive player contact")
+        #expect(nodeHealth.currentHealth == initialHP - GameConfig.Player.collisionDamage,
+                "Fortress node should take only collisionDamage, not full HP")
+        #expect(!ctx.pendingRemovals.contains(where: { $0 === node }))
+    }
+
+    @Test @MainActor func playerContactWithShieldedFortressNodeDoesNoDamageToNode() {
+        let player = TestEntityFactory.makePlayerEntity()
+        player.component(ofType: HealthComponent.self)!.hasInvulnerabilityFrames = false
+        let ctx = MockCollisionContext(player: player)
+        let handler = CollisionResponseHandler(context: ctx)
+
+        // Shielded non-generator node
+        let node = Galaxy3EntityFactory.makeFortressNode(role: .pulseTurret, at: .zero, fortressID: 1)
+        let nodeHealth = node.component(ofType: HealthComponent.self)!
+        let initialHP = nodeHealth.currentHealth
+
+        handler.processCollisions(pairs: [(player, node)])
+
+        #expect(nodeHealth.currentHealth == initialHP,
+                "Shielded fortress node should take no damage from player ramming")
+        // Player still takes damage
+        let playerHP = player.component(ofType: HealthComponent.self)!
+        #expect(playerHP.currentHealth < 100, "Player should still take collision damage")
+    }
+
+    @Test @MainActor func playerContactWithRegularEnemyStillKillsIt() {
+        let player = TestEntityFactory.makePlayerEntity()
+        player.component(ofType: HealthComponent.self)!.hasInvulnerabilityFrames = false
+        let ctx = MockCollisionContext(player: player)
+        let handler = CollisionResponseHandler(context: ctx)
+
+        let enemy = TestEntityFactory.makeEnemyEntity(health: 10, scorePoints: 50)
+
+        handler.processCollisions(pairs: [(player, enemy)])
+
+        #expect(ctx.pendingRemovals.contains(where: { $0 === enemy }),
+                "Regular enemy should still be killed by player contact")
+        #expect(ctx.enemiesDestroyed == 1)
+    }
 }

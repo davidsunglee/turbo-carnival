@@ -483,6 +483,10 @@ public final class Galaxy3Scene: GameScene {
             }
         }
 
+        // Propagate fortress shield-down AFTER all damage paths have run
+        // but BEFORE entity removals, so dead generators are still visible.
+        propagateFortressShieldDown()
+
         // Fortress hull updates
         updateFortressHulls()
 
@@ -978,6 +982,13 @@ public final class Galaxy3Scene: GameScene {
         stageState = .bossIntro
         environmentSystem.lockScroll()
 
+        // Clear remaining barriers and lane bounds so the boss arena is open
+        for barrier in barriers {
+            unregisterEntity(barrier)
+        }
+        barriers.removeAll()
+        environmentSystem.resetLaneBounds()
+
         // Spawn Zenith Core Sentinel boss at top of screen
         let bossPos = SIMD2<Float>(0, 340) // above visible area; intro will descend to 200
         let (core, shields) = Galaxy3EntityFactory.makeZenithBossShell(at: bossPos)
@@ -1316,7 +1327,16 @@ public final class Galaxy3Scene: GameScene {
     }
 
     private func updateFortressNodes(deltaTime: Double) {
-        // Check for shield generator destruction and unshield other nodes
+        // Formerly handled shield propagation; that logic is now in
+        // propagateFortressShieldDown() which runs after all damage paths.
+        // This method is retained for future per-frame fortress-node updates.
+    }
+
+    /// Check for dead shield generators and propagate shield-down to sibling
+    /// fortress nodes sharing the same fortressID. Called after all damage
+    /// systems (collisions, laser hitscan, lightning arc) but before entity
+    /// removals so the dead generator entity is still in the enemies array.
+    private func propagateFortressShieldDown() {
         var destroyedGeneratorIDs: Set<Int> = []
         for enemy in enemies {
             guard let fortNode = enemy.component(ofType: FortressNodeComponent.self),

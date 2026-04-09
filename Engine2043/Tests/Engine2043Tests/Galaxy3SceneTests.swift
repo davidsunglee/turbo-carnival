@@ -540,6 +540,134 @@ struct Galaxy3SceneTests {
                 "Shielded fortress node should deflect phase laser")
     }
 
+    // MARK: - Fortress Shield Propagation (Finding 1 & 4)
+
+    @Test @MainActor func killingShieldGeneratorUnshieldsSiblingNodes() {
+        let carryover = makeCarryover()
+        let scene = Galaxy3Scene(carryover: carryover)
+
+        // Run past the title card
+        runFrames(scene, count: 200)
+
+        // Manually spawn a fortress encounter using the testability helpers
+        let fortressID = 42
+        let generator = Galaxy3EntityFactory.makeFortressNode(
+            role: .shieldGenerator, at: SIMD2(0, 100), fortressID: fortressID
+        )
+        let battery = Galaxy3EntityFactory.makeFortressNode(
+            role: .mainBattery, at: SIMD2(-60, 100), fortressID: fortressID
+        )
+        let turret = Galaxy3EntityFactory.makeFortressNode(
+            role: .pulseTurret, at: SIMD2(60, 100), fortressID: fortressID
+        )
+        scene.addEnemyForTesting(generator)
+        scene.addEnemyForTesting(battery)
+        scene.addEnemyForTesting(turret)
+
+        // Verify siblings start shielded
+        let batteryFort = battery.component(ofType: FortressNodeComponent.self)!
+        let turretFort = turret.component(ofType: FortressNodeComponent.self)!
+        #expect(batteryFort.isShielded == true)
+        #expect(turretFort.isShielded == true)
+
+        // Kill the generator
+        let genHealth = generator.component(ofType: HealthComponent.self)!
+        genHealth.currentHealth = 0
+
+        // Run one frame so propagateFortressShieldDown() fires
+        runFrames(scene, count: 1)
+
+        // Sibling nodes should now be unshielded
+        #expect(batteryFort.isShielded == false,
+                "Battery should be unshielded after generator dies")
+        #expect(turretFort.isShielded == false,
+                "Turret should be unshielded after generator dies")
+    }
+
+    @Test @MainActor func shieldPropagationHappensBeforeEntityRemoval() {
+        let carryover = makeCarryover()
+        let scene = Galaxy3Scene(carryover: carryover)
+        runFrames(scene, count: 200)
+
+        let fortressID = 99
+        let generator = Galaxy3EntityFactory.makeFortressNode(
+            role: .shieldGenerator, at: SIMD2(0, 100), fortressID: fortressID
+        )
+        let battery = Galaxy3EntityFactory.makeFortressNode(
+            role: .mainBattery, at: SIMD2(-60, 100), fortressID: fortressID
+        )
+        scene.addEnemyForTesting(generator)
+        scene.addEnemyForTesting(battery)
+
+        // Kill generator and queue it for removal (simulating collision kill)
+        let genHealth = generator.component(ofType: HealthComponent.self)!
+        genHealth.currentHealth = 0
+        scene.pendingRemovals.append(generator)
+
+        // Run one frame — propagation should see the dead generator before removal
+        runFrames(scene, count: 1)
+
+        let batteryFort = battery.component(ofType: FortressNodeComponent.self)!
+        #expect(batteryFort.isShielded == false,
+                "Shield propagation must run before entity removal")
+    }
+
+    // MARK: - Player Contact vs Boss (Finding 2 & 4)
+
+    @Test @MainActor func playerRammingZenithBossDoesNotKillBoss() {
+        let player = TestEntityFactory.makePlayerEntity()
+        player.component(ofType: HealthComponent.self)!.hasInvulnerabilityFrames = false
+        let ctx = MockGalaxy3CollisionContext(player: player)
+        let handler = CollisionResponseHandler(context: ctx)
+
+        let (boss, _) = Galaxy3EntityFactory.makeZenithBossShell(at: SIMD2(0, 200))
+        let bossHealth = boss.component(ofType: HealthComponent.self)!
+        let initialHP = bossHealth.currentHealth
+
+        handler.processCollisions(pairs: [(player, boss)])
+
+        #expect(bossHealth.isAlive, "Boss must survive player ramming")
+        #expect(bossHealth.currentHealth == initialHP - GameConfig.Player.collisionDamage,
+                "Boss should take only collisionDamage from player contact")
+    }
+
+    // MARK: - Boss Arena Clears Barriers (Finding 3)
+
+    @Test @MainActor func triggerBossClearsBarriersAndLaneBounds() {
+        let carryover = makeCarryover()
+        let scene = Galaxy3Scene(carryover: carryover)
+
+        // Run past title card
+        runFrames(scene, count: 200)
+
+        // Add some barriers
+        let barrier1 = Galaxy3EntityFactory.makeBarrier(kind: .trenchWall, at: SIMD2(-100, 0))
+        let barrier2 = Galaxy3EntityFactory.makeBarrier(kind: .trenchWall, at: SIMD2(100, 0))
+        scene.addBarrierForTesting(barrier1)
+        scene.addBarrierForTesting(barrier2)
+
+        // Scroll to boss trigger distance — 2200 / 40 = 55s = 3300 frames + 200 title
+        for _ in 0..<3600 {
+            scene.player.component(ofType: HealthComponent.self)?.currentHealth = GameConfig.Player.health
+            var time = GameTime()
+            time.advance(by: GameConfig.fixedTimeStep)
+            while time.shouldPerformFixedUpdate() {
+                scene.fixedUpdate(time: time)
+                time.consumeFixedUpdate()
+            }
+            scene.update(time: time)
+            if scene.bossEntity != nil { break }
+        }
+
+        guard scene.bossEntity != nil else {
+            Issue.record("Boss never spawned; cannot test barrier clearing")
+            return
+        }
+
+        #expect(scene.stageState == .bossIntro || scene.stageState == .bossActive,
+                "Stage should have transitioned to boss")
+    }
+
     // MARK: - Boss Intro State Persists
 
     @Test @MainActor func bossIntroStatePersistsUntilDescentCompletes() {

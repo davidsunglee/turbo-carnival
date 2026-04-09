@@ -205,7 +205,6 @@ public enum GameConfig {
 
         public enum Barrier {
             public static let collisionDamage: Float = 20
-            public static let trenchWallWidth: Float = 60
             public static let gateSegmentSize = SIMD2<Float>(40, 120)
             public static let rotatingGateSpeed: Float = 1.5
         }
@@ -239,7 +238,6 @@ public enum GameConfig {
 
             // EMP attack
             public static let empDisableDuration: Double = 2.0
-            public static let empChargeTime: Double = 1.0
         }
 
         public enum Score {

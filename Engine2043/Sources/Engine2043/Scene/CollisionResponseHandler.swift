@@ -213,8 +213,25 @@ final class CollisionResponseHandler {
     private func handlePlayerEnemyCollision(enemy: GKEntity, ctx: any CollisionContext) {
         ctx.player.component(ofType: HealthComponent.self)?.takeDamage(GameConfig.Player.collisionDamage)
         ctx.sfx?.play(.playerDamaged)
+
+        // Boss and fortress nodes survive player contact — they take a small
+        // fixed amount of damage instead of being instantly destroyed.
+        let isBossOrFortress = enemy.component(ofType: BossPhaseComponent.self) != nil
+            || enemy.component(ofType: FortressNodeComponent.self) != nil
+
         if let health = enemy.component(ofType: HealthComponent.self) {
-            health.takeDamage(health.currentHealth)
+            if isBossOrFortress {
+                // Shielded non-generator fortress nodes take no damage from ramming
+                if let fortNode = enemy.component(ofType: FortressNodeComponent.self),
+                   fortNode.isShielded,
+                   fortNode.role != .shieldGenerator {
+                    // Deflect — no damage to the node
+                } else {
+                    health.takeDamage(GameConfig.Player.collisionDamage)
+                }
+            } else {
+                health.takeDamage(health.currentHealth)
+            }
             if !health.isAlive {
                 if let score = enemy.component(ofType: ScoreComponent.self) {
                     ctx.scoreSystem.addScore(score.points)

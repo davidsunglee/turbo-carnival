@@ -669,7 +669,7 @@ struct Galaxy2SceneTests {
 
     // MARK: - Galaxy 2 -> Galaxy 3 -> Victory Flow (no app shell)
 
-    @Test @MainActor func galaxy2ToGalaxy3ToVictoryFlowWithoutAppShell() {
+    @Test @MainActor func galaxy2ToGalaxy3FlowWithoutAppShell() {
         // Step 1: Create Galaxy3Scene from carryover (simulating G2 boss defeat)
         let carryover = PlayerCarryover(
             weaponType: .triSpread,

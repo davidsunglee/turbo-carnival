@@ -55,6 +55,11 @@ public final class Galaxy3EnvironmentSystem {
         isScrollLocked = false
     }
 
+    /// Resets lane bounds to inactive, clearing any corridor restriction.
+    public func resetLaneBounds() {
+        activeLaneBounds = LaneBounds()
+    }
+
     /// Update lane bounds based on active barrier entities.
     /// Finds the leftmost right-edge and rightmost left-edge of barriers
     /// to determine the passable corridor.
