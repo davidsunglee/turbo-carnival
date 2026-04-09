@@ -1007,25 +1007,6 @@ public final class Galaxy3Scene: GameScene {
         sfx?.startMusic(.boss)
     }
 
-    // MARK: - Boss Integration Hooks
-
-    /// Called by BossSystem integration (Task 5) to register the Zenith boss.
-    func registerBoss(_ boss: GKEntity, shields: [GKEntity]) {
-        bossEntity = boss
-        registerEntity(boss)
-        bossSystem.register(boss)
-        enemies.append(boss)
-        lightningArcSystem.registerEnemy(boss)
-
-        for shield in shields {
-            registerEntity(shield)
-            bossSystem.registerShield(shield)
-            shieldEntities.append(shield)
-        }
-
-        stageState = .bossActive
-    }
-
     // MARK: - Projectile Spawning
 
     private func spawnPlayerProjectile(_ request: ProjectileSpawnRequest) {
