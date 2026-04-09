@@ -223,4 +223,41 @@ private class FakeTouch: UITouch {
     let second = provider.poll()
     #expect(second.menuDown == false)
 }
+
+@Test @MainActor func touchProviderSwipeOverEntryCancelsTap() {
+    let provider = TouchInputProvider()
+    provider.screenSize = CGSize(width: 390, height: 844)
+    let view = UIView(frame: CGRect(x: 0, y: 0, width: 390, height: 844))
+
+    // Touch begins on a galaxy entry position
+    let touch = FakeTouch(location: CGPoint(x: 195, y: 400))
+    provider.touchesBegan([touch], in: view)
+
+    // Move >30pt (becomes a swipe)
+    touch.updateLocation(CGPoint(x: 195, y: 435))
+    provider.touchesMoved([touch], in: view)
+
+    // End the touch
+    provider.touchesEnded([touch], in: view)
+
+    let input = provider.poll()
+    // Swipe should fire, but tap should be cancelled
+    #expect(input.menuDown == true)
+    #expect(input.tapPosition == nil, "Tap should be cancelled when swipe detected")
+}
+
+@Test @MainActor func touchProviderTapWithoutSwipeEmitsOnEnd() {
+    let provider = TouchInputProvider()
+    provider.screenSize = CGSize(width: 390, height: 844)
+    let view = UIView(frame: CGRect(x: 0, y: 0, width: 390, height: 844))
+
+    let touch = FakeTouch(location: CGPoint(x: 195, y: 400))
+    provider.touchesBegan([touch], in: view)
+
+    // No significant movement — just end the touch
+    provider.touchesEnded([touch], in: view)
+
+    let input = provider.poll()
+    #expect(input.tapPosition != nil, "Tap without swipe should emit tapPosition")
+}
 #endif

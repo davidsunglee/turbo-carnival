@@ -153,4 +153,24 @@ struct SceneTransitionTests {
         let scene = Galaxy3Scene(carryover: nil)
         #expect(scene.requestedTransition == nil)
     }
+
+    @Test @MainActor func titleSceneRequestsGalaxySelectOnTap() {
+        let scene = TitleScene()
+        let input = MockInputProvider()
+        input.tapPos = SIMD2(100, 100)
+        scene.inputProvider = input
+
+        var time = GameTime()
+        time.advance(by: 1.0 / 60.0)
+        while time.shouldPerformFixedUpdate() {
+            scene.fixedUpdate(time: time)
+            time.consumeFixedUpdate()
+        }
+
+        if case .toGalaxySelect = scene.requestedTransition {
+            // pass
+        } else {
+            #expect(Bool(false), "Expected .toGalaxySelect on tap, got \(String(describing: scene.requestedTransition))")
+        }
+    }
 }

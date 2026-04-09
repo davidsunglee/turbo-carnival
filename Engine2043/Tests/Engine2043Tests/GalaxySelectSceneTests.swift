@@ -82,7 +82,9 @@ struct GalaxySelectSceneTests {
         let input = MockInputProvider()
         scene.inputProvider = input
 
-        // Galaxy 1 is selected by default, fire
+        // Warmup frame to clear edge-trigger guard
+        runFrames(scene, count: 1)
+
         input.primary = true
         runFrames(scene, count: 1)
 
@@ -185,5 +187,26 @@ struct GalaxySelectSceneTests {
         runFrames(scene, count: 5)
         // 5 frames (~83ms at 60fps) which is less than 0.3s repeat delay
         #expect(scene.selectedIndex == 1)
+    }
+
+    @Test @MainActor func heldFireFromTitleDoesNotAutoLaunch() {
+        let scene = GalaxySelectScene()
+        let input = MockInputProvider(primary: true) // fire already held from title screen
+        scene.inputProvider = input
+
+        runFrames(scene, count: 1)
+        #expect(scene.requestedTransition == nil, "Held fire should not auto-launch")
+
+        // Release and re-press should work
+        input.primary = false
+        runFrames(scene, count: 1)
+        input.primary = true
+        runFrames(scene, count: 1)
+
+        if case .toGame = scene.requestedTransition {
+            // pass
+        } else {
+            #expect(Bool(false), "Expected .toGame after fresh press")
+        }
     }
 }

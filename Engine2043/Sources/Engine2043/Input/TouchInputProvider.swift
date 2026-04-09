@@ -26,6 +26,11 @@ public final class TouchInputProvider: InputProvider {
     private var pendingMenuDown: Bool = false
     private let swipeThreshold: Float = 30
 
+    // Deferred tap: emit on touch-end, cancel if swipe detected
+    private var tapCandidatePosition: SIMD2<Float>?
+    private var tapCandidateTouchID: ObjectIdentifier?
+    private var tapCandidateCancelled: Bool = false
+
     // Configuration
     private let maxJoystickRadius: Float = 60
     private let deadZone: Float = 10
@@ -104,7 +109,12 @@ public final class TouchInputProvider: InputProvider {
             let designWidth = viewportManager?.currentDesignWidth ?? GameConfig.designWidth
             let gameX = (Float(loc.x) / Float(screenSize.width) - 0.5) * designWidth
             let gameY = (0.5 - Float(loc.y) / Float(screenSize.height)) * GameConfig.designHeight
-            pendingTapPosition = SIMD2(gameX, gameY)
+            // Defer tap to touch-end so swipes can cancel it
+            if tapCandidateTouchID == nil {
+                tapCandidatePosition = SIMD2(gameX, gameY)
+                tapCandidateTouchID = touchID
+                tapCandidateCancelled = false
+            }
 
             // Track swipe origin for menu navigation
             if swipeTouchID == nil {
@@ -150,23 +160,25 @@ public final class TouchInputProvider: InputProvider {
                 if delta > swipeThreshold {
                     pendingMenuDown = true
                     swipeOriginY = currentY
+                    tapCandidateCancelled = true
                 } else if delta < -swipeThreshold {
                     pendingMenuUp = true
                     swipeOriginY = currentY
+                    tapCandidateCancelled = true
                 }
             }
         }
     }
 
     public func touchesEnded(_ touches: Set<UITouch>, in view: UIView) {
-        cancelTouches(touches)
+        cancelTouches(touches, emitTap: true)
     }
 
     public func touchesCancelled(_ touches: Set<UITouch>, in view: UIView) {
-        cancelTouches(touches)
+        cancelTouches(touches, emitTap: false)
     }
 
-    private func cancelTouches(_ touches: Set<UITouch>) {
+    private func cancelTouches(_ touches: Set<UITouch>, emitTap: Bool = false) {
         for touch in touches {
             let touchID = ObjectIdentifier(touch)
             if touchID == joystickTouchID {
@@ -177,6 +189,14 @@ public final class TouchInputProvider: InputProvider {
             if touchID == swipeTouchID {
                 swipeOriginY = nil
                 swipeTouchID = nil
+            }
+            if touchID == tapCandidateTouchID {
+                if emitTap && !tapCandidateCancelled, let pos = tapCandidatePosition {
+                    pendingTapPosition = pos
+                }
+                tapCandidatePosition = nil
+                tapCandidateTouchID = nil
+                tapCandidateCancelled = false
             }
             if touchID == primaryTouchID {
                 primaryFireActive = false

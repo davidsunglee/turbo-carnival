@@ -32,6 +32,9 @@ public final class GalaxySelectScene: GameScene {
     private let backOption = MenuInput.Option(label: "BACK", position: SIMD2(0, -270), scale: 1.0)
     #endif
 
+    // Edge detection for fire (prevents held-fire from title screen auto-launching)
+    private var prevFire = true
+
     // Repeat guard
     private var prevMenuUp = false
     private var prevMenuDown = false
@@ -75,9 +78,10 @@ public final class GalaxySelectScene: GameScene {
             #endif
         }
 
-        // Fire launches selected galaxy
-        if input.primaryFire {
+        // Fire launches selected galaxy (edge-triggered: fresh press only)
+        if input.primaryFire && !prevFire {
             launchGalaxy(selectedIndex)
+            prevFire = input.primaryFire
             return
         }
 
@@ -100,6 +104,7 @@ public final class GalaxySelectScene: GameScene {
 
         prevMenuUp = input.menuUp
         prevMenuDown = input.menuDown
+        prevFire = input.primaryFire
     }
 
     public func update(time: GameTime) {}
