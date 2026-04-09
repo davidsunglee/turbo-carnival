@@ -5,6 +5,7 @@ public enum SteeringBehavior: Sendable {
     case hover
     case strafe
     case leadShot
+    case tracking
 }
 
 public final class SteeringComponent: GKComponent {

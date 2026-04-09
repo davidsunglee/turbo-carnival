@@ -229,6 +229,7 @@ public final class BossSystem {
             // Reset attack timer on phase change for clean cadence
             zenith.attackTimer = 0
             zenith.empTimer = 0
+            zenith.radialBurstTimer = 0
         }
 
         // Intro descent — boss slides down from above before attacking
@@ -313,14 +314,20 @@ public final class BossSystem {
             }
 
         case .phase3:
-            // Grid beams + radial bursts + homing missiles + EMP
+            // Grid beams
             let interval = GameConfig.Galaxy3.BossAttack.gridBeamInterval * 0.6
             if zenith.attackTimer >= interval {
                 zenith.attackTimer -= interval
                 generateGridBeamAttack(from: position)
+            }
+            // Radial bursts on their own configured cadence
+            zenith.radialBurstTimer += deltaTime
+            let radialInterval3 = GameConfig.Galaxy3.BossAttack.radialBurstInterval
+            if zenith.radialBurstTimer >= radialInterval3 {
+                zenith.radialBurstTimer -= radialInterval3
                 generateRadialBurst(from: position)
             }
-            // Homing missiles on separate timer
+            // Homing missiles + EMP on separate timer
             zenith.empTimer += deltaTime
             let homingInterval = GameConfig.Galaxy3.BossAttack.homingMissileInterval
             if zenith.empTimer >= homingInterval {
@@ -330,12 +337,18 @@ public final class BossSystem {
             }
 
         case .phase4:
-            // All attacks overlapped but bounded — clear offensive windows remain
+            // Grid beams + spiral sweeps
             let interval = GameConfig.Galaxy3.BossAttack.gridBeamInterval * 0.5
             if zenith.attackTimer >= interval {
                 zenith.attackTimer -= interval
                 generateGridBeamAttack(from: position)
                 generateSpiralSweep(from: position, zenith: zenith)
+            }
+            // Radial bursts on their own configured cadence
+            zenith.radialBurstTimer += deltaTime
+            let radialInterval4 = GameConfig.Galaxy3.BossAttack.radialBurstInterval * 0.8
+            if zenith.radialBurstTimer >= radialInterval4 {
+                zenith.radialBurstTimer -= radialInterval4
                 generateRadialBurst(from: position)
             }
             // More frequent homing + EMP

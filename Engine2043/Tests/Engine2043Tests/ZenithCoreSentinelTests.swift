@@ -363,6 +363,7 @@ struct ZenithCoreSentinelTests {
         #expect(zenith.introTimer == 0)
         #expect(zenith.spiralAngle == 0)
         #expect(zenith.lastPhase == .intro)
+        #expect(zenith.radialBurstTimer == 0)
     }
 
     // MARK: - Invulnerability Window Timing
@@ -606,6 +607,44 @@ struct ZenithCoreSentinelTests {
         }
 
         #expect(zenith.isShieldActive == false, "Shield should not activate in phase 1")
+    }
+
+    // MARK: - Radial Burst Cadence
+
+    @Test @MainActor func radialBurstUsesOwnTimerInPhase3() {
+        let (system, boss) = makeZenithBossSystem()
+        skipIntro(system: system, boss: boss)
+        let health = boss.component(ofType: HealthComponent.self)!
+        let zenith = boss.component(ofType: ZenithBossComponent.self)!
+
+        // Move to phase 3
+        health.currentHealth = 150 * 0.45
+        system.update(deltaTime: 1.0 / 60.0)
+        #expect(zenith.currentPhase == .phase3)
+
+        // Run for radialBurstInterval (3.0s). The radialBurstTimer should
+        // accumulate independently of the attackTimer.
+        let radialInterval = GameConfig.Galaxy3.BossAttack.radialBurstInterval
+        let gridInterval = GameConfig.Galaxy3.BossAttack.gridBeamInterval * 0.6
+
+        // Verify the intervals are different
+        #expect(radialInterval != gridInterval,
+                "Radial burst interval should differ from grid beam interval")
+
+        // Run for slightly more than radialInterval
+        let frames = Int((radialInterval + 0.1) / (1.0 / 60.0))
+        var radialBurstProjectileCount = 0
+        for _ in 0..<frames {
+            system.update(deltaTime: 1.0 / 60.0)
+            // Count projectiles that match radial burst pattern (12 projectiles in a ring)
+            let spawns = system.pendingProjectileSpawns
+            if spawns.count >= GameConfig.Galaxy3.BossAttack.radialBurstProjectileCount {
+                radialBurstProjectileCount += 1
+            }
+        }
+
+        #expect(radialBurstProjectileCount > 0,
+                "Radial burst should fire on its own timer in phase 3")
     }
 
     @Test @MainActor func shieldDoesNotActivateInPhase2() {

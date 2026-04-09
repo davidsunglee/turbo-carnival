@@ -24,6 +24,7 @@ public final class ZenithBossComponent: GKComponent {
     public var introTimer: Double = 0
     public var spiralAngle: Float = 0
     public var lastPhase: ZenithPhase = .intro
+    public var radialBurstTimer: Double = 0
 
     public override init() { super.init() }
 

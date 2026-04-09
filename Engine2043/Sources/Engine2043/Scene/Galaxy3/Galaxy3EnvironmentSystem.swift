@@ -16,7 +16,7 @@ public final class Galaxy3EnvironmentSystem {
         public var rightWall: Float
         public var isActive: Bool
 
-        public init(leftWall: Float = 0, rightWall: Float = GameConfig.designWidth, isActive: Bool = false) {
+        public init(leftWall: Float = -GameConfig.designWidth / 2, rightWall: Float = GameConfig.designWidth / 2, isActive: Bool = false) {
             self.leftWall = leftWall
             self.rightWall = rightWall
             self.isActive = isActive
@@ -64,8 +64,10 @@ public final class Galaxy3EnvironmentSystem {
             return
         }
 
-        var leftWall: Float = 0
-        var rightWall: Float = GameConfig.designWidth
+        // Positions are centered around 0, not 0...designWidth
+        let halfDesign = GameConfig.designWidth / 2
+        var leftWall: Float = -halfDesign
+        var rightWall: Float = halfDesign
         var foundBarriers = false
 
         for entity in barriers {
@@ -78,12 +80,12 @@ public final class Galaxy3EnvironmentSystem {
             let barrierLeft = transform.position.x - halfWidth
             let barrierRight = transform.position.x + halfWidth
 
-            // Barriers on the left side push the left wall right
-            if transform.position.x < GameConfig.designWidth / 2 {
+            // Barriers on the left side (position < 0) push the left wall right
+            if transform.position.x < 0 {
                 leftWall = max(leftWall, barrierRight)
             }
-            // Barriers on the right side push the right wall left
-            if transform.position.x > GameConfig.designWidth / 2 {
+            // Barriers on the right side (position > 0) push the right wall left
+            if transform.position.x > 0 {
                 rightWall = min(rightWall, barrierLeft)
             }
 

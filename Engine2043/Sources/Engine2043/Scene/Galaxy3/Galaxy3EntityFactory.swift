@@ -35,6 +35,11 @@ public enum Galaxy3EntityFactory {
         let score = ScoreComponent(points: GameConfig.Galaxy3.Score.g3Tier1)
         entity.addComponent(score)
 
+        let steering = SteeringComponent(behavior: .tracking)
+        steering.hasReachedHover = true  // Start tracking immediately
+        steering.steerStrength = 1.5
+        entity.addComponent(steering)
+
         return entity
     }
 

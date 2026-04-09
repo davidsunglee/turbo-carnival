@@ -60,6 +60,18 @@ public final class SteeringSystem {
                 let dx = playerPosition.x - transform.position.x
                 physics.velocity.x = dx * steering.steerStrength
                 physics.velocity.y = sin(Float(accumulatedTime) * 2) * 20
+
+            case .tracking:
+                // Gently steer toward player's X while maintaining downward velocity.
+                // Readable tracking — not too aggressive.
+                let dx = playerPosition.x - transform.position.x
+                let trackingForce = sign(dx) * min(abs(dx) * steering.steerStrength, 100)
+                physics.velocity.x = trackingForce
+                // Maintain a steady downward speed
+                let baseSpeed = simd_length(physics.velocity) > 0
+                    ? max(abs(physics.velocity.y), GameConfig.Galaxy3.Enemy.tier1Speed * 0.5)
+                    : GameConfig.Galaxy3.Enemy.tier1Speed
+                physics.velocity.y = -baseSpeed
             }
         }
     }

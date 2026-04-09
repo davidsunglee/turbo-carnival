@@ -356,4 +356,253 @@ struct Galaxy3SceneTests {
         #expect(physics.collisionMask.contains(.enemyProjectile))
         #expect(physics.collisionMask.contains(.item))
     }
+
+    // MARK: - Phase Laser vs Zenith Boss Shield
+
+    @Test @MainActor func phaseLaserBlockedByZenithBossShield() {
+        let carryover = makeCarryover(weaponType: .phaseLaser)
+        let scene = Galaxy3Scene(carryover: carryover)
+
+        // Create a boss enemy with ZenithBossComponent and shield active
+        let boss = GKEntity()
+        boss.addComponent(TransformComponent(position: SIMD2(0, 100)))
+        let bossHealth = HealthComponent(health: 150)
+        bossHealth.hasInvulnerabilityFrames = false
+        boss.addComponent(bossHealth)
+        boss.addComponent(PhysicsComponent(
+            collisionSize: SIMD2(80, 80), layer: .enemy,
+            mask: [.player, .playerProjectile, .blast]
+        ))
+        let render = RenderComponent(size: SIMD2(80, 80), color: SIMD4(1, 1, 1, 1))
+        boss.addComponent(render)
+        boss.addComponent(ScoreComponent(points: 5000))
+        let zenith = ZenithBossComponent()
+        zenith.isShieldActive = true
+        boss.addComponent(zenith)
+
+        scene.addEnemyForTesting(boss)
+        let initialHP = bossHealth.currentHealth
+
+        // Fire laser at the boss
+        let hitscan = LaserHitscanRequest(
+            position: SIMD2(0, -250),
+            width: GameConfig.Weapon.laserWidth,
+            damagePerTick: GameConfig.Weapon.laserDamagePerTick
+        )
+        scene.processLaserHitscan(hitscan)
+
+        #expect(bossHealth.currentHealth == initialHP,
+                "Boss should not take laser damage while shield is active")
+    }
+
+    @Test @MainActor func phaseLaserDamagesBossWhenShieldInactive() {
+        let carryover = makeCarryover(weaponType: .phaseLaser)
+        let scene = Galaxy3Scene(carryover: carryover)
+
+        let boss = GKEntity()
+        boss.addComponent(TransformComponent(position: SIMD2(0, 100)))
+        let bossHealth = HealthComponent(health: 150)
+        bossHealth.hasInvulnerabilityFrames = false
+        boss.addComponent(bossHealth)
+        boss.addComponent(PhysicsComponent(
+            collisionSize: SIMD2(80, 80), layer: .enemy,
+            mask: [.player, .playerProjectile, .blast]
+        ))
+        let render = RenderComponent(size: SIMD2(80, 80), color: SIMD4(1, 1, 1, 1))
+        boss.addComponent(render)
+        boss.addComponent(ScoreComponent(points: 5000))
+        let zenith = ZenithBossComponent()
+        zenith.isShieldActive = false
+        boss.addComponent(zenith)
+
+        scene.addEnemyForTesting(boss)
+        let initialHP = bossHealth.currentHealth
+
+        let hitscan = LaserHitscanRequest(
+            position: SIMD2(0, -250),
+            width: GameConfig.Weapon.laserWidth,
+            damagePerTick: GameConfig.Weapon.laserDamagePerTick
+        )
+        scene.processLaserHitscan(hitscan)
+
+        #expect(bossHealth.currentHealth < initialHP,
+                "Boss should take laser damage when shield is inactive")
+    }
+
+    // MARK: - Phase Laser vs Barrier Occlusion
+
+    @Test @MainActor func phaseLaserBlockedByBarrier() {
+        let carryover = makeCarryover(weaponType: .phaseLaser)
+        let scene = Galaxy3Scene(carryover: carryover)
+
+        // Place an enemy above a barrier
+        let enemy = TestEntityFactory.makeEnemyEntity(position: SIMD2(0, 100), health: 10)
+        let enemyRender = RenderComponent(size: SIMD2(16, 16), color: SIMD4(1, 1, 1, 1))
+        enemy.addComponent(enemyRender)
+        scene.addEnemyForTesting(enemy)
+
+        // Place a barrier between the player (y=-250) and the enemy (y=100)
+        let barrier = Galaxy3EntityFactory.makeBarrier(kind: .trenchWall, at: SIMD2(0, 0))
+        scene.addBarrierForTesting(barrier)
+
+        let enemyHealth = enemy.component(ofType: HealthComponent.self)!
+        let initialHP = enemyHealth.currentHealth
+
+        let hitscan = LaserHitscanRequest(
+            position: SIMD2(0, -250),
+            width: GameConfig.Weapon.laserWidth,
+            damagePerTick: GameConfig.Weapon.laserDamagePerTick
+        )
+        scene.processLaserHitscan(hitscan)
+
+        #expect(enemyHealth.currentHealth == initialHP,
+                "Enemy behind barrier should not take laser damage")
+    }
+
+    // MARK: - Fortress Node Shielding
+
+    @Test @MainActor func shieldedFortressNodeDeflectsProjectile() {
+        let player = TestEntityFactory.makePlayerEntity()
+        let ctx = MockGalaxy3CollisionContext(player: player)
+        let handler = CollisionResponseHandler(context: ctx)
+
+        // Create a fortress node that is shielded (non-generator)
+        let node = Galaxy3EntityFactory.makeFortressNode(role: .mainBattery, at: .zero, fortressID: 1)
+        let nodeHealth = node.component(ofType: HealthComponent.self)!
+        let initialHP = nodeHealth.currentHealth
+
+        let projectile = TestEntityFactory.makeProjectileEntity()
+        handler.processCollisions(pairs: [(projectile, node)])
+
+        #expect(nodeHealth.currentHealth == initialHP,
+                "Shielded fortress node should not take damage")
+        #expect(ctx.pendingRemovals.contains(where: { $0 === projectile }),
+                "Projectile should be consumed")
+    }
+
+    @Test @MainActor func shieldGeneratorCanBeDamagedWhileShielded() {
+        let player = TestEntityFactory.makePlayerEntity()
+        let ctx = MockGalaxy3CollisionContext(player: player)
+        let handler = CollisionResponseHandler(context: ctx)
+
+        // Create a shield generator — generators should always be damageable
+        let gen = Galaxy3EntityFactory.makeFortressNode(role: .shieldGenerator, at: .zero, fortressID: 1)
+        let genHealth = gen.component(ofType: HealthComponent.self)!
+        let initialHP = genHealth.currentHealth
+
+        let projectile = TestEntityFactory.makeProjectileEntity()
+        handler.processCollisions(pairs: [(projectile, gen)])
+
+        #expect(genHealth.currentHealth < initialHP,
+                "Shield generator should be damageable even while isShielded is true")
+    }
+
+    @Test @MainActor func unshieldedFortressNodeTakesDamage() {
+        let player = TestEntityFactory.makePlayerEntity()
+        let ctx = MockGalaxy3CollisionContext(player: player)
+        let handler = CollisionResponseHandler(context: ctx)
+
+        let node = Galaxy3EntityFactory.makeFortressNode(role: .mainBattery, at: .zero, fortressID: 1)
+        // Unshield it (as if the shield generator was destroyed)
+        node.component(ofType: FortressNodeComponent.self)!.isShielded = false
+        let nodeHealth = node.component(ofType: HealthComponent.self)!
+        let initialHP = nodeHealth.currentHealth
+
+        let projectile = TestEntityFactory.makeProjectileEntity()
+        handler.processCollisions(pairs: [(projectile, node)])
+
+        #expect(nodeHealth.currentHealth < initialHP,
+                "Unshielded fortress node should take damage")
+    }
+
+    // MARK: - Phase Laser vs Fortress Shielding
+
+    @Test @MainActor func phaseLaserDeflectedByShieldedFortressNode() {
+        let carryover = makeCarryover(weaponType: .phaseLaser)
+        let scene = Galaxy3Scene(carryover: carryover)
+
+        let node = Galaxy3EntityFactory.makeFortressNode(role: .pulseTurret, at: SIMD2(0, 50), fortressID: 1)
+        let nodeRender = RenderComponent(size: GameConfig.Galaxy3.Enemy.fortressNodeSize, color: SIMD4(1, 1, 1, 1))
+        node.addComponent(nodeRender)
+        scene.addEnemyForTesting(node)
+
+        let nodeHealth = node.component(ofType: HealthComponent.self)!
+        let initialHP = nodeHealth.currentHealth
+
+        let hitscan = LaserHitscanRequest(
+            position: SIMD2(0, -250),
+            width: GameConfig.Weapon.laserWidth,
+            damagePerTick: GameConfig.Weapon.laserDamagePerTick
+        )
+        scene.processLaserHitscan(hitscan)
+
+        #expect(nodeHealth.currentHealth == initialHP,
+                "Shielded fortress node should deflect phase laser")
+    }
+
+    // MARK: - Boss Intro State Persists
+
+    @Test @MainActor func bossIntroStatePersistsUntilDescentCompletes() {
+        let carryover = makeCarryover()
+        let scene = Galaxy3Scene(carryover: carryover)
+
+        // Scroll to boss trigger
+        for _ in 0..<3600 {
+            scene.player.component(ofType: HealthComponent.self)?.currentHealth = GameConfig.Player.health
+            var time = GameTime()
+            time.advance(by: GameConfig.fixedTimeStep)
+            while time.shouldPerformFixedUpdate() {
+                scene.fixedUpdate(time: time)
+                time.consumeFixedUpdate()
+            }
+            scene.update(time: time)
+            if scene.bossEntity != nil { break }
+        }
+
+        guard let boss = scene.bossEntity else {
+            Issue.record("Boss never spawned")
+            return
+        }
+
+        let zenith = boss.component(ofType: ZenithBossComponent.self)!
+        // Right after trigger, boss should be in intro and stageState should be bossIntro
+        if zenith.currentPhase == .intro {
+            #expect(scene.stageState == .bossIntro,
+                    "Stage state should be bossIntro during boss intro descent")
+        }
+
+        // Run enough frames for intro to complete (1.5s = 90 frames)
+        for _ in 0..<120 {
+            scene.player.component(ofType: HealthComponent.self)?.currentHealth = GameConfig.Player.health
+            var time = GameTime()
+            time.advance(by: GameConfig.fixedTimeStep)
+            while time.shouldPerformFixedUpdate() {
+                scene.fixedUpdate(time: time)
+                time.consumeFixedUpdate()
+            }
+            scene.update(time: time)
+        }
+
+        #expect(scene.stageState == .bossActive,
+                "Stage state should transition to bossActive after intro completes")
+    }
+}
+
+// MARK: - Mock Collision Context for Galaxy3 Tests
+
+@MainActor
+private final class MockGalaxy3CollisionContext: CollisionContext {
+    var player: GKEntity!
+    let scoreSystem = ScoreSystem()
+    let itemSystem = ItemSystem()
+    var sfx: AudioEngine? = nil
+    var pendingRemovals: [GKEntity] = []
+    var enemiesDestroyed: Int = 0
+
+    init(player: GKEntity) {
+        self.player = player
+    }
+
+    func checkFormationWipe(enemy: GKEntity) {}
+    func spawnShieldDrones() {}
 }

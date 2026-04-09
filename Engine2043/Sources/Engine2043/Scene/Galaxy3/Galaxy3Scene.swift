@@ -343,6 +343,14 @@ public final class Galaxy3Scene: GameScene {
             }
         }
 
+        // Transition bossIntro -> bossActive when intro descent completes
+        if stageState == .bossIntro,
+           let boss = bossEntity,
+           let zenith = boss.component(ofType: ZenithBossComponent.self),
+           zenith.currentPhase != .intro {
+            stageState = .bossActive
+        }
+
         // Update homing projectiles and expire aged-out projectiles
         updateHomingProjectiles(deltaTime: time.fixedDeltaTime)
 
@@ -354,6 +362,16 @@ public final class Galaxy3Scene: GameScene {
         if let transform = player.component(ofType: TransformComponent.self) {
             let halfW = currentHalfWidth - GameConfig.Player.size.x / 2
             let halfH = GameConfig.designHeight / 2 - GameConfig.Player.size.y / 2
+
+            // When inside an active corridor, restrict X to the lane bounds
+            let laneBounds = environmentSystem.activeLaneBounds
+            if laneBounds.isActive {
+                let playerHalfW = GameConfig.Player.size.x / 2
+                let minX = laneBounds.leftWall + playerHalfW
+                let maxX = laneBounds.rightWall - playerHalfW
+                transform.position.x = max(minX, min(maxX, transform.position.x))
+            }
+
             transform.position.x = max(-halfW, min(halfW, transform.position.x))
             transform.position.y = max(-halfH, min(halfH, transform.position.y))
         }
@@ -523,22 +541,8 @@ public final class Galaxy3Scene: GameScene {
             }
         }
 
-        // Barrier entities render behind gameplay but in front of hulls
-        for barrier in barriers {
-            if let transform = barrier.component(ofType: TransformComponent.self),
-               let render = barrier.component(ofType: RenderComponent.self),
-               render.isVisible {
-                let uv = atlas?.uvRect(for: render.spriteId) ?? SpriteInstance.defaultUVRect
-                sprites.append(SpriteInstance(
-                    position: transform.position,
-                    size: render.size,
-                    color: render.color,
-                    rotation: transform.rotation,
-                    uvRect: uv
-                ))
-            }
-        }
-
+        // Barriers are registered in renderSystem via registerEntity, so
+        // renderSystem.collectSprites already includes them. No manual loop needed.
         sprites.append(contentsOf: renderSystem.collectSprites(atlas: atlas))
 
         // Phase Laser beam visual
@@ -977,7 +981,20 @@ public final class Galaxy3Scene: GameScene {
         // Spawn Zenith Core Sentinel boss at top of screen
         let bossPos = SIMD2<Float>(0, 340) // above visible area; intro will descend to 200
         let (core, shields) = Galaxy3EntityFactory.makeZenithBossShell(at: bossPos)
-        registerBoss(core, shields: shields)
+
+        // Register boss entities directly — keep stageState as .bossIntro
+        bossEntity = core
+        registerEntity(core)
+        bossSystem.register(core)
+        enemies.append(core)
+        lightningArcSystem.registerEnemy(core)
+
+        for shield in shields {
+            registerEntity(shield)
+            bossSystem.registerShield(shield)
+            shieldEntities.append(shield)
+        }
+
         bossSystem.bossType = .zenithCoreSentinel
 
         // Hide shield entities initially (they appear in phase 3+)
@@ -1374,11 +1391,17 @@ public final class Galaxy3Scene: GameScene {
             guard let transform = barrier.component(ofType: TransformComponent.self) else { continue }
             transform.position.y -= scrollDelta
 
-            // Rotate rotating gates
+            // Rotate rotating gates and modulate collision width based on angle
             if let barrierComp = barrier.component(ofType: BarrierComponent.self),
-               barrierComp.kind == .rotatingGate {
+               barrierComp.kind == .rotatingGate,
+               let physics = barrier.component(ofType: PhysicsComponent.self) {
                 barrierComp.currentAngle += barrierComp.rotationSpeed * Float(deltaTime)
                 transform.rotation = barrierComp.currentAngle
+                // When gate is perpendicular (angle ~0 or ~π), full collision width (closed).
+                // When gate is parallel (angle ~π/2), near-zero width (open).
+                let openFactor = abs(sin(barrierComp.currentAngle))
+                let baseSize = GameConfig.Galaxy3.Barrier.gateSegmentSize
+                physics.collisionSize = SIMD2(baseSize.x * (1.0 - openFactor * 0.9), baseSize.y)
             }
         }
 
@@ -1517,7 +1540,35 @@ public final class Galaxy3Scene: GameScene {
             }
         }
 
-        // Galaxy 3 has no asteroids, so just process enemies directly
+        // Find the nearest barrier that occludes the beam (stops it from
+        // reaching targets behind). Barriers with a Y above the player's Y
+        // and overlapping the beam's X range block the beam.
+        var beamCutoffY: Float = laserMaxY
+        for barrier in barriers {
+            guard let bTransform = barrier.component(ofType: TransformComponent.self),
+                  let bPhysics = barrier.component(ofType: PhysicsComponent.self) else { continue }
+            let bHalfW = bPhysics.collisionSize.x / 2
+            let bHalfH = bPhysics.collisionSize.y / 2
+            let bMinX = bTransform.position.x - bHalfW
+            let bMaxX = bTransform.position.x + bHalfW
+            let bMinY = bTransform.position.y - bHalfH
+
+            // Barrier must overlap beam horizontally AND be above the player
+            guard laserMaxX >= bMinX && laserMinX <= bMaxX,
+                  bMinY > laserMinY else { continue }
+
+            // The beam stops at the bottom edge of the nearest occluding barrier
+            beamCutoffY = min(beamCutoffY, bMinY)
+        }
+
+        // Process enemies sorted by Y (ascending — nearest to player first),
+        // stopping at the beam cutoff.
+        struct EnemyHit {
+            let entity: GKEntity
+            let y: Float
+        }
+
+        var hits: [EnemyHit] = []
         for enemy in enemies {
             guard let transform = enemy.component(ofType: TransformComponent.self),
                   let health = enemy.component(ofType: HealthComponent.self),
@@ -1526,9 +1577,32 @@ public final class Galaxy3Scene: GameScene {
             let size = enemy.component(ofType: RenderComponent.self)?.size ?? .zero
             guard laserMaxX >= transform.position.x - size.x / 2,
                   laserMinX <= transform.position.x + size.x / 2,
-                  laserMaxY >= transform.position.y - size.y / 2,
+                  beamCutoffY >= transform.position.y - size.y / 2,
                   laserMinY <= transform.position.y + size.y / 2 else { continue }
 
+            hits.append(EnemyHit(entity: enemy, y: transform.position.y))
+        }
+        hits.sort { $0.y < $1.y }
+
+        for hit in hits {
+            let enemy = hit.entity
+
+            // Zenith boss shield check — laser is deflected when shield is active
+            if let zenith = enemy.component(ofType: ZenithBossComponent.self),
+               zenith.isShieldActive {
+                sfx?.play(.bossShieldDeflect)
+                continue
+            }
+
+            // Fortress node shielding — shielded non-generator nodes deflect the laser
+            if let fortNode = enemy.component(ofType: FortressNodeComponent.self),
+               fortNode.isShielded,
+               fortNode.role != .shieldGenerator {
+                sfx?.play(.bossShieldDeflect)
+                continue
+            }
+
+            guard let health = enemy.component(ofType: HealthComponent.self) else { continue }
             health.takeDamage(hitscan.damagePerTick)
             if !health.isAlive {
                 sfx?.play(.enemyDestroyed)
@@ -1551,6 +1625,12 @@ public final class Galaxy3Scene: GameScene {
         registerEntity(entity)
         enemies.append(entity)
         lightningArcSystem.registerEnemy(entity)
+    }
+
+    /// Registers an entity as a barrier. For use in tests via @testable import only.
+    func addBarrierForTesting(_ entity: GKEntity) {
+        registerEntity(entity)
+        barriers.append(entity)
     }
 
     // MARK: - Collisions

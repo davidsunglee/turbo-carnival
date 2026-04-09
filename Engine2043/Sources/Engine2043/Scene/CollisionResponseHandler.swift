@@ -184,6 +184,15 @@ final class CollisionResponseHandler {
             }
         }
 
+        // Fortress node shielding — shielded non-generator nodes deflect projectiles
+        if let fortNode = enemy.component(ofType: FortressNodeComponent.self),
+           fortNode.isShielded,
+           fortNode.role != .shieldGenerator {
+            ctx.pendingRemovals.append(projectile)
+            ctx.sfx?.play(.bossShieldDeflect)
+            return
+        }
+
         if let health = enemy.component(ofType: HealthComponent.self) {
             health.takeDamage(GameConfig.Player.damage)
             if !health.isAlive {
