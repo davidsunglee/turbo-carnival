@@ -11,18 +11,18 @@ public final class GalaxySelectScene: GameScene {
     public private(set) var requestedTransition: SceneTransition?
 
     // Galaxy entry data
-    private let galaxyNames = [
+    private static let galaxyNames = [
         "GALAXY 1  NGC-2043 PERIMETER",
         "GALAXY 2  KAY'SHARA EXPANSE",
         "GALAXY 3  ZENITH ARMADA GRID",
     ]
 
     // Layout constants
-    private let titleY: Float = 180
-    private let entryBaseY: Float = 70
-    private let entrySpacing: Float = 40
-    private let entryScale: Float = 2.0
-    private let hintY: Float = -240
+    private static let titleY: Float = 180
+    private static let entryBaseY: Float = 70
+    private static let entrySpacing: Float = 40
+    private static let entryScale: Float = 2.0
+    private static let hintY: Float = -240
 
     // Hit-test options for galaxy entries
     private let entryOptions: [MenuInput.Option]
@@ -40,15 +40,11 @@ public final class GalaxySelectScene: GameScene {
     private let repeatRate: Double = 0.12
 
     public init() {
-        entryOptions = (0..<3).map { i in
+        entryOptions = Self.galaxyNames.enumerated().map { i, name in
             MenuInput.Option(
-                label: [
-                    "GALAXY 1  NGC-2043 PERIMETER",
-                    "GALAXY 2  KAY'SHARA EXPANSE",
-                    "GALAXY 3  ZENITH ARMADA GRID",
-                ][i],
-                position: SIMD2(0, 70 - Float(i) * 40),
-                scale: 2.0
+                label: name,
+                position: SIMD2(0, Self.entryBaseY - Float(i) * Self.entrySpacing),
+                scale: Self.entryScale
             )
         }
     }
@@ -123,7 +119,7 @@ public final class GalaxySelectScene: GameScene {
         // Title
         sprites.append(contentsOf: BitmapText.makeSprites(
             "SELECT GALAXY",
-            at: SIMD2(0, titleY),
+            at: SIMD2(0, Self.titleY),
             color: dimWhite,
             scale: 2.0,
             effectSheet: effectSheet
@@ -131,46 +127,46 @@ public final class GalaxySelectScene: GameScene {
 
         // Galaxy entries
         for i in 0..<3 {
-            let entryY = entryBaseY - Float(i) * entrySpacing
+            let entryY = Self.entryBaseY - Float(i) * Self.entrySpacing
             let isSelected = i == selectedIndex
             let entryColor = isSelected
                 ? SIMD4<Float>(cyanColor.x, cyanColor.y, cyanColor.z, 1.0)
                 : dimWhite
-            let text = galaxyNames[i]
+            let text = Self.galaxyNames[i]
 
             // Entry text
             sprites.append(contentsOf: BitmapText.makeSprites(
                 text,
                 at: SIMD2(0, entryY),
                 color: entryColor,
-                scale: entryScale,
+                scale: Self.entryScale,
                 effectSheet: effectSheet
             ))
 
             // Cursor > (left of highlighted entry)
             if isSelected {
-                let glyphW: Float = 6 * entryScale
+                let glyphW: Float = 6 * Self.entryScale
                 let textWidth = Float(text.count) * glyphW
                 let cursorX = -(textWidth / 2) - glyphW * 1.5
                 sprites.append(contentsOf: BitmapText.makeSprites(
                     ">",
                     at: SIMD2(cursorX, entryY),
                     color: SIMD4(cyanColor.x, cyanColor.y, cyanColor.z, 1.0),
-                    scale: entryScale,
+                    scale: Self.entryScale,
                     effectSheet: effectSheet
                 ))
             }
 
             // Cleared * indicator (right of entry)
             if ProgressStore.isCleared(galaxy: i + 1) {
-                let glyphW: Float = 6 * entryScale
+                let glyphW: Float = 6 * Self.entryScale
                 let textWidth = Float(text.count) * glyphW
                 let starX = (textWidth / 2) + glyphW * 1.5
                 sprites.append(contentsOf: BitmapText.makeSprites(
                     "*",
                     at: SIMD2(starX, entryY),
                     color: SIMD4(goldColor.x, goldColor.y, goldColor.z, 1.0),
-                    scale: entryScale,
+                    scale: Self.entryScale,
                     effectSheet: effectSheet
                 ))
             }
@@ -184,7 +180,7 @@ public final class GalaxySelectScene: GameScene {
         #endif
         sprites.append(contentsOf: BitmapText.makeSprites(
             hintText,
-            at: SIMD2(0, hintY),
+            at: SIMD2(0, Self.hintY),
             color: SIMD4(1, 1, 1, 0.3),
             scale: 1.0,
             effectSheet: effectSheet
