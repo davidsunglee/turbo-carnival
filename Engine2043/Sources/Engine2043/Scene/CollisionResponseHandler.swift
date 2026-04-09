@@ -152,6 +152,15 @@ final class CollisionResponseHandler {
     }
 
     private func handleProjectileHitEnemy(projectile: GKEntity, enemy: GKEntity, ctx: any CollisionContext) {
+        // Zenith Core Sentinel shield invulnerability — when shields are active,
+        // all projectiles are deflected.
+        if let zenith = enemy.component(ofType: ZenithBossComponent.self),
+           zenith.isShieldActive {
+            ctx.pendingRemovals.append(projectile)
+            ctx.sfx?.play(.bossShieldDeflect)
+            return
+        }
+
         // Boss armor interception: geometric angle-based check.
         // Compute approach angle from projectile to boss; only the armor slot
         // covering that angle can block the hit.

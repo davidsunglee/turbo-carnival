@@ -5,6 +5,22 @@ public struct ProjectileSpawnRequest: Sendable {
     public var position: SIMD2<Float>
     public var velocity: SIMD2<Float>
     public var damage: Float
+    public var effects: ProjectileEffect
+    public var isHoming: Bool
+    public var homingTurnRate: Float
+    public var lifetime: Double
+
+    public init(position: SIMD2<Float>, velocity: SIMD2<Float>, damage: Float,
+                effects: ProjectileEffect = [], isHoming: Bool = false,
+                homingTurnRate: Float = 0, lifetime: Double = 5.0) {
+        self.position = position
+        self.velocity = velocity
+        self.damage = damage
+        self.effects = effects
+        self.isHoming = isHoming
+        self.homingTurnRate = homingTurnRate
+        self.lifetime = lifetime
+    }
 }
 
 public struct LaserHitscanRequest: Sendable {

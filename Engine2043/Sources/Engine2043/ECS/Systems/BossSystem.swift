@@ -4,6 +4,7 @@ import simd
 public enum BossType: Sendable {
     case galaxy1
     case lithicHarvester
+    case zenithCoreSentinel
 }
 
 @MainActor
@@ -64,6 +65,8 @@ public final class BossSystem {
             updateGalaxy1Boss(boss: boss, bossPhase: bossPhase, health: health, transform: transform, deltaTime: deltaTime)
         case .lithicHarvester:
             updateLithicHarvester(boss: boss, bossPhase: bossPhase, health: health, transform: transform, deltaTime: deltaTime)
+        case .zenithCoreSentinel:
+            updateZenithCoreSentinel(boss: boss, bossPhase: bossPhase, health: health, transform: transform, deltaTime: deltaTime)
         }
     }
 
@@ -207,6 +210,243 @@ public final class BossSystem {
                 }
             }
         }
+    }
+
+    // MARK: - Zenith Core Sentinel Boss
+
+    private func updateZenithCoreSentinel(boss: GKEntity, bossPhase: BossPhaseComponent, health: HealthComponent, transform: TransformComponent, deltaTime: Double) {
+        guard let zenith = boss.component(ofType: ZenithBossComponent.self) else { return }
+
+        // Only update phase from health after intro is complete
+        if zenith.currentPhase != .intro {
+            let healthFraction = health.currentHealth / bossPhase.totalHP
+            zenith.updatePhase(healthFraction: healthFraction)
+        }
+
+        // Detect phase transitions
+        if zenith.currentPhase != zenith.lastPhase {
+            zenith.lastPhase = zenith.currentPhase
+            // Reset attack timer on phase change for clean cadence
+            zenith.attackTimer = 0
+            zenith.empTimer = 0
+        }
+
+        // Intro descent — boss slides down from above before attacking
+        if zenith.currentPhase == .intro {
+            zenith.introTimer += deltaTime
+            let introDuration: Double = 1.5
+            if zenith.introTimer < introDuration {
+                let t = Float(zenith.introTimer / introDuration)
+                // Descend from y=340 to y=200
+                transform.position.y = 340 - t * 140
+                return
+            }
+            // Intro complete — transition to phase 1
+            transform.position.y = 200
+            zenith.currentPhase = .phase1
+            zenith.lastPhase = .phase1
+            return
+        }
+
+        // Shield window logic (phase 3 and 4 only)
+        if zenith.currentPhase == .phase3 || zenith.currentPhase == .phase4 {
+            if zenith.isShieldActive {
+                zenith.shieldTimer += deltaTime
+                let duration = zenith.currentPhase == .phase4
+                    ? GameConfig.Galaxy3.BossAttack.shieldWindowDuration * 0.6
+                    : GameConfig.Galaxy3.BossAttack.shieldWindowDuration
+                if zenith.shieldTimer >= duration {
+                    zenith.isShieldActive = false
+                    zenith.shieldTimer = 0
+                    zenith.shieldCooldownTimer = 0
+                    updateZenithShieldVisibility(visible: false)
+                }
+            } else {
+                zenith.shieldCooldownTimer += deltaTime
+                let cooldown = zenith.currentPhase == .phase4
+                    ? GameConfig.Galaxy3.BossAttack.shieldCooldown * 0.7
+                    : GameConfig.Galaxy3.BossAttack.shieldCooldown
+                if zenith.shieldCooldownTimer >= cooldown {
+                    zenith.isShieldActive = true
+                    zenith.shieldCooldownTimer = 0
+                    zenith.shieldTimer = 0
+                    updateZenithShieldVisibility(visible: true)
+                }
+            }
+        } else {
+            // Phases 1 and 2 — shields stay off
+            if zenith.isShieldActive {
+                zenith.isShieldActive = false
+                updateZenithShieldVisibility(visible: false)
+            }
+        }
+
+        // Update shield positions around boss
+        let bossPos = transform.position
+        let shieldDistance: Float = 70
+        for (i, shield) in shieldEntities.enumerated() {
+            guard let shieldTransform = shield.component(ofType: TransformComponent.self) else { continue }
+            let angle = Float(i) * (.pi / 2)  // 4 shields, 90-degree spacing
+            shieldTransform.position = bossPos + SIMD2(cos(angle), sin(angle)) * shieldDistance
+        }
+
+        // Attack sequencing per phase
+        let position = transform.position
+        zenith.attackTimer += deltaTime
+
+        switch zenith.currentPhase {
+        case .phase1:
+            // Grid beam attacks with clear gaps
+            let interval = GameConfig.Galaxy3.BossAttack.gridBeamInterval
+            if zenith.attackTimer >= interval {
+                zenith.attackTimer -= interval
+                generateGridBeamAttack(from: position)
+            }
+
+        case .phase2:
+            // Grid beams (faster) + spiral sweeps
+            let interval = GameConfig.Galaxy3.BossAttack.gridBeamInterval * 0.75
+            if zenith.attackTimer >= interval {
+                zenith.attackTimer -= interval
+                generateGridBeamAttack(from: position)
+                generateSpiralSweep(from: position, zenith: zenith)
+            }
+
+        case .phase3:
+            // Grid beams + radial bursts + homing missiles + EMP
+            let interval = GameConfig.Galaxy3.BossAttack.gridBeamInterval * 0.6
+            if zenith.attackTimer >= interval {
+                zenith.attackTimer -= interval
+                generateGridBeamAttack(from: position)
+                generateRadialBurst(from: position)
+            }
+            // Homing missiles on separate timer
+            zenith.empTimer += deltaTime
+            let homingInterval = GameConfig.Galaxy3.BossAttack.homingMissileInterval
+            if zenith.empTimer >= homingInterval {
+                zenith.empTimer -= homingInterval
+                generateHomingMissiles(from: position)
+                generateEMPProjectile(from: position)
+            }
+
+        case .phase4:
+            // All attacks overlapped but bounded — clear offensive windows remain
+            let interval = GameConfig.Galaxy3.BossAttack.gridBeamInterval * 0.5
+            if zenith.attackTimer >= interval {
+                zenith.attackTimer -= interval
+                generateGridBeamAttack(from: position)
+                generateSpiralSweep(from: position, zenith: zenith)
+                generateRadialBurst(from: position)
+            }
+            // More frequent homing + EMP
+            zenith.empTimer += deltaTime
+            let homingInterval = GameConfig.Galaxy3.BossAttack.homingMissileInterval * 0.6
+            if zenith.empTimer >= homingInterval {
+                zenith.empTimer -= homingInterval
+                generateHomingMissiles(from: position)
+                generateEMPProjectile(from: position)
+            }
+
+        case .intro, .defeated:
+            break
+        }
+    }
+
+    private func updateZenithShieldVisibility(visible: Bool) {
+        for shield in shieldEntities {
+            shield.component(ofType: RenderComponent.self)?.isVisible = visible
+        }
+    }
+
+    // MARK: - Zenith Attack Patterns
+
+    private func generateGridBeamAttack(from position: SIMD2<Float>) {
+        let speed = GameConfig.Galaxy3.BossAttack.gridBeamProjectileSpeed
+        // Fire a row of downward projectiles with gaps for the player to dodge
+        // 5 columns across 360-unit width, with safe lanes between them
+        let columns: [Float] = [-120, -60, 0, 60, 120]
+        // Leave 2 random safe lanes
+        var activeColumns = columns
+        let skip1 = Int.random(in: 0..<activeColumns.count)
+        activeColumns.remove(at: skip1)
+        let skip2 = Int.random(in: 0..<activeColumns.count)
+        activeColumns.remove(at: skip2)
+
+        for col in activeColumns {
+            let spawnPos = SIMD2<Float>(col, position.y)
+            let vel = SIMD2<Float>(0, -speed)
+            pendingProjectileSpawns.append(ProjectileSpawnRequest(
+                position: spawnPos,
+                velocity: vel,
+                damage: 5
+            ))
+        }
+    }
+
+    private func generateSpiralSweep(from position: SIMD2<Float>, zenith: ZenithBossComponent) {
+        let speed = GameConfig.Galaxy3.BossAttack.radialBurstProjectileSpeed
+        // Rotating double-arm spiral using spiralAngle state
+        zenith.spiralAngle += 0.4
+        let armCount = 2
+        for arm in 0..<armCount {
+            let angle = zenith.spiralAngle + Float(arm) * .pi
+            let vel = SIMD2<Float>(cos(angle), sin(angle)) * speed
+            pendingProjectileSpawns.append(ProjectileSpawnRequest(
+                position: position,
+                velocity: vel,
+                damage: 5
+            ))
+        }
+    }
+
+    private func generateRadialBurst(from position: SIMD2<Float>) {
+        let speed = GameConfig.Galaxy3.BossAttack.radialBurstProjectileSpeed
+        let count = GameConfig.Galaxy3.BossAttack.radialBurstProjectileCount
+        // Offset each burst by a random angle so patterns aren't perfectly repetitive
+        let offset = Float.random(in: 0...(Float.pi * 2 / Float(count)))
+        for i in 0..<count {
+            let angle = Float(i) / Float(count) * .pi * 2 + offset
+            let vel = SIMD2<Float>(cos(angle), sin(angle)) * speed
+            pendingProjectileSpawns.append(ProjectileSpawnRequest(
+                position: position,
+                velocity: vel,
+                damage: 5
+            ))
+        }
+    }
+
+    private func generateHomingMissiles(from position: SIMD2<Float>) {
+        let speed = GameConfig.Galaxy3.BossAttack.homingMissileSpeed
+        let count = GameConfig.Galaxy3.BossAttack.homingMissileCount
+        let turnRate = GameConfig.Galaxy3.BossAttack.homingMissileTurnRate
+        let lifetime = GameConfig.Galaxy3.BossAttack.homingMissileLifetime
+
+        let dir = playerPosition == position ? SIMD2<Float>(0, -1) : simd_normalize(playerPosition - position)
+        let spread: Float = 0.3
+
+        for i in 0..<count {
+            let offset = Float(i - count / 2) * spread
+            let vel = SIMD2(dir.x + offset, dir.y) * speed
+            pendingProjectileSpawns.append(ProjectileSpawnRequest(
+                position: position,
+                velocity: vel,
+                damage: 8,
+                isHoming: true,
+                homingTurnRate: turnRate,
+                lifetime: lifetime
+            ))
+        }
+    }
+
+    private func generateEMPProjectile(from position: SIMD2<Float>) {
+        let speed = GameConfig.Galaxy3.BossAttack.gridBeamProjectileSpeed * 0.8
+        let dir = playerPosition == position ? SIMD2<Float>(0, -1) : simd_normalize(playerPosition - position)
+        pendingProjectileSpawns.append(ProjectileSpawnRequest(
+            position: position,
+            velocity: dir * speed,
+            damage: 5,
+            effects: .empDisable
+        ))
     }
 
     private func generateLithicHarvesterAttack(from position: SIMD2<Float>, phase: Int) {

@@ -339,9 +339,12 @@ public final class Galaxy3Scene: GameScene {
             bossSystem.playerPosition = playerPos
             bossSystem.update(deltaTime: time.fixedDeltaTime)
             for spawn in bossSystem.pendingProjectileSpawns {
-                spawnEnemyProjectile(position: spawn.position, velocity: spawn.velocity, damage: spawn.damage)
+                spawnBossProjectile(spawn)
             }
         }
+
+        // Update homing projectiles and expire aged-out projectiles
+        updateHomingProjectiles(deltaTime: time.fixedDeltaTime)
 
         // Physics
         physicsSystem.syncFromComponents()
@@ -971,9 +974,20 @@ public final class Galaxy3Scene: GameScene {
         stageState = .bossIntro
         environmentSystem.lockScroll()
 
-        // Boss spawning is deferred to Task 5 (Zenith Core Sentinel).
-        // The scroll lock and stage state are set here so the boss system
-        // can be wired in without restructuring.
+        // Spawn Zenith Core Sentinel boss at top of screen
+        let bossPos = SIMD2<Float>(0, 340) // above visible area; intro will descend to 200
+        let (core, shields) = Galaxy3EntityFactory.makeZenithBossShell(at: bossPos)
+        registerBoss(core, shields: shields)
+        bossSystem.bossType = .zenithCoreSentinel
+
+        // Hide shield entities initially (they appear in phase 3+)
+        for shield in shields {
+            shield.component(ofType: RenderComponent.self)?.isVisible = false
+        }
+
+        // Switch to boss music — reuse existing boss track
+        sfx?.stopMusic()
+        sfx?.startMusic(.boss)
     }
 
     // MARK: - Boss Integration Hooks
@@ -1055,6 +1069,34 @@ public final class Galaxy3Scene: GameScene {
 
         let render = RenderComponent(size: SIMD2(8, 8), color: SIMD4(1, 1, 1, 1))
         render.spriteId = "enemyBullet"
+        entity.addComponent(render)
+
+        registerEntity(entity)
+        enemyProjectiles.append(entity)
+    }
+
+    private func spawnBossProjectile(_ request: ProjectileSpawnRequest) {
+        let entity = GKEntity()
+        entity.addComponent(TransformComponent(position: request.position))
+
+        let size: SIMD2<Float> = request.isHoming ? SIMD2(10, 10) : SIMD2(8, 8)
+        let physics = PhysicsComponent(
+            collisionSize: size,
+            layer: .enemyProjectile,
+            mask: [.player, .shieldDrone]
+        )
+        physics.velocity = request.velocity
+        entity.addComponent(physics)
+
+        let projComp = ProjectileComponent(damage: request.damage, speed: simd_length(request.velocity), effects: request.effects)
+        projComp.isHoming = request.isHoming
+        projComp.homingTurnRate = request.homingTurnRate
+        projComp.lifetime = request.lifetime
+        entity.addComponent(projComp)
+
+        let spriteId = request.effects.contains(.empDisable) ? "g3EmpProjectile" : "enemyBullet"
+        let render = RenderComponent(size: size, color: SIMD4(1, 1, 1, 1))
+        render.spriteId = spriteId
         entity.addComponent(render)
 
         registerEntity(entity)
@@ -1293,6 +1335,34 @@ public final class Galaxy3Scene: GameScene {
                     fortNode.isShielded = false
                 }
             }
+        }
+    }
+
+    private func updateHomingProjectiles(deltaTime: Double) {
+        let playerPos = player.component(ofType: TransformComponent.self)?.position ?? .zero
+
+        for proj in enemyProjectiles {
+            guard let projComp = proj.component(ofType: ProjectileComponent.self) else { continue }
+
+            projComp.age += deltaTime
+            if projComp.isExpired {
+                pendingRemovals.append(proj)
+                continue
+            }
+
+            guard projComp.isHoming,
+                  let physics = proj.component(ofType: PhysicsComponent.self),
+                  let transform = proj.component(ofType: TransformComponent.self) else { continue }
+
+            let currentSpeed = simd_length(physics.velocity)
+            guard currentSpeed > 0 else { continue }
+            let dir = simd_normalize(playerPos - transform.position)
+            let currentDir = physics.velocity / currentSpeed
+            let turnAmount = projComp.homingTurnRate * Float(deltaTime)
+            let blended = currentDir + dir * turnAmount
+            let blendedLen = simd_length(blended)
+            let newDir = blendedLen > 0 ? blended / blendedLen : currentDir
+            physics.velocity = newDir * projComp.speed
         }
     }
 

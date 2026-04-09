@@ -16,6 +16,15 @@ public final class ZenithBossComponent: GKComponent {
     public var scrollLockRequested: Bool = false
     public var isDefeated: Bool = false
 
+    // Timer and sequencing state (added in Task 5)
+    public var attackTimer: Double = 0
+    public var shieldTimer: Double = 0
+    public var shieldCooldownTimer: Double = 0
+    public var empTimer: Double = 0
+    public var introTimer: Double = 0
+    public var spiralAngle: Float = 0
+    public var lastPhase: ZenithPhase = .intro
+
     public override init() { super.init() }
 
     public func updatePhase(healthFraction: Float) {
