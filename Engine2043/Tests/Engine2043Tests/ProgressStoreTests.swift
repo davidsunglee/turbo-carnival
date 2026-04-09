@@ -44,4 +44,11 @@ struct ProgressStoreTests {
     @Test func convenienceMethodsUseStandardDefaults() {
         _ = ProgressStore.isCleared(galaxy: 1)
     }
+
+    @Test func markClearedIsIdempotent() {
+        let defaults = freshDefaults()
+        ProgressStore.markCleared(galaxy: 1, store: defaults)
+        ProgressStore.markCleared(galaxy: 1, store: defaults)
+        #expect(ProgressStore.isCleared(galaxy: 1, store: defaults) == true)
+    }
 }

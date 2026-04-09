@@ -139,4 +139,14 @@ struct SceneTransitionTests {
             #expect(Bool(false), "Expected .toGalaxy3 case")
         }
     }
+
+    @Test @MainActor func galaxy2SceneAcceptsNilCarryover() {
+        let scene = Galaxy2Scene(carryover: nil)
+        #expect(scene.requestedTransition == nil)
+    }
+
+    @Test @MainActor func galaxy3SceneAcceptsNilCarryover() {
+        let scene = Galaxy3Scene(carryover: nil)
+        #expect(scene.requestedTransition == nil)
+    }
 }
