@@ -146,3 +146,81 @@ struct InputTests {
     }
 #endif
 }
+
+#if os(iOS)
+import UIKit
+
+private class FakeTouch: UITouch {
+    private var _location: CGPoint
+    private let _id = UUID()
+
+    init(location: CGPoint) {
+        _location = location
+        super.init()
+    }
+
+    func updateLocation(_ point: CGPoint) {
+        _location = point
+    }
+
+    override func location(in view: UIView?) -> CGPoint { _location }
+    override var phase: UITouch.Phase { .moved }
+    override func isEqual(_ object: Any?) -> Bool {
+        guard let other = object as? FakeTouch else { return false }
+        return _id == other._id
+    }
+    override var hash: Int { _id.hashValue }
+}
+
+@Test @MainActor func touchProviderSwipeDownProducesMenuDown() {
+    let provider = TouchInputProvider()
+    provider.screenSize = CGSize(width: 390, height: 844)
+    let view = UIView(frame: CGRect(x: 0, y: 0, width: 390, height: 844))
+    let touch = FakeTouch(location: CGPoint(x: 195, y: 400))
+    provider.touchesBegan([touch], in: view)
+    touch.updateLocation(CGPoint(x: 195, y: 435))
+    provider.touchesMoved([touch], in: view)
+    let input = provider.poll()
+    #expect(input.menuDown == true)
+    #expect(input.menuUp == false)
+}
+
+@Test @MainActor func touchProviderSwipeUpProducesMenuUp() {
+    let provider = TouchInputProvider()
+    provider.screenSize = CGSize(width: 390, height: 844)
+    let view = UIView(frame: CGRect(x: 0, y: 0, width: 390, height: 844))
+    let touch = FakeTouch(location: CGPoint(x: 195, y: 400))
+    provider.touchesBegan([touch], in: view)
+    touch.updateLocation(CGPoint(x: 195, y: 365))
+    provider.touchesMoved([touch], in: view)
+    let input = provider.poll()
+    #expect(input.menuUp == true)
+    #expect(input.menuDown == false)
+}
+
+@Test @MainActor func touchProviderSmallMovementNoMenuEvent() {
+    let provider = TouchInputProvider()
+    provider.screenSize = CGSize(width: 390, height: 844)
+    let view = UIView(frame: CGRect(x: 0, y: 0, width: 390, height: 844))
+    let touch = FakeTouch(location: CGPoint(x: 195, y: 400))
+    provider.touchesBegan([touch], in: view)
+    touch.updateLocation(CGPoint(x: 195, y: 420))
+    provider.touchesMoved([touch], in: view)
+    let input = provider.poll()
+    #expect(input.menuUp == false)
+    #expect(input.menuDown == false)
+}
+
+@Test @MainActor func touchProviderMenuEventsConsumedAfterPoll() {
+    let provider = TouchInputProvider()
+    provider.screenSize = CGSize(width: 390, height: 844)
+    let view = UIView(frame: CGRect(x: 0, y: 0, width: 390, height: 844))
+    let touch = FakeTouch(location: CGPoint(x: 195, y: 400))
+    provider.touchesBegan([touch], in: view)
+    touch.updateLocation(CGPoint(x: 195, y: 435))
+    provider.touchesMoved([touch], in: view)
+    _ = provider.poll()
+    let second = provider.poll()
+    #expect(second.menuDown == false)
+}
+#endif
