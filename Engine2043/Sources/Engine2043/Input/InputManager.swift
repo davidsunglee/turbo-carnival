@@ -8,6 +8,9 @@ public struct PlayerInput: Sendable {
     public var secondaryFire3: Bool = false  // C — Overcharge Protocol
     /// Screen-space tap/click position in game design coordinates, set on first frame of tap
     public var tapPosition: SIMD2<Float>?
+    public var menuUp: Bool = false
+    public var menuDown: Bool = false
+    public var menuBack: Bool = false
 
     public init() {}
 }

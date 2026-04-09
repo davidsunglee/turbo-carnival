@@ -103,4 +103,22 @@ struct InputTests {
         #expect(input.tapPosition == nil)
         #expect(input.movement == .zero)
     }
+
+    @Test func playerInputMenuFieldsDefaultToFalse() {
+        let input = PlayerInput()
+        #expect(input.menuUp == false)
+        #expect(input.menuDown == false)
+        #expect(input.menuBack == false)
+    }
+
+    @Test @MainActor func mockInputProviderMenuFields() {
+        let provider = MockInputProvider()
+        provider.menuUp = true
+        provider.menuDown = false
+        provider.menuBack = true
+        let input = provider.poll()
+        #expect(input.menuUp == true)
+        #expect(input.menuDown == false)
+        #expect(input.menuBack == true)
+    }
 }
