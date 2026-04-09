@@ -50,12 +50,12 @@ struct SceneTransitionTests {
         let transition = SceneTransition.toGalaxy3(carryover)
 
         if case .toGalaxy3(let carried) = transition {
-            #expect(carried.weaponType == .lightningArc)
-            #expect(carried.score == 8000)
-            #expect(carried.secondaryCharges == 3)
-            #expect(carried.shieldDroneCount == 1)
-            #expect(carried.enemiesDestroyed == 55)
-            #expect(carried.elapsedTime == 200.0)
+            #expect(carried?.weaponType == .lightningArc)
+            #expect(carried?.score == 8000)
+            #expect(carried?.secondaryCharges == 3)
+            #expect(carried?.shieldDroneCount == 1)
+            #expect(carried?.enemiesDestroyed == 55)
+            #expect(carried?.elapsedTime == 200.0)
         } else {
             #expect(Bool(false), "Expected .toGalaxy3 case")
         }
@@ -74,12 +74,13 @@ struct SceneTransitionTests {
         let transitions: [SceneTransition] = [
             .toGame,
             .toTitle,
+            .toGalaxySelect,
             .toGameOver(result),
             .toVictory(result),
             .toGalaxy2(carryover),
             .toGalaxy3(carryover),
         ]
-        #expect(transitions.count == 6, "All 6 transition cases should exist")
+        #expect(transitions.count == 7, "All 7 transition cases should exist")
     }
 
     @Test func toVictoryTransitionPreservesResult() {
@@ -104,11 +105,38 @@ struct SceneTransitionTests {
         let transition = SceneTransition.toGalaxy2(carryover)
 
         if case .toGalaxy2(let carried) = transition {
-            #expect(carried.weaponType == .phaseLaser)
-            #expect(carried.score == 4500)
-            #expect(carried.shieldDroneCount == 1)
+            #expect(carried?.weaponType == .phaseLaser)
+            #expect(carried?.score == 4500)
+            #expect(carried?.shieldDroneCount == 1)
         } else {
             #expect(Bool(false), "Expected .toGalaxy2 case")
+        }
+    }
+
+    @Test func toGalaxySelectTransitionExists() {
+        let transition = SceneTransition.toGalaxySelect
+        if case .toGalaxySelect = transition {
+            // pass
+        } else {
+            #expect(Bool(false), "Expected .toGalaxySelect case")
+        }
+    }
+
+    @Test func toGalaxy2AcceptsNilCarryover() {
+        let transition = SceneTransition.toGalaxy2(nil)
+        if case .toGalaxy2(let carryover) = transition {
+            #expect(carryover == nil)
+        } else {
+            #expect(Bool(false), "Expected .toGalaxy2 case")
+        }
+    }
+
+    @Test func toGalaxy3AcceptsNilCarryover() {
+        let transition = SceneTransition.toGalaxy3(nil)
+        if case .toGalaxy3(let carryover) = transition {
+            #expect(carryover == nil)
+        } else {
+            #expect(Bool(false), "Expected .toGalaxy3 case")
         }
     }
 }
