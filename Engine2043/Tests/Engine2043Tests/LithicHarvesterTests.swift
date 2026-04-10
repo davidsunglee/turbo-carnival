@@ -503,6 +503,13 @@ struct LithicHarvesterTests {
         #expect(phase.driftElapsed == 0)
     }
 
+    // MARK: - BossArmorComponent rotationAngle field
+
+    @Test @MainActor func bossArmorComponentHasRotationAngle() {
+        let comp = BossArmorComponent()
+        #expect(comp.rotationAngle == 0)
+    }
+
     // MARK: - Config constants exist
 
     @Test func lithicHarvesterConfigConstantsExist() {

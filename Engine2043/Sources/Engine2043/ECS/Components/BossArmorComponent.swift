@@ -13,6 +13,7 @@ public final class BossArmorComponent: GKComponent {
     public var tractorBeamTimer: Double = 0
     public var tractorBeamInterval: Double = 8.0     // seconds between armor rebuilds
     public var armorRadius: Float = 70               // distance from boss center
+    public var rotationAngle: Float = 0
 
     public override init() { super.init() }
     required init?(coder: NSCoder) { fatalError("NSCoding not supported") }
