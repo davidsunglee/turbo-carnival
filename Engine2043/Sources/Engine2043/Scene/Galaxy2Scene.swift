@@ -1088,7 +1088,7 @@ public final class Galaxy2Scene: GameScene {
     private func spawnBoss() {
         let boss = GKEntity()
 
-        boss.addComponent(TransformComponent(position: SIMD2(0, 250)))
+        boss.addComponent(TransformComponent(position: SIMD2(0, GameConfig.Galaxy2.Boss.spawnY)))
         let physics = PhysicsComponent(
             collisionSize: GameConfig.Galaxy2.Enemy.bossSize,
             layer: .enemy,
@@ -1107,6 +1107,7 @@ public final class Galaxy2Scene: GameScene {
         bossHealth.hasInvulnerabilityFrames = false
         boss.addComponent(bossHealth)
         boss.addComponent(BossPhaseComponent(totalHP: GameConfig.Galaxy2.Enemy.bossHP))
+        boss.component(ofType: BossPhaseComponent.self)!.introComplete = false
         boss.addComponent(ScoreComponent(points: GameConfig.Galaxy2.Score.g2Boss))
 
         // Lithic Harvester armor
