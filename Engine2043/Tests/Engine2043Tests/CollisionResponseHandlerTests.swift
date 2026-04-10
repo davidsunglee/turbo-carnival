@@ -826,8 +826,8 @@ struct CollisionResponseHandlerTests {
 
         let initialArmorHP = armorHP.currentHealth
 
-        // Create projectile approaching from below (angle ~= π/2 toward boss)
-        let projectile = TestEntityFactory.makeProjectileEntity(position: SIMD2(0, 190))
+        // Create projectile above the boss so angle from boss toward projectile ≈ π/2
+        let projectile = TestEntityFactory.makeProjectileEntity(position: SIMD2(0, 210))
         let projComp = ProjectileComponent(
             damage: GameConfig.Weapon.triSpreadDamage,
             speed: 500

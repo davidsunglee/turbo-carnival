@@ -153,12 +153,12 @@ final class CollisionResponseHandler {
         }
 
         // Boss armor interception: geometric angle-based check.
-        // Compute approach angle from projectile to boss; only the armor slot
+        // Compute angle from boss toward projectile; only the armor slot
         // covering that angle can block the hit.
         if let armor = enemy.component(ofType: BossArmorComponent.self),
            let projPos = projectile.component(ofType: TransformComponent.self)?.position,
            let bossPos = enemy.component(ofType: TransformComponent.self)?.position {
-            let approachAngle = atan2(bossPos.y - projPos.y, bossPos.x - projPos.x)
+            let approachAngle = atan2(projPos.y - bossPos.y, projPos.x - bossPos.x)
             if let idx = armor.coveringSlotIndex(for: approachAngle),
                let armorEntity = armor.slots[idx].entity,
                let armorHealth = armorEntity.component(ofType: HealthComponent.self) {

@@ -1710,13 +1710,13 @@ public final class Galaxy2Scene: GameScene {
 
             case .enemy(let enemy):
                 // Boss armor interception: geometric angle-based check.
-                // The Phase Laser fires straight up from the player, so the approach
-                // angle from the laser source to the boss determines which armor
+                // The Phase Laser fires straight up from the player, so the angle
+                // from boss toward the laser source determines which armor
                 // slot (if any) blocks the beam.
                 if let armor = enemy.component(ofType: BossArmorComponent.self) {
                     let laserApproachAngle = atan2(
-                        enemy.component(ofType: TransformComponent.self)!.position.y - hitscan.position.y,
-                        enemy.component(ofType: TransformComponent.self)!.position.x - hitscan.position.x
+                        hitscan.position.y - enemy.component(ofType: TransformComponent.self)!.position.y,
+                        hitscan.position.x - enemy.component(ofType: TransformComponent.self)!.position.x
                     )
                     if let idx = armor.coveringSlotIndex(for: laserApproachAngle),
                        let armorEntity = armor.slots[idx].entity,
