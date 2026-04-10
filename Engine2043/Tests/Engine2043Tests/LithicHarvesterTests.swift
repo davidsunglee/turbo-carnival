@@ -494,6 +494,55 @@ struct LithicHarvesterTests {
         #expect(g2Total > 0, "Lithic Harvester should attack")
     }
 
+    // MARK: - Boss entry descent
+
+    @Test @MainActor func lithicHarvesterDescendsDuringIntro() {
+        let system = BossSystem()
+        system.bossType = .lithicHarvester
+        system.playerPosition = SIMD2(0, -200)
+
+        let (boss, _) = makeBossEntity(hp: 100)
+        let transform = boss.component(ofType: TransformComponent.self)!
+        transform.position = SIMD2(0, GameConfig.Galaxy2.Boss.spawnY)
+        let phase = boss.component(ofType: BossPhaseComponent.self)!
+        phase.introComplete = false
+
+        system.register(boss)
+
+        let startY = transform.position.y
+
+        // Run 30 frames (~0.5s)
+        for _ in 0..<30 {
+            system.update(deltaTime: 1.0 / 60.0)
+        }
+
+        #expect(transform.position.y < startY, "Boss should descend during intro")
+        #expect(system.pendingProjectileSpawns.isEmpty, "Boss should not fire during intro")
+    }
+
+    @Test @MainActor func lithicHarvesterIntroCompletesAtRestingY() {
+        let system = BossSystem()
+        system.bossType = .lithicHarvester
+        system.playerPosition = SIMD2(0, -200)
+
+        let (boss, _) = makeBossEntity(hp: 100)
+        let transform = boss.component(ofType: TransformComponent.self)!
+        transform.position = SIMD2(0, GameConfig.Galaxy2.Boss.spawnY)
+        let phase = boss.component(ofType: BossPhaseComponent.self)!
+        phase.introComplete = false
+
+        system.register(boss)
+
+        // Run for 2 seconds (intro is 1.5s)
+        for _ in 0..<120 {
+            system.update(deltaTime: 1.0 / 60.0)
+        }
+
+        #expect(phase.introComplete == true, "Intro should be complete after 1.5s")
+        #expect(transform.position.y == GameConfig.Galaxy2.Boss.restingY,
+                "Boss should be at resting Y after intro")
+    }
+
     // MARK: - BossPhaseComponent intro/drift fields
 
     @Test @MainActor func bossPhaseComponentHasIntroAndDriftFields() {

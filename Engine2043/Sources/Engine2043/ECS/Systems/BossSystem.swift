@@ -168,7 +168,35 @@ public final class BossSystem {
     private func updateLithicHarvester(boss: GKEntity, bossPhase: BossPhaseComponent, health: HealthComponent, transform: TransformComponent, deltaTime: Double) {
         let phase = bossPhase.currentPhase
 
-        // Determine fire interval based on phase
+        // --- Intro descent ---
+        if !bossPhase.introComplete {
+            bossPhase.introTimer += deltaTime
+            let introDuration = GameConfig.Galaxy2.Boss.introDuration
+            if bossPhase.introTimer < introDuration {
+                let t = Float(bossPhase.introTimer / introDuration)
+                let spawnY = GameConfig.Galaxy2.Boss.spawnY
+                let restingY = GameConfig.Galaxy2.Boss.restingY
+                transform.position.y = spawnY - t * (spawnY - restingY)
+                // Update armor positions even during intro so they follow the boss
+                updateLithicArmor(boss: boss, transform: transform, deltaTime: deltaTime, phase: phase)
+                return  // no attacks during intro
+            }
+            // Intro complete
+            transform.position.y = GameConfig.Galaxy2.Boss.restingY
+            bossPhase.introComplete = true
+        }
+
+        // --- Lateral drift (sinusoidal sway) ---
+        bossPhase.driftElapsed += deltaTime
+        let clampedPhase = min(phase, GameConfig.Galaxy2.Boss.driftAmplitude.count - 1)
+        let amplitude = GameConfig.Galaxy2.Boss.driftAmplitude[clampedPhase]
+        let period = GameConfig.Galaxy2.Boss.driftPeriod[clampedPhase]
+        transform.position.x = amplitude * sin(Float(bossPhase.driftElapsed) * (2.0 * .pi / Float(period)))
+
+        // --- Armor ring rotation + position update ---
+        updateLithicArmor(boss: boss, transform: transform, deltaTime: deltaTime, phase: phase)
+
+        // --- Attacks ---
         let fireInterval: Double
         switch phase {
         case 0: fireInterval = 2.0
@@ -183,9 +211,8 @@ public final class BossSystem {
             generateLithicHarvesterAttack(from: transform.position, phase: phase)
         }
 
-        // Tractor beam logic
+        // --- Tractor beam logic ---
         if let armor = boss.component(ofType: BossArmorComponent.self) {
-            // Update tractor beam interval based on phase
             switch phase {
             case 0: armor.tractorBeamInterval = 8.0
             case 1: armor.tractorBeamInterval = 5.0
@@ -197,25 +224,30 @@ public final class BossSystem {
             if armor.tractorBeamTimer >= armor.tractorBeamInterval {
                 armor.tractorBeamTimer -= armor.tractorBeamInterval
 
-                // Check for empty slots
                 let hasEmptySlot = armor.slots.contains { !$0.isActive }
                 if hasEmptySlot {
-                    // Signal the scene to start pulling nearby asteroids
-                    // The scene will handle finding actual asteroid targets
                     for target in armor.tractorBeamTargets {
                         pendingTractorBeamPulls.append((source: transform.position, target: target))
                     }
                 }
             }
+        }
+    }
 
-            // Update armor slot positions around boss
-            let bossPos = transform.position
-            for i in 0..<armor.slots.count {
-                if let armorEntity = armor.slots[i].entity,
-                   let armorTransform = armorEntity.component(ofType: TransformComponent.self) {
-                    let angle = armor.slots[i].angle
-                    armorTransform.position = bossPos + SIMD2(cos(angle), sin(angle)) * armor.armorRadius
-                }
+    private func updateLithicArmor(boss: GKEntity, transform: TransformComponent, deltaTime: Double, phase: Int) {
+        guard let armor = boss.component(ofType: BossArmorComponent.self) else { return }
+
+        // Rotate the armor ring
+        let clampedPhase = min(phase, GameConfig.Galaxy2.Boss.armorRotationSpeed.count - 1)
+        armor.rotationAngle += GameConfig.Galaxy2.Boss.armorRotationSpeed[clampedPhase] * Float(deltaTime)
+
+        // Update armor slot positions around boss
+        let bossPos = transform.position
+        for i in 0..<armor.slots.count {
+            if let armorEntity = armor.slots[i].entity,
+               let armorTransform = armorEntity.component(ofType: TransformComponent.self) {
+                let effectiveAngle = armor.slots[i].angle + armor.rotationAngle
+                armorTransform.position = bossPos + SIMD2(cos(effectiveAngle), sin(effectiveAngle)) * armor.armorRadius
             }
         }
     }
