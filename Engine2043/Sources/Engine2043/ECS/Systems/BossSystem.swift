@@ -181,9 +181,10 @@ public final class BossSystem {
                 updateLithicArmor(boss: boss, transform: transform, deltaTime: deltaTime, phase: phase)
                 return  // no attacks during intro
             }
-            // Intro complete
+            // Intro complete — begin drift/attack on next frame
             transform.position.y = GameConfig.Galaxy2.Boss.restingY
             bossPhase.introComplete = true
+            return
         }
 
         // --- Lateral drift (sinusoidal sway) ---
