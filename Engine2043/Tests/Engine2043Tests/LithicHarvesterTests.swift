@@ -680,6 +680,45 @@ struct LithicHarvesterTests {
         #expect(armor.coveringSlotIndex(for: .pi / 2) == 0)
     }
 
+    // MARK: - Integration: full lifecycle
+
+    @Test @MainActor func lithicHarvesterFullLifecycle() {
+        let system = BossSystem()
+        system.bossType = .lithicHarvester
+        system.playerPosition = SIMD2(0, -200)
+
+        let (boss, armor) = makeBossEntity(hp: 100)
+        let transform = boss.component(ofType: TransformComponent.self)!
+        let phase = boss.component(ofType: BossPhaseComponent.self)!
+        transform.position = SIMD2(0, GameConfig.Galaxy2.Boss.spawnY)
+        phase.introComplete = false
+
+        // Attach armor to slot 0
+        let armorEntity = makeArmorAsteroidEntity(position: .zero)
+        armor.slots[0].entity = armorEntity
+
+        system.register(boss)
+
+        // Phase 1: Intro descent (run slightly past 1.5s to avoid boundary flake)
+        for _ in 0..<120 {
+            system.update(deltaTime: 1.0 / 60.0)
+        }
+        #expect(phase.introComplete == true, "Intro should be complete")
+        #expect(transform.position.y == GameConfig.Galaxy2.Boss.restingY)
+
+        // Phase 2: Post-intro — drift should be active, armor should rotate, attacks should fire
+        var totalProjectiles = 0
+        let preRotation = armor.rotationAngle
+        for _ in 0..<180 { // 3 more seconds
+            system.update(deltaTime: 1.0 / 60.0)
+            totalProjectiles += system.pendingProjectileSpawns.count
+        }
+
+        #expect(abs(transform.position.x) > 0.1, "Boss should have drifted laterally")
+        #expect(armor.rotationAngle > preRotation, "Armor should have continued rotating")
+        #expect(totalProjectiles > 0, "Boss should have fired projectiles after intro")
+    }
+
     // MARK: - BossPhaseComponent intro/drift fields
 
     @Test @MainActor func bossPhaseComponentHasIntroAndDriftFields() {
