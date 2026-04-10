@@ -493,4 +493,20 @@ struct LithicHarvesterTests {
         #expect(g1Total > 0, "Galaxy 1 boss should attack")
         #expect(g2Total > 0, "Lithic Harvester should attack")
     }
+
+    // MARK: - Config constants exist
+
+    @Test func lithicHarvesterConfigConstantsExist() {
+        // Boss intro
+        #expect(GameConfig.Galaxy2.Boss.spawnY == 340)
+        #expect(GameConfig.Galaxy2.Boss.restingY == 250)
+        #expect(GameConfig.Galaxy2.Boss.introDuration == 1.5)
+
+        // Lateral drift
+        #expect(GameConfig.Galaxy2.Boss.driftAmplitude == [30.0, 45.0, 60.0])
+        #expect(GameConfig.Galaxy2.Boss.driftPeriod == [5.0, 4.0, 3.0])
+
+        // Armor rotation
+        #expect(GameConfig.Galaxy2.Boss.armorRotationSpeed == [0.4, 0.7, 1.1])
+    }
 }

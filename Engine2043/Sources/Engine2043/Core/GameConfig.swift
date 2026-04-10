@@ -176,6 +176,20 @@ public enum GameConfig {
             public static let g2BossCore = SIMD4<Float>(0.9, 0.3, 0.5, 1.0)
             public static let g2TractorBeam = SIMD4<Float>(0.4, 0.8, 1.0, 0.6)
         }
+
+        public enum Boss {
+            // Intro descent
+            public static let spawnY: Float = 340
+            public static let restingY: Float = 250
+            public static let introDuration: Double = 1.5
+
+            // Lateral drift (per phase: 0, 1, 2)
+            public static let driftAmplitude: [Float] = [30.0, 45.0, 60.0]
+            public static let driftPeriod: [Double] = [5.0, 4.0, 3.0]
+
+            // Armor ring rotation speed in rad/s (per phase: 0, 1, 2)
+            public static let armorRotationSpeed: [Float] = [0.4, 0.7, 1.1]
+        }
     }
 
     public enum Galaxy3 {
