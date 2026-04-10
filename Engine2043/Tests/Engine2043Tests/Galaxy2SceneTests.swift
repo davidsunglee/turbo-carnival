@@ -545,6 +545,58 @@ struct Galaxy2SceneTests {
         #expect(!ctx.pendingRemovals.contains { $0 === boss })
     }
 
+    // MARK: - Boss Spawn Contract
+
+    @Test @MainActor func bossSpawnsAboveViewportWithIntroState() {
+        let carryover = makeCarryover()
+        let scene = Galaxy2Scene(carryover: carryover)
+        let input = MockInputProvider(movement: .zero, primary: false)
+        scene.inputProvider = input
+
+        var time = GameTime()
+
+        // Advance until boss spawns (scroll distance 2400 at ~20 units/s ≈ 7200 frames + title card)
+        for _ in 0..<7500 {
+            time.advance(by: GameConfig.fixedTimeStep)
+            while time.shouldPerformFixedUpdate() {
+                scene.player.component(ofType: HealthComponent.self)?.currentHealth = GameConfig.Player.health
+                scene.fixedUpdate(time: time)
+                time.consumeFixedUpdate()
+            }
+            scene.update(time: time)
+            if scene.bossEntity != nil { break }
+        }
+
+        guard let boss = scene.bossEntity else {
+            Issue.record("Boss never spawned in Galaxy2Scene after 7500 frames")
+            return
+        }
+
+        let transform = boss.component(ofType: TransformComponent.self)!
+        let phase = boss.component(ofType: BossPhaseComponent.self)!
+
+        // Boss should spawn at (or within one frame of) the configured spawn Y
+        #expect(transform.position.y >= GameConfig.Galaxy2.Boss.spawnY - 5,
+                "Boss should spawn near spawnY (\(GameConfig.Galaxy2.Boss.spawnY)), got \(transform.position.y)")
+        #expect(phase.introComplete == false,
+                "Boss should start with intro incomplete")
+
+        // Advance a few frames — boss should survive (not culled) and be descending
+        let spawnY = transform.position.y
+        for _ in 0..<30 {
+            time.advance(by: GameConfig.fixedTimeStep)
+            while time.shouldPerformFixedUpdate() {
+                scene.player.component(ofType: HealthComponent.self)?.currentHealth = GameConfig.Player.health
+                scene.fixedUpdate(time: time)
+                time.consumeFixedUpdate()
+            }
+            scene.update(time: time)
+        }
+
+        #expect(scene.bossEntity != nil, "Boss should not be culled during intro descent")
+        #expect(transform.position.y < spawnY, "Boss should be descending during intro")
+    }
+
     // MARK: - Boss Defeat → Galaxy 3 Transition
 
     @Test @MainActor func sceneRemainsPlayingBeforeBossDefeat() {

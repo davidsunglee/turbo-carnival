@@ -35,7 +35,7 @@ public final class Galaxy2Scene: GameScene {
     private var enemyProjectiles: [GKEntity] = []
     private var items: [GKEntity] = []
     private var capitalShipHulls: [GKEntity] = []
-    private var bossEntity: GKEntity?
+    private(set) var bossEntity: GKEntity?
     private var shieldEntities: [GKEntity] = []
     private var armorEntities: [GKEntity] = []  // armor asteroids orbiting Lithic Harvester
     private var shieldDrones: [GKEntity] = []
