@@ -596,6 +596,90 @@ struct LithicHarvesterTests {
                 "Phase 2 drift should have a clearly larger offset than phase 0")
     }
 
+    // MARK: - Armor ring rotation
+
+    @Test @MainActor func armorRingRotatesOverTime() {
+        let system = BossSystem()
+        system.bossType = .lithicHarvester
+        system.playerPosition = SIMD2(0, -200)
+
+        let (boss, armor) = makeBossEntity(hp: 100)
+        let armorEntity = makeArmorAsteroidEntity(position: .zero)
+        armor.slots[0].entity = armorEntity
+
+        system.register(boss)
+
+        #expect(armor.rotationAngle == 0, "Rotation should start at 0")
+
+        for _ in 0..<60 {
+            system.update(deltaTime: 1.0 / 60.0)
+        }
+
+        #expect(armor.rotationAngle > 0.35 && armor.rotationAngle < 0.45,
+                "Rotation angle should be ~0.4 after 1s, got \(armor.rotationAngle)")
+    }
+
+    @Test @MainActor func armorAsteroidPositionChangesWithRotation() {
+        let system = BossSystem()
+        system.bossType = .lithicHarvester
+        system.playerPosition = SIMD2(0, -200)
+
+        let (boss, armor) = makeBossEntity(hp: 100)
+        let armorEntity = makeArmorAsteroidEntity(position: .zero)
+        armor.slots[0].entity = armorEntity
+        let armorTransform = armorEntity.component(ofType: TransformComponent.self)!
+
+        system.register(boss)
+
+        system.update(deltaTime: 1.0 / 60.0)
+        let initialPos = armorTransform.position
+
+        for _ in 0..<59 {
+            system.update(deltaTime: 1.0 / 60.0)
+        }
+
+        let finalPos = armorTransform.position
+        let distance = simd_length(finalPos - initialPos)
+        #expect(distance > 1.0,
+                "Armor asteroid should have moved due to rotation, distance: \(distance)")
+    }
+
+    @Test @MainActor func armorRotationSpeedIncreasesWithPhase() {
+        let system0 = BossSystem()
+        system0.bossType = .lithicHarvester
+        system0.playerPosition = SIMD2(0, -200)
+        let (boss0, armor0) = makeBossEntity(hp: 100)
+        system0.register(boss0)
+
+        let system2 = BossSystem()
+        system2.bossType = .lithicHarvester
+        system2.playerPosition = SIMD2(0, -200)
+        let (boss2, armor2) = makeBossEntity(hp: 100)
+        let health2 = boss2.component(ofType: HealthComponent.self)!
+        health2.currentHealth = 20  // 20% -> phase 2
+        system2.register(boss2)
+
+        for _ in 0..<60 {
+            system0.update(deltaTime: 1.0 / 60.0)
+            system2.update(deltaTime: 1.0 / 60.0)
+        }
+
+        #expect(armor2.rotationAngle > armor0.rotationAngle,
+                "Phase 2 rotation should be faster: p0=\(armor0.rotationAngle), p2=\(armor2.rotationAngle)")
+    }
+
+    @Test @MainActor func rotatedArmorCoverageUsesRotationAngle() {
+        let armor = BossArmorComponent()
+        armor.slots = [ArmorSlot(angle: 0, entity: makeArmorAsteroidEntity())]
+
+        #expect(armor.coveringSlotIndex(for: 0) == 0)
+
+        armor.rotationAngle = .pi / 2
+
+        #expect(armor.coveringSlotIndex(for: 0) == nil)
+        #expect(armor.coveringSlotIndex(for: .pi / 2) == 0)
+    }
+
     // MARK: - BossPhaseComponent intro/drift fields
 
     @Test @MainActor func bossPhaseComponentHasIntroAndDriftFields() {

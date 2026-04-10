@@ -1717,18 +1717,7 @@ public final class Galaxy2Scene: GameScene {
                         enemy.component(ofType: TransformComponent.self)!.position.y - hitscan.position.y,
                         enemy.component(ofType: TransformComponent.self)!.position.x - hitscan.position.x
                     )
-                    let halfArc: Float = .pi / 6  // ±30°
-                    var coveringIdx: Int? = nil
-                    for (i, slot) in armor.slots.enumerated() where slot.isActive {
-                        var diff = laserApproachAngle - slot.angle
-                        while diff > .pi  { diff -= 2 * .pi }
-                        while diff < -.pi { diff += 2 * .pi }
-                        if abs(diff) <= halfArc {
-                            coveringIdx = i
-                            break
-                        }
-                    }
-                    if let idx = coveringIdx,
+                    if let idx = armor.coveringSlotIndex(for: laserApproachAngle),
                        let armorEntity = armor.slots[idx].entity,
                        let armorHealth = armorEntity.component(ofType: HealthComponent.self) {
                         armorHealth.takeDamage(hitscan.damagePerTick)

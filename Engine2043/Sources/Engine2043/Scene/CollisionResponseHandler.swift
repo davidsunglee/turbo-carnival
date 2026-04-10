@@ -134,23 +134,6 @@ final class CollisionResponseHandler {
         ctx.sfx?.play(.playerDamaged)
     }
 
-    /// Half-arc that an armor slot covers on each side of its angle (±30°).
-    static let armorSlotHalfArc: Float = .pi / 6  // 30°
-
-    /// Returns the index of the armor slot (if any) that covers the given approach angle.
-    private func armorSlotCovering(angle: Float, armor: BossArmorComponent) -> Int? {
-        for (i, slot) in armor.slots.enumerated() where slot.isActive {
-            var diff = angle - slot.angle
-            // Normalize to [-π, π]
-            while diff > .pi  { diff -= 2 * .pi }
-            while diff < -.pi { diff += 2 * .pi }
-            if abs(diff) <= Self.armorSlotHalfArc {
-                return i
-            }
-        }
-        return nil
-    }
-
     private func handleProjectileHitEnemy(projectile: GKEntity, enemy: GKEntity, ctx: any CollisionContext) {
         // Zenith Core Sentinel shield invulnerability — when shields are active,
         // all projectiles are deflected.
@@ -176,7 +159,7 @@ final class CollisionResponseHandler {
            let projPos = projectile.component(ofType: TransformComponent.self)?.position,
            let bossPos = enemy.component(ofType: TransformComponent.self)?.position {
             let approachAngle = atan2(bossPos.y - projPos.y, bossPos.x - projPos.x)
-            if let idx = armorSlotCovering(angle: approachAngle, armor: armor),
+            if let idx = armor.coveringSlotIndex(for: approachAngle),
                let armorEntity = armor.slots[idx].entity,
                let armorHealth = armorEntity.component(ofType: HealthComponent.self) {
                 armorHealth.takeDamage(projectileDamage)
