@@ -494,6 +494,15 @@ struct LithicHarvesterTests {
         #expect(g2Total > 0, "Lithic Harvester should attack")
     }
 
+    // MARK: - BossPhaseComponent intro/drift fields
+
+    @Test @MainActor func bossPhaseComponentHasIntroAndDriftFields() {
+        let phase = BossPhaseComponent(totalHP: 100)
+        #expect(phase.introTimer == 0)
+        #expect(phase.introComplete == true)
+        #expect(phase.driftElapsed == 0)
+    }
+
     // MARK: - Config constants exist
 
     @Test func lithicHarvesterConfigConstantsExist() {

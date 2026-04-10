@@ -8,6 +8,9 @@ public final class BossPhaseComponent: GKComponent {
     public var isDefeated: Bool = false
     public var shieldRotation: Float = 0
     public var shieldSpeed: Float = 1.5
+    public var introTimer: Double = 0
+    public var introComplete: Bool = true
+    public var driftElapsed: Double = 0
 
     public override init() { super.init() }
 
