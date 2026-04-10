@@ -543,6 +543,59 @@ struct LithicHarvesterTests {
                 "Boss should be at resting Y after intro")
     }
 
+    // MARK: - Lateral drift
+
+    @Test @MainActor func lithicHarvesterDriftsLaterally() {
+        let system = BossSystem()
+        system.bossType = .lithicHarvester
+        system.playerPosition = SIMD2(0, -200)
+
+        let (boss, _) = makeBossEntity(hp: 100)
+        let transform = boss.component(ofType: TransformComponent.self)!
+        system.register(boss)
+
+        // Run for ~1.25s (quarter of the 5.0s period in phase 0) — should be near peak
+        let frames = Int(1.25 / (1.0 / 60.0))
+        for _ in 0..<frames {
+            system.update(deltaTime: 1.0 / 60.0)
+        }
+
+        #expect(abs(transform.position.x) > 1.0,
+                "Boss should have drifted away from x=0, got \(transform.position.x)")
+    }
+
+    @Test @MainActor func lithicHarvesterPhase2DriftProducesLargerOffsetAtSharedSampleTime() {
+        // Phase 0: amplitude 30, period 5
+        let system0 = BossSystem()
+        system0.bossType = .lithicHarvester
+        system0.playerPosition = SIMD2(0, -200)
+        let (boss0, _) = makeBossEntity(hp: 100)
+        system0.register(boss0)
+        let transform0 = boss0.component(ofType: TransformComponent.self)!
+
+        // Phase 2: amplitude 60, period 3
+        let system2 = BossSystem()
+        system2.bossType = .lithicHarvester
+        system2.playerPosition = SIMD2(0, -200)
+        let (boss2, _) = makeBossEntity(hp: 100)
+        system2.register(boss2)
+        let health2 = boss2.component(ofType: HealthComponent.self)!
+        health2.currentHealth = 20  // 20% -> phase 2
+        let transform2 = boss2.component(ofType: TransformComponent.self)!
+
+        // Run both for 0.75s.
+        // phase 0 offset ~= 30 * sin(2π * 0.75 / 5)  ≈ 24.3
+        // phase 2 offset ~= 60 * sin(2π * 0.75 / 3)  = 60
+        let frames = Int(0.75 / (1.0 / 60.0))
+        for _ in 0..<frames {
+            system0.update(deltaTime: 1.0 / 60.0)
+            system2.update(deltaTime: 1.0 / 60.0)
+        }
+
+        #expect(abs(transform2.position.x) > abs(transform0.position.x) + 10,
+                "Phase 2 drift should have a clearly larger offset than phase 0")
+    }
+
     // MARK: - BossPhaseComponent intro/drift fields
 
     @Test @MainActor func bossPhaseComponentHasIntroAndDriftFields() {
