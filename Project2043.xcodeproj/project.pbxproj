@@ -23,7 +23,7 @@
 		291E2D6993FA88EA4251C8AF /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		3C1193DBA9A9FFC7DC44A7E0 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		3D13BD42707ADB1B2C5B0AE4 /* MetalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetalView.swift; sourceTree = "<group>"; };
-		513C293C19F1C5B766786E41 /* Project2043-macOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; name = "Project2043-macOS.app"; path = "Project 2043.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		513C293C19F1C5B766786E41 /* Project 2043.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Project 2043.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		5250E5D30DACDDF487B288D3 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		5A918567041D9CA523D94314 /* Project 2043.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Project 2043.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		75207AA8EC9A1A9FCAD1EA30 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
@@ -92,7 +92,7 @@
 			isa = PBXGroup;
 			children = (
 				5A918567041D9CA523D94314 /* Project 2043.app */,
-				513C293C19F1C5B766786E41 /* Project2043-macOS.app */,
+				513C293C19F1C5B766786E41 /* Project 2043.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -148,7 +148,7 @@
 				02D93F7A118390BB5E9296EF /* Engine2043 */,
 			);
 			productName = "Project2043-macOS";
-			productReference = 513C293C19F1C5B766786E41 /* Project2043-macOS.app */;
+			productReference = 513C293C19F1C5B766786E41 /* Project 2043.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -230,7 +230,10 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = 8GP2225C88;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_NSMainNibFile = "";
 				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
@@ -240,6 +243,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.project2043.macos;
 				PRODUCT_NAME = "Project 2043";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = macosx;
 				SWIFT_VERSION = 6.0;
 			};
@@ -305,7 +309,10 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = 8GP2225C88;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_NSMainNibFile = "";
 				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
@@ -315,6 +322,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.project2043.macos;
 				PRODUCT_NAME = "Project 2043";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = macosx;
 				SWIFT_VERSION = 6.0;
 			};
